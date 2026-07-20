@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-avgst}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-avgst}
+      POSTGRES_DB: ${POSTGRES_DB:-avgst_catalog}
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-avgst} -d ${POSTGRES_DB:-avgst_catalog}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-avgst}:${POSTGRES_PASSWORD:-avgst}@postgres:5432/${POSTGRES_DB:-avgst_catalog}
+      STORAGE_DIR: /app/storage
+      OUTPUT_DIR: /app/output
+      TEMPLATES_DIR: /app/templates
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server:/app/server
+      - ./templates:/app/templates
+      - ./storage:/app/storage
+      - ./output:/app/output
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:

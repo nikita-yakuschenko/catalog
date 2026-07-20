@@ -1,0 +1,142 @@
+{% if false %}
+<link rel="stylesheet" href="../styles/tokens.css" />
+<link rel="stylesheet" href="../styles/pages.css" />
+<link rel="stylesheet" href="../styles/layouts.css" />
+{% endif %}
+{% set project = block.project %}
+{% set assets = block.assets %}
+{% set layout = block.layout %}
+{% from 'partials/specs.html' import specs_block, specs_row, action_cluster, price_inline, cta_link, qr_compact with context %}
+
+{% if layout == 'project_spread' or block.page_count == 2 %}
+
+{# —— Страница 1: белый хедер + edge-to-edge фото + спеки —— #}
+<section class="page project-page layout-project_spread spread-hero">
+  <div class="hero-sheet">
+    <header class="hero-head">
+      <div class="hero-brand-row">
+        <span>AVGST · {{ block.section_label | upper }}</span>
+        <span class="page-num"><i></i>{{ '%02d'|format(block.page_number) }}</span>
+      </div>
+      <div class="hero-head-main">
+        <div class="hero-titles">
+          <h1 class="hero-title">{{ block.title }}</h1>
+          <p class="hero-tagline">{{ block.tagline }}</p>
+        </div>
+        {{ action_cluster(project, block, 'light') }}
+      </div>
+    </header>
+
+    <div class="hero-photo">
+      {% if assets.exterior_url %}
+      <img
+        class="img-hero"
+        src="{{ assets.exterior_url }}"
+        alt="{{ block.title }}"
+        style="object-position: {{ assets.object_position }};"
+      />
+      {% endif %}
+      <div class="hero-fade hero-fade-top"></div>
+      <div class="hero-fade hero-fade-bottom"></div>
+      <div class="hero-seal" aria-hidden="true">
+        <svg viewBox="0 0 120 120" class="hero-seal-svg">
+          <defs>
+            <path id="seal-circle" d="M60,60 m-42,0 a42,42 0 1,1 84,0 a42,42 0 1,1 -84,0" />
+          </defs>
+          <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1" />
+          <circle cx="60" cy="60" r="34" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.6" />
+          <text class="hero-seal-text">
+            <textPath href="#seal-circle" startOffset="0%">{{ block.seal | upper }} · {{ block.seal | upper }} · </textPath>
+          </text>
+        </svg>
+        <div class="hero-seal-icon">{{ icons.tree | safe }}</div>
+      </div>
+    </div>
+
+    <footer class="hero-foot">
+      {{ specs_row(project) }}
+      <div class="hero-blurb">
+        <p>{{ block.blurb }}</p>
+        <i class="hero-blurb-rule"></i>
+      </div>
+    </footer>
+  </div>
+</section>
+
+{# —— Страница 2: планировка + спеки + галерея —— #}
+<section class="page project-page layout-project_spread spread-dossier">
+  <div class="dossier-sheet">
+    <div class="hero-brand-row dossier-brand">
+      <span>AVGST · {{ block.section_label | upper }}</span>
+      <span class="page-num"><i></i>{{ '%02d'|format(block.detail_page_number) }}</span>
+    </div>
+
+    <div class="dossier-head">
+      <div class="dossier-titles">
+        <h1 class="dossier-title">{{ block.title }}</h1>
+        <p class="dossier-kicker">Планировочное решение</p>
+      </div>
+      {{ action_cluster(project, block, 'light') }}
+    </div>
+
+    <div class="dossier-body">
+      <div class="dossier-visual">
+        <div class="plans-panel {% if assets.plan_urls|length > 1 %}plans-panel-2{% endif %}">
+          {% for plan_url in assets.plan_urls %}
+          <div class="plan-slot">
+            <img class="img-contain" src="{{ plan_url }}" alt="План {{ block.title }}" />
+          </div>
+          {% else %}
+          <div class="plan-slot empty-plan">План недоступен</div>
+          {% endfor %}
+        </div>
+
+        {% if assets.gallery_urls %}
+        {% set gn = assets.gallery_urls|length %}
+        <div class="gallery-strip" style="grid-template-columns: repeat({{ gn }}, 1fr);">
+          {% for g in assets.gallery_urls %}
+          <div class="gallery-slot">
+            <img class="img-cover" src="{{ g }}" alt="Ракурс {{ loop.index }}" />
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <aside class="dossier-specs">
+        {{ specs_block(project) }}
+        <div class="spec-promo">
+          <div class="spec-promo-icon">{{ icons.tree | safe }}</div>
+          <p class="spec-promo-text">{{ block.promo }}</p>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer footer-safe dossier-footer">
+      <span>Авангард Строй · avgst.ru</span>
+      <span>{{ year }}</span>
+    </div>
+  </div>
+</section>
+
+{% else %}
+<section class="page project-page layout-{{ layout }}">
+  <div class="header-bar">
+    <span><span class="brand">AVGST</span> · {{ block.section_label }}</span>
+    <span>{{ '%02d'|format(block.page_number) }}</span>
+  </div>
+  <h1 class="dossier-title">{{ block.title }}</h1>
+  {% if layout == 'split_equal' %}
+    {% include 'layouts/split_equal.html' %}
+  {% else %}
+    {% include 'layouts/hero_plan_right.html' %}
+  {% endif %}
+  <div class="project-legacy-extra">
+    {{ action_cluster(project, block, 'light') }}
+  </div>
+  <div class="footer footer-safe">
+    <span>Авангард Строй · avgst.ru</span>
+    <span>{{ year }}</span>
+  </div>
+</section>
+{% endif %}

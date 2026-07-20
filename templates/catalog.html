@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ catalog.title }} — AVGST</title>
+  <style>
+    {% if font_gilroy_light %}
+    @font-face {
+      font-family: "Gilroy";
+      src: url("{{ font_gilroy_light }}") format("opentype");
+      font-weight: 300;
+      font-style: normal;
+      font-display: block;
+    }
+    {% endif %}
+    {% if font_gilroy_extrabold %}
+    @font-face {
+      font-family: "Gilroy";
+      src: url("{{ font_gilroy_extrabold }}") format("opentype");
+      font-weight: 800;
+      font-style: normal;
+      font-display: block;
+    }
+    {% endif %}
+    {% include 'styles/tokens.css' %}
+    {% include 'styles/pages.css' %}
+    {% include 'styles/layouts.css' %}
+  </style>
+</head>
+<body>
+  {% include 'pages/cover.html' %}
+
+  {% if catalog.show_introduction %}
+    {% include 'pages/introduction.html' %}
+  {% endif %}
+
+  {% if catalog.show_contents %}
+    {% include 'pages/contents.html' %}
+  {% endif %}
+
+  {% for block in project_blocks %}
+    {% if block.kind == 'divider' %}
+      {% include 'pages/divider.html' %}
+    {% elif block.kind == 'project' %}
+      {% include 'pages/project.html' %}
+    {% endif %}
+  {% endfor %}
+
+  {% if catalog.show_contacts %}
+    {% include 'pages/contacts.html' %}
+  {% endif %}
+</body>
+</html>

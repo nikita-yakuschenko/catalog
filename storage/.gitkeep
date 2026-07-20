@@ -1,0 +1,4 @@
+storage/projects/
+output/*/
+!output/.gitkeep
+storage/.gitkeep

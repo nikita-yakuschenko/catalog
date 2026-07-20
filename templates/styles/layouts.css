@@ -1,0 +1,361 @@
+.project-page {
+  padding: 0;
+}
+
+.layout-project_spread,
+.layout-hero_plan_right,
+.layout-split_equal,
+.layout-hero_top_plan_bottom {
+  --layout-marker: 1;
+}
+
+.media {
+  display: grid;
+  gap: 6mm;
+  min-height: 0;
+}
+
+.specs-wrap { margin-top: 4mm; }
+.hero { min-height: 0; }
+.bottom { display: grid; gap: 6mm; min-height: 0; }
+.media-frame {
+  overflow: hidden;
+  background: var(--color-bg);
+  height: 100%;
+}
+
+.plan-caption {
+  font-size: 7.5pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: 2mm;
+}
+
+.project-title,
+.dossier-title {
+  font-family: var(--font-display);
+  font-size: 24pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.02;
+}
+
+.project-meta,
+.dossier-kicker {
+  font-size: 7.5pt;
+  font-weight: 300;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin: 2.5mm 0 0;
+  padding-top: 2.5mm;
+  border-top: 1px solid var(--color-line);
+  display: inline-block;
+}
+
+.hero-brand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 7pt;
+  font-weight: 300;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.page-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 3mm;
+}
+
+.page-num i {
+  display: block;
+  width: 14mm;
+  height: 0;
+  border-top: 1px solid var(--color-line);
+}
+
+/* —— Hero sheet (mockup page 1) —— */
+.spread-hero {
+  padding: 0;
+  background: #fff;
+}
+
+.hero-sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-head {
+  flex: 0 0 auto;
+  padding: 7mm var(--page-margin) 4mm;
+  background: #fff;
+  z-index: 2;
+}
+
+.hero-head-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8mm;
+  margin-top: 5mm;
+}
+
+.hero-titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: 28pt;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1;
+  color: var(--color-ink);
+}
+
+.hero-tagline {
+  margin: 2.5mm 0 0;
+  font-size: 8pt;
+  font-weight: 300;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  max-width: 120mm;
+}
+
+/* Photo band: full width, no side margins, cover-fit */
+.hero-photo {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  background: #1a1c1a;
+}
+
+.hero-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 18mm;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hero-fade-top {
+  top: 0;
+  background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.hero-fade-bottom {
+  bottom: 0;
+  background: linear-gradient(0deg, #fff 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.hero-seal {
+  position: absolute;
+  left: 14mm;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38mm;
+  height: 38mm;
+  z-index: 3;
+  color: #fff;
+}
+
+.hero-seal-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hero-seal-text {
+  font-size: 7px;
+  font-weight: 300;
+  letter-spacing: 1.2px;
+  fill: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+}
+
+.hero-seal-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.hero-seal-icon svg {
+  width: 12mm;
+  height: 12mm;
+}
+
+.hero-foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10mm;
+  padding: 5mm var(--page-margin) 8mm;
+  background: #fff;
+  z-index: 2;
+}
+
+.hero-blurb {
+  flex: 0 0 62mm;
+  text-align: left;
+}
+
+.hero-blurb p {
+  margin: 0;
+  font-size: 7pt;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.hero-blurb-rule {
+  display: block;
+  width: 18mm;
+  height: 0;
+  margin-top: 2.5mm;
+  border-top: 1.5px solid var(--color-brand);
+}
+
+/* —— Dossier (mockup page 2) —— */
+.spread-dossier {
+  padding: 0;
+  background: #fff;
+}
+
+.dossier-sheet {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 7mm var(--page-margin) 12mm;
+}
+
+.dossier-brand {
+  flex: 0 0 auto;
+}
+
+.dossier-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8mm;
+  margin-top: 5mm;
+  margin-bottom: 5mm;
+  flex: 0 0 auto;
+}
+
+.dossier-titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.dossier-body {
+  display: grid;
+  grid-template-columns: 1fr 72mm;
+  gap: 7mm;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.dossier-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+  min-height: 0;
+}
+
+.plans-panel {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3mm;
+}
+
+.plans-panel-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.plan-slot {
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  background: #f7f8f5;
+  min-height: 0;
+}
+
+.empty-plan {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  font-size: 10pt;
+}
+
+.gallery-strip {
+  display: grid;
+  gap: 3mm;
+  height: 34mm;
+  flex-shrink: 0;
+}
+
+.gallery-slot {
+  overflow: hidden;
+  height: 34mm;
+  border: 1px solid var(--color-line);
+  background: var(--color-bg);
+}
+
+.dossier-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+  min-height: 0;
+  height: 100%;
+}
+
+.dossier-footer {
+  position: static;
+  margin-top: 4mm;
+  padding: 0;
+}
+
+/* Legacy */
+.layout-hero_plan_right .media,
+.layout-split_equal .media {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 6mm;
+  height: 110mm;
+  margin-top: 4mm;
+}
+
+.project-legacy-extra {
+  display: flex;
+  align-items: center;
+  gap: 5mm;
+  margin-top: 5mm;
+}
+
+.project-page.layout-hero_plan_right,
+.project-page.layout-split_equal {
+  padding: 16mm var(--page-margin) 14mm;
+}

@@ -1,0 +1,352 @@
+:root {
+  --color-brand: #3b774c;
+  --color-ink: #111111;
+  --color-muted: #8a8f88;
+  --color-paper: #ffffff;
+  --color-bg: #f3f4f1;
+  --color-line: #d9dcd6;
+  --color-soft: #e8ebe4;
+  --page-width: 297mm;
+  --page-height: 210mm;
+  --page-margin: 12mm;
+  --font-sans: "Gilroy", "Segoe UI", "DejaVu Sans", sans-serif;
+  --font-display: "Gilroy", "Segoe UI", sans-serif;
+}
+
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  color: var(--color-ink);
+  background: #ddd;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.page {
+  width: var(--page-width);
+  height: var(--page-height);
+  page-break-after: always;
+  break-after: page;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-paper);
+}
+
+.page:last-child { page-break-after: auto; }
+
+.brand { color: var(--color-brand); font-weight: 800; }
+
+.header-bar {
+  position: absolute;
+  top: 7mm;
+  left: var(--page-margin);
+  right: var(--page-margin);
+  display: flex;
+  justify-content: space-between;
+  font-size: 7.5pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  z-index: 3;
+}
+
+.footer,
+.footer-safe {
+  position: absolute;
+  left: var(--page-margin);
+  right: var(--page-margin);
+  bottom: 6mm;
+  display: flex;
+  justify-content: space-between;
+  font-size: 7pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  z-index: 3;
+}
+
+.eyebrow {
+  font-size: 7.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.h1 {
+  font-family: var(--font-display);
+  font-size: 28pt;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.05;
+}
+
+.img-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.img-contain {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: #f7f8f5;
+}
+
+/* Hero photo fills the frame edge-to-edge — no letterboxing */
+.img-hero {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* —— Spec chips (dossier column) —— */
+.spec-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3mm;
+  flex: 0 0 auto;
+}
+
+.spec-chip {
+  display: grid;
+  grid-template-columns: 9mm 1fr;
+  gap: 3.5mm;
+  align-items: center;
+  padding: 3.2mm 3.5mm;
+  background: transparent;
+  border: 1px solid var(--color-line);
+}
+
+.spec-chip-icon {
+  width: 8mm;
+  height: 8mm;
+  color: var(--color-brand);
+}
+
+.spec-chip-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.spec-chip-label {
+  font-size: 6.5pt;
+  font-weight: 300;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  line-height: 1.2;
+}
+
+.spec-chip-value {
+  font-family: var(--font-display);
+  font-size: 13pt;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-top: 0.8mm;
+}
+
+.spec-promo {
+  margin-top: auto;
+  border: 1px solid var(--color-line);
+  padding: 5mm 4.5mm;
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+  min-height: 38mm;
+}
+
+.spec-promo-icon {
+  width: 14mm;
+  height: 14mm;
+  color: var(--color-brand);
+}
+
+.spec-promo-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.spec-promo-text {
+  margin: 0;
+  font-size: 8.5pt;
+  font-weight: 300;
+  line-height: 1.45;
+  color: var(--color-ink);
+}
+
+/* —— Horizontal specs (hero foot) —— */
+.spec-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.spec-row-item {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  padding: 0 5mm;
+}
+
+.spec-row-item:first-child { padding-left: 0; }
+
+.spec-row-icon {
+  width: 7mm;
+  height: 7mm;
+  color: var(--color-brand);
+  flex-shrink: 0;
+}
+
+.spec-row-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.spec-row-label {
+  font-size: 6pt;
+  font-weight: 300;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.spec-row-value {
+  font-family: var(--font-display);
+  font-size: 11pt;
+  font-weight: 800;
+  margin-top: 0.6mm;
+}
+
+.spec-row-sep {
+  width: 0;
+  height: 10mm;
+  border-left: 1px solid var(--color-line);
+  flex-shrink: 0;
+}
+
+/* —— Action cluster: price / date / CTA | QR —— */
+.action-cluster {
+  display: flex;
+  align-items: stretch;
+  gap: 3.5mm;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+}
+
+.action-cluster-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  padding: 2.8mm 4mm;
+  min-width: 52mm;
+  gap: 1.2mm;
+  border: 1px solid var(--color-line);
+  background: #fff;
+}
+
+.action-price {
+  font-family: var(--font-display);
+  font-size: 13pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.action-date {
+  font-size: 6pt;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  text-align: center;
+  margin-bottom: 1.2mm;
+}
+
+.btn-site {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  min-height: 9.5mm;
+  padding: 0 4mm;
+  background: var(--color-brand);
+  color: #fff;
+  font-size: 7.5pt;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.action-qr-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--color-line);
+  background: #fff;
+}
+
+.qr-lg {
+  width: 26mm;
+  height: 26mm;
+  display: block;
+  object-fit: contain;
+  padding: 1.5mm;
+}
+
+.qr-compact {
+  width: 18mm;
+  height: 18mm;
+  display: block;
+  background: #fff;
+  padding: 1mm;
+  border: 1px solid var(--color-line);
+}
+
+.price-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8mm;
+}
+
+.price-inline-amount {
+  font-family: var(--font-display);
+  font-size: 15pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.price-inline-note {
+  font-size: 6.5pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}

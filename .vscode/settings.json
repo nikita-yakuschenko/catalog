@@ -1,0 +1,17 @@
+{
+  "css.styleSheets": [
+    "templates/styles/tokens.css",
+    "templates/styles/pages.css",
+    "templates/styles/layouts.css",
+    "templates/styles/catalog.css"
+  ],
+  "css.validation": {
+    "class": false,
+    "id": false
+  },
+  "css.autoValidation": "Never",
+  "html-css-class-completion.enableEmmetSupport": true,
+  "files.associations": {
+    "templates/**/*.html": "html"
+  }
+}

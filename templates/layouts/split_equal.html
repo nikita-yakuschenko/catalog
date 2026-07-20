@@ -1,0 +1,21 @@
+{% if false %}
+<link rel="stylesheet" href="../styles/tokens.css" />
+<link rel="stylesheet" href="../styles/layouts.css" />
+{% endif %}
+{% from 'partials/specs.html' import specs_block with context %}
+<div class="media">
+  <div class="media-frame">
+    {% if assets.exterior_url %}
+      <img class="img-cover" src="{{ assets.exterior_url }}" alt="{{ block.title }}" style="object-position: {{ assets.object_position }};" />
+    {% endif %}
+  </div>
+  <div class="media-frame">
+    <div class="plan-caption" style="padding: 3mm 3mm 0;">Планировочное решение</div>
+    {% if assets.plan_url %}
+      <img class="img-contain" src="{{ assets.plan_url }}" alt="План {{ block.title }}" style="height: calc(100% - 10mm);" />
+    {% endif %}
+  </div>
+</div>
+<div class="specs-wrap">
+  {{ specs_block(project) }}
+</div>

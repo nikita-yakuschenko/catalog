@@ -1,0 +1,120 @@
+{% if false %}
+<link rel="stylesheet" href="../styles/tokens.css" />
+<link rel="stylesheet" href="../styles/pages.css" />
+<link rel="stylesheet" href="../styles/layouts.css" />
+{% endif %}
+{% macro specs_row(project) %}
+<div class="spec-row">
+  <div class="spec-row-item">
+    <div class="spec-row-icon">{{ icons.area | safe }}</div>
+    <div>
+      <div class="spec-row-label">Площадь</div>
+      <div class="spec-row-value">{{ project.area | area }}</div>
+    </div>
+  </div>
+  <div class="spec-row-sep"></div>
+  <div class="spec-row-item">
+    <div class="spec-row-icon">{{ icons.dimensions | safe }}</div>
+    <div>
+      <div class="spec-row-label">Габариты</div>
+      <div class="spec-row-value">{{ project.dimensions_display or '—' }}</div>
+    </div>
+  </div>
+  <div class="spec-row-sep"></div>
+  <div class="spec-row-item">
+    <div class="spec-row-icon">{{ icons.bedrooms | safe }}</div>
+    <div>
+      <div class="spec-row-label">Спальня</div>
+      <div class="spec-row-value">{{ project.bedrooms if project.bedrooms is not none else '—' }}</div>
+    </div>
+  </div>
+  <div class="spec-row-sep"></div>
+  <div class="spec-row-item">
+    <div class="spec-row-icon">{{ icons.bathrooms | safe }}</div>
+    <div>
+      <div class="spec-row-label">Санузел</div>
+      <div class="spec-row-value">{{ project.bathrooms or '—' }}</div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro specs_block(project) %}
+<div class="spec-grid">
+  <div class="spec-chip">
+    <div class="spec-chip-icon">{{ icons.area | safe }}</div>
+    <div class="spec-chip-body">
+      <div class="spec-chip-label">Площадь</div>
+      <div class="spec-chip-value">{{ project.area | area }}</div>
+    </div>
+  </div>
+  <div class="spec-chip">
+    <div class="spec-chip-icon">{{ icons.dimensions | safe }}</div>
+    <div class="spec-chip-body">
+      <div class="spec-chip-label">Габариты</div>
+      <div class="spec-chip-value">{{ project.dimensions_display or '—' }}</div>
+    </div>
+  </div>
+  <div class="spec-chip">
+    <div class="spec-chip-icon">{{ icons.bedrooms | safe }}</div>
+    <div class="spec-chip-body">
+      <div class="spec-chip-label">Спальни</div>
+      <div class="spec-chip-value">{{ project.bedrooms if project.bedrooms is not none else '—' }}</div>
+    </div>
+  </div>
+  <div class="spec-chip">
+    <div class="spec-chip-icon">{{ icons.bathrooms | safe }}</div>
+    <div class="spec-chip-body">
+      <div class="spec-chip-label">Санузлы</div>
+      <div class="spec-chip-value">{{ project.bathrooms or '—' }}</div>
+    </div>
+  </div>
+  <div class="spec-chip">
+    <div class="spec-chip-icon">{{ icons.floors | safe }}</div>
+    <div class="spec-chip-body">
+      <div class="spec-chip-label">Этажность</div>
+      <div class="spec-chip-value">{{ project.floors or 1 }}</div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro action_cluster(project, block, variant='light') %}
+<div class="action-cluster action-cluster-{{ variant }}">
+  <div class="action-cluster-main">
+    {% if show_prices and project.price %}
+    <div class="action-price">{{ project.price | price }}</div>
+    <div class="action-date">на {{ price_actual_at }}</div>
+    {% endif %}
+    {% if show_project_links and block.project_url %}
+    <a class="btn-site" href="{{ block.project_url }}">Посмотреть проект на сайте&nbsp;↗</a>
+    {% endif %}
+  </div>
+  {% if show_project_links and block.qr_url %}
+  <div class="action-qr-wrap">
+    <img class="qr-lg" src="{{ block.qr_url }}" alt="QR" />
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro price_inline(project) %}
+{% if show_prices and project.price %}
+<div class="price-inline">
+  <span class="price-inline-amount">{{ project.price | price }}</span>
+  <span class="price-inline-note">на {{ price_actual_at }}</span>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro cta_link(block) %}
+{% if show_project_links and block.project_url %}
+<a class="btn-site" href="{{ block.project_url }}">Посмотреть проект на сайте&nbsp;↗</a>
+{% endif %}
+{% endmacro %}
+
+{% macro qr_compact(block) %}
+{% if show_project_links and block.qr_url %}
+<img class="qr-compact" src="{{ block.qr_url }}" alt="QR" />
+{% endif %}
+{% endmacro %}

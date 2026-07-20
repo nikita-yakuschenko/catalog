@@ -1,0 +1,25 @@
+[
+  {
+    "uid": "1001",
+    "title": "Модульный дом Экохаус 124",
+    "price": "5558000",
+    "descr": "Модульный дом площадью 123,1 м². Размеры: 15,0х10,2 м. Кол-во спален: 3. Кол-во санузлов: 2",
+    "gallery": [
+      {"img": "https://static.tildacdn.com/example/exterior.jpg"},
+      {"img": "https://static.tildacdn.com/example/plan.jpg"}
+    ],
+    "sort": 10,
+    "url": "/tproduct/ekohouse-124"
+  },
+  {
+    "uid": "1002",
+    "title": "Панельно-каркасный дом Шведский 95",
+    "price": 3722000,
+    "text": "Дом площадью 127,3 м2. Размеры дома: 13,3x8,2 м. Кол-во с/у: 1-2",
+    "gallery": [
+      "https://static.tildacdn.com/example/ext2.jpg",
+      "https://static.tildacdn.com/example/plan2.jpg"
+    ],
+    "sort": 20
+  }
+]

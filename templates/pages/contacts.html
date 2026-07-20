@@ -1,0 +1,48 @@
+{% if false %}
+<link rel="stylesheet" href="../styles/tokens.css" />
+<link rel="stylesheet" href="../styles/pages.css" />
+<link rel="stylesheet" href="../styles/layouts.css" />
+{% endif %}
+<section class="page contacts">
+  <div class="header-bar">
+    <span><span class="brand">AVGST</span> · Контакты</span>
+    <span>{{ '%02d'|format(total_pages) }}</span>
+  </div>
+
+  <div class="contacts-main">
+    <h1 class="h1">Связаться с нами</h1>
+    <div class="contacts-grid">
+      <div>
+        <p class="eyebrow">Авангард Строй</p>
+        <p class="contacts-site">{{ contacts.site or 'avgst.ru' }}</p>
+        {% if contacts.phone %}<p>{{ contacts.phone }}</p>{% endif %}
+        {% if contacts.email %}<p>{{ contacts.email }}</p>{% endif %}
+        {% if contacts.address %}<p>{{ contacts.address }}</p>{% endif %}
+      </div>
+      <div>
+        <p class="eyebrow">О компании</p>
+        <p class="contacts-copy">
+          Проектирование, производство и строительство модульных
+          и панельно-каркасных домов.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="legal-footer">
+    <div class="disclaimer">
+      <p>
+        Материалы каталога носят справочный характер и не являются публичной офертой
+        (ст. 437 ГК РФ). Характеристики, планировки, комплектация и стоимость приведены
+        по данным avgst.ru и актуальны на <strong>{{ generated_at }}</strong>{% if show_prices %}
+        (цены — на {{ price_actual_at }}){% endif %}.
+        Итоговые параметры и цена определяются индивидуально.
+        Визуализации могут отличаться от реализованных объектов.
+      </p>
+    </div>
+    <div class="legal-meta">
+      <span>Авангард Строй · avgst.ru</span>
+      <span>Сформирован {{ generated_at }} · {{ year }}</span>
+    </div>
+  </footer>
+</section>

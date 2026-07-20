@@ -1,0 +1,29 @@
+{% if false %}
+<link rel="stylesheet" href="../styles/tokens.css" />
+<link rel="stylesheet" href="../styles/pages.css" />
+{% endif %}
+<section class="page toc">
+  <div class="header-bar">
+    <span><span class="brand">AVGST</span> · Содержание</span>
+    <span>03</span>
+  </div>
+  <h1 class="h1" style="margin-top: 10mm;">Содержание</h1>
+  <div class="toc-columns">
+    {% set groups = {'modular': 'Модульные дома', 'panel': 'Панельно-каркасные'} %}
+    {% for tech, label in groups.items() %}
+      <div>
+        <div class="toc-group-title">{{ label }}</div>
+        {% for entry in toc_entries if entry.technology == tech %}
+          <div class="toc-row">
+            <span>{{ entry.title }}</span>
+            <span class="toc-page">{{ '%02d'|format(entry.page) }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+  <div class="footer">
+    <span>Авангард Строй · avgst.ru</span>
+    <span>Каталог проектов · {{ year }}</span>
+  </div>
+</section>
