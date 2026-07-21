@@ -164,3 +164,48 @@ pytest -q
 - `GET /api/catalogs/{id}/download`
 
 Полный список — `/docs`.
+
+## Коммерческие предложения (КП)
+
+Помимо PDF-каталогов, сервис собирает **коммерческие предложения** (A4, портрет) из:
+
+1. **Структурированного JSON** (основной сценарий для Bitrix24).
+2. **PDF-сметы** (например, `example.pdf`) — текст извлекается через [MarkItDown](https://github.com/microsoft/markitdown), при недоступности библиотеки используется PyMuPDF.
+3. **Слияния** обоих источников: поля из API/Bitrix имеют приоритет, PDF заполняет пробелы (название проекта, комплектация, цены, опции).
+
+Миграция БД:
+
+```powershell
+cd server
+$env:PYTHONPATH = (Get-Location).Path
+alembic upgrade head
+```
+
+### API
+
+| Метод | Назначение |
+|--------|------------|
+| `POST /api/proposals` | КП из JSON |
+| `POST /api/proposals/bitrix` | Вебхук Bitrix24 (заголовок `X-Bitrix-Webhook-Secret`, если задан `BITRIX_WEBHOOK_SECRET`) |
+| `POST /api/proposals/from-pdf` | `multipart`: файл PDF + опционально `payload_json` |
+| `POST /api/proposals/{id}/build` | Сборка PDF (фон) |
+| `GET /api/proposals/{id}/status` | Статус сборки |
+| `GET /api/proposals/{id}/download` | Скачать готовый PDF |
+
+Пример тела для Bitrix (`POST /api/proposals/bitrix`):
+
+```json
+{
+  "deal_id": "D_12845",
+  "project_name": "Зимний 54",
+  "package_name": "Базовая",
+  "house_price": 2768000,
+  "options": [
+    { "title": "Внешняя отделка блок-хаус", "price": 221000 }
+  ],
+  "client": { "name": "Иван Иванов", "phone": "+7..." },
+  "manager": { "name": "Менеджер", "phone": "+7..." }
+}
+```
+
+По `project_name` выполняется привязка к проекту в каталоге (для фото в КП). Результат: `output/proposals/{id}/{build_id}/proposal.pdf`.

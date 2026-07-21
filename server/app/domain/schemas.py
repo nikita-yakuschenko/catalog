@@ -9,6 +9,8 @@ from app.domain.models import (
     BuildStatus,
     CatalogStatus,
     OutputProfile,
+    ProposalSource,
+    ProposalStatus,
     QualityStatus,
     Technology,
 )
@@ -213,3 +215,62 @@ class SyncResult(BaseModel):
     updated: int
     assets_downloaded: int
     errors: list[str] = Field(default_factory=list)
+
+
+class ProposalOptionIn(BaseModel):
+    title: str
+    price: Optional[int] = None
+    selected: bool = True
+
+
+class ProposalPartyIn(BaseModel):
+    name: str = ""
+    company: str = ""
+    phone: str = ""
+    email: str = ""
+
+
+class ProposalCreate(BaseModel):
+    project_name: str = ""
+    package_name: Optional[str] = None
+    house_price: Optional[int] = None
+    currency: str = "RUB"
+    options: list[ProposalOptionIn] = Field(default_factory=list)
+    client: ProposalPartyIn = Field(default_factory=ProposalPartyIn)
+    manager: ProposalPartyIn = Field(default_factory=ProposalPartyIn)
+    notes: str = ""
+    project_id: Optional[UUID] = None
+    meta: dict[str, Any] = Field(default_factory=dict)
+
+
+class ProposalBitrixIn(ProposalCreate):
+    deal_id: str = ""
+    lead_id: Optional[str] = None
+    contact_id: Optional[str] = None
+    raw: dict[str, Any] = Field(default_factory=dict)
+
+
+class ProposalOut(ORMModel):
+    id: UUID
+    source: ProposalSource
+    external_id: str
+    status: ProposalStatus
+    project_id: Optional[UUID]
+    request_payload: dict[str, Any]
+    document: dict[str, Any]
+    source_pdf_path: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class ProposalBuildOut(ORMModel):
+    id: UUID
+    proposal_id: UUID
+    status: BuildStatus
+    stage: str
+    log: list[Any]
+    pdf_path: str
+    html_path: str
+    error_message: str
+    created_at: datetime
+    finished_at: Optional[datetime]

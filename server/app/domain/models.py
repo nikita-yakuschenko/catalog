@@ -68,6 +68,19 @@ class OutputProfile(str, enum.Enum):
     print = "print"
 
 
+class ProposalSource(str, enum.Enum):
+    api = "api"
+    bitrix = "bitrix"
+    pdf = "pdf"
+
+
+class ProposalStatus(str, enum.Enum):
+    draft = "draft"
+    building = "building"
+    ready = "ready"
+    failed = "failed"
+
+
 class HouseProject(Base):
     __tablename__ = "house_projects"
     __table_args__ = (UniqueConstraint("source", "source_uid", name="uq_project_source"),)
@@ -220,3 +233,47 @@ class Build(Base):
     finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     catalog: Mapped["Catalog"] = relationship(back_populates="builds")
+
+
+class CommercialProposal(Base):
+    __tablename__ = "commercial_proposals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source: Mapped[ProposalSource] = mapped_column(Enum(ProposalSource), default=ProposalSource.api)
+    external_id: Mapped[str] = mapped_column(String(128), default="", index=True)
+    status: Mapped[ProposalStatus] = mapped_column(Enum(ProposalStatus), default=ProposalStatus.draft)
+    project_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("house_projects.id", ondelete="SET NULL"), nullable=True
+    )
+    request_payload: Mapped[dict] = mapped_column(JsonType, default=dict)
+    document: Mapped[dict] = mapped_column(JsonType, default=dict)
+    source_pdf_path: Mapped[str] = mapped_column(String(1024), default="")
+    intake_markdown: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    project: Mapped[Optional["HouseProject"]] = relationship()
+    builds: Mapped[list["ProposalBuild"]] = relationship(
+        back_populates="proposal", cascade="all, delete-orphan", order_by="ProposalBuild.created_at.desc()"
+    )
+
+
+class ProposalBuild(Base):
+    __tablename__ = "proposal_builds"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    proposal_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("commercial_proposals.id", ondelete="CASCADE"), index=True
+    )
+    status: Mapped[BuildStatus] = mapped_column(Enum(BuildStatus), default=BuildStatus.pending)
+    stage: Mapped[str] = mapped_column(String(64), default="queued")
+    log: Mapped[list] = mapped_column(JsonType, default=list)
+    pdf_path: Mapped[str] = mapped_column(String(1024), default="")
+    html_path: Mapped[str] = mapped_column(String(1024), default="")
+    error_message: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    proposal: Mapped["CommercialProposal"] = relationship(back_populates="builds")

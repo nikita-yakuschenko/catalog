@@ -1,29 +1,30 @@
 import Link from "next/link";
+import { IconBooks, IconFolder } from "@tabler/icons-react";
+
+import { buttonVariants } from "@/components/ui/button";
+import { PageHeader } from "@/components/page-header";
+import { cn } from "@/lib/utils";
 
 export default function HomePage() {
   return (
     <div className="space-y-8">
-      <div className="max-w-2xl space-y-4">
-        <p className="text-xs font-semibold tracking-[0.2em] text-[#48B062] uppercase">
-          Publishing pipeline
-        </p>
-        <h1 className="text-4xl font-semibold tracking-tight">Сборка каталогов AVGST</h1>
-        <p className="text-[#737373] leading-relaxed">
-          Синхронизация проектов с avgst.ru, выбор состава, детерминированные композиции
-          и генерация экранного PDF в стиле корпоративного каталога.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Publishing pipeline"
+        title="Сборка каталогов AVGST"
+        description={
+          <>
+            Синхронизация проектов с avgst.ru, выбор состава, детерминированные композиции и генерация
+            экранного PDF в стиле корпоративного каталога.
+          </>
+        }
+      />
       <div className="flex flex-wrap gap-3">
-        <Link
-          href="/projects"
-          className="rounded-md bg-[#48B062] px-5 py-3 text-sm font-medium text-white"
-        >
+        <Link href="/projects" className={cn(buttonVariants({ size: "lg" }))}>
+          <IconFolder className="size-4" stroke={1.75} />
           Проекты
         </Link>
-        <Link
-          href="/catalogs/new"
-          className="rounded-md border border-[#D9D9D4] bg-white px-5 py-3 text-sm font-medium"
-        >
+        <Link href="/catalogs/new" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
+          <IconBooks className="size-4" stroke={1.75} />
           Создать каталог
         </Link>
       </div>

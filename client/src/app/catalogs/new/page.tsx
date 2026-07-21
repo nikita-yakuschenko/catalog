@@ -4,6 +4,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { api, Project } from "@/lib/api";
 
 export default function NewCatalogPage() {
@@ -47,43 +54,49 @@ export default function NewCatalogPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-semibold">Новый каталог</h1>
+      <PageHeader backHref="/catalogs" backLabel="К списку каталогов" title="Новый каталог" />
 
-      <div className="grid gap-4 rounded-lg border border-[#D9D9D4] bg-white p-5 md:grid-cols-2">
-        <label className="text-sm">
-          <span className="mb-1 block text-xs uppercase tracking-wide text-[#737373]">Название</span>
-          <input className="w-full rounded-md border border-[#D9D9D4] px-3 py-2" value={name} onChange={(e) => setName(e.target.value)} />
-        </label>
-        <label className="text-sm">
-          <span className="mb-1 block text-xs uppercase tracking-wide text-[#737373]">Заголовок</span>
-          <input className="w-full rounded-md border border-[#D9D9D4] px-3 py-2" value={title} onChange={(e) => setTitle(e.target.value)} />
-        </label>
-        <label className="text-sm md:col-span-2">
-          <span className="mb-1 block text-xs uppercase tracking-wide text-[#737373]">Подзаголовок</span>
-          <input className="w-full rounded-md border border-[#D9D9D4] px-3 py-2" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={showPrices} onChange={(e) => setShowPrices(e.target.checked)} />
-          Показывать цены
-        </label>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Параметры каталога</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="name">Название</Label>
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="title">Заголовок</Label>
+            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label htmlFor="subtitle">Подзаголовок</Label>
+            <Input id="subtitle" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+          </div>
+          <label className="flex cursor-pointer items-center gap-2 text-sm md:col-span-2">
+            <Checkbox checked={showPrices} onCheckedChange={(v) => setShowPrices(v === true)} />
+            Показывать цены
+          </label>
+        </CardContent>
+      </Card>
 
       <div className="flex flex-wrap gap-2">
-        <button onClick={() => pickFirst(modular, 10)} className="rounded-md border border-[#D9D9D4] bg-white px-3 py-2 text-sm">
+        <Button type="button" variant="outline" onClick={() => pickFirst(modular, 10)}>
           10 модульных
-        </button>
-        <button onClick={() => pickFirst(panel, 10)} className="rounded-md border border-[#D9D9D4] bg-white px-3 py-2 text-sm">
+        </Button>
+        <Button type="button" variant="outline" onClick={() => pickFirst(panel, 10)}>
           10 панельно-каркасных
-        </button>
-        <button
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => {
             const ids = [...modular.slice(0, 10), ...panel.slice(0, 10)].map((p) => p.id);
             setSelected(ids);
           }}
-          className="rounded-md border border-[#D9D9D4] bg-white px-3 py-2 text-sm"
         >
           Как в примере (10+10)
-        </button>
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -91,30 +104,28 @@ export default function NewCatalogPage() {
           ["Модульные", modular],
           ["Панельно-каркасные", panel],
         ].map(([label, list]) => (
-          <div key={label as string} className="rounded-lg border border-[#D9D9D4] bg-white p-4">
-            <h2 className="mb-3 font-semibold">{label as string}</h2>
-            <div className="max-h-[420px] space-y-2 overflow-auto">
+          <Card key={label as string}>
+            <CardHeader>
+              <CardTitle>{label as string}</CardTitle>
+            </CardHeader>
+            <CardContent className="max-h-[420px] space-y-2 overflow-auto">
               {(list as Project[]).map((p) => (
-                <label key={p.id} className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={selected.includes(p.id)} onChange={() => toggle(p.id)} />
+                <label key={p.id} className="flex cursor-pointer items-center gap-2 text-sm">
+                  <Checkbox checked={selected.includes(p.id)} onCheckedChange={() => toggle(p.id)} />
                   <span>
                     {p.short_name}
                     {p.area ? ` · ${p.area} м²` : ""}
                   </span>
                 </label>
               ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      <button
-        disabled={create.isPending || selected.length === 0}
-        onClick={() => create.mutate()}
-        className="rounded-md bg-[#48B062] px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
-      >
+      <Button disabled={create.isPending || selected.length === 0} onClick={() => create.mutate()}>
         Создать каталог ({selected.length})
-      </button>
+      </Button>
     </div>
   );
 }

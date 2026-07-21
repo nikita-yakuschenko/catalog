@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     prince_bin: str = ""
     max_asset_size_mb: int = 25
     http_timeout_sec: int = 30
+    # Skip icons / lazy placeholders when syncing (both sides must be at least this many px)
+    min_asset_edge_px: int = 128
+    # Max images per project from Tilda API + product page (slider gallery)
+    max_sync_assets_per_project: int = 24
+    bitrix_webhook_secret: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

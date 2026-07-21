@@ -27,6 +27,7 @@ export type Project = {
   short_name: string;
   area: number | null;
   dimensions_display: string | null;
+  floors: number | null;
   bedrooms: number | null;
   bathrooms: string | null;
   price: number | null;

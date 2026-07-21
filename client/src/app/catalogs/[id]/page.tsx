@@ -5,9 +5,25 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { IconDownload, IconEye, IconPlayerPlay, IconShieldCheck } from "@tabler/icons-react";
+
+import { PageHeader } from "@/components/page-header";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 const LAYOUTS = ["project_spread", "hero_plan_right", "split_equal"];
+
+const selectClass =
+  "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 export default function CatalogDetailPage() {
   const params = useParams<{ id: string }>();
@@ -62,67 +78,77 @@ export default function CatalogDetailPage() {
     },
   });
 
-  if (!data) return <p className="text-[#737373]">Загрузка…</p>;
+  if (!data) return <p className="text-muted-foreground">Загрузка…</p>;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold">{data.name}</h1>
-          <p className="text-sm text-[#737373]">
+      <PageHeader
+        backHref="/catalogs"
+        backLabel="К списку каталогов"
+        title={data.name}
+        description={
+          <>
             {data.title} · статус {data.status}
             {status?.build ? ` · сборка ${status.build.status} (${status.build.stage})` : ""}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => preflight.mutate()} className="rounded-md border border-[#D9D9D4] bg-white px-3 py-2 text-sm">
-            Preflight
-          </button>
-          <button
-            onClick={() => build.mutate()}
-            disabled={build.isPending}
-            className="rounded-md bg-[#48B062] px-3 py-2 text-sm text-white"
-          >
-            Собрать PDF
-          </button>
-          <Link href={`/catalogs/${id}/preview`} className="rounded-md border border-[#D9D9D4] bg-white px-3 py-2 text-sm">
-            Превью
-          </Link>
-          <a href={api.downloadUrl(id)} className="rounded-md border border-[#D9D9D4] bg-white px-3 py-2 text-sm">
-            Скачать PDF
-          </a>
-        </div>
-      </div>
+          </>
+        }
+        actions={
+          <>
+            <Button type="button" variant="outline" onClick={() => preflight.mutate()}>
+              <IconShieldCheck className="size-4" stroke={1.75} />
+              Preflight
+            </Button>
+            <Button type="button" onClick={() => build.mutate()} disabled={build.isPending}>
+              <IconPlayerPlay className="size-4" stroke={1.75} />
+              Собрать PDF
+            </Button>
+            <Link
+              href={`/catalogs/${id}/preview`}
+              className={cn(buttonVariants({ variant: "outline", size: "default" }))}
+            >
+              <IconEye className="size-4" stroke={1.75} />
+              Превью
+            </Link>
+            <a
+              href={api.downloadUrl(id)}
+              className={cn(buttonVariants({ variant: "outline", size: "default" }))}
+            >
+              <IconDownload className="size-4" stroke={1.75} />
+              Скачать PDF
+            </a>
+          </>
+        }
+      />
 
       {status?.build?.error_message && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           {status.build.error_message}
         </div>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-[#D9D9D4] bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-[#D9D9D4] bg-[#FAFAF8] text-xs uppercase tracking-wide text-[#737373]">
-            <tr>
-              <th className="px-4 py-3">#</th>
-              <th className="px-4 py-3">Проект</th>
-              <th className="px-4 py-3">Layout</th>
-              <th className="px-4 py-3">Override</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">#</TableHead>
+              <TableHead>Проект</TableHead>
+              <TableHead>Layout</TableHead>
+              <TableHead>Override</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {[...data.projects].sort((a, b) => a.order - b.order).map((cp, idx) => (
-              <tr key={cp.id} className="border-t border-[#EEE]">
-                <td className="px-4 py-3">{idx + 1}</td>
-                <td className="px-4 py-3">{cp.project?.short_name || cp.project_id}</td>
-                <td className="px-4 py-3">{cp.layout_variant || "—"}</td>
-                <td className="px-4 py-3">
+              <TableRow key={cp.id}>
+                <TableCell>{idx + 1}</TableCell>
+                <TableCell>{cp.project?.short_name || cp.project_id}</TableCell>
+                <TableCell>{cp.layout_variant || "—"}</TableCell>
+                <TableCell>
                   <select
                     value={cp.layout_variant_override || ""}
                     onChange={(e) =>
                       updateLayout.mutate({ projectId: cp.project_id, layout: e.target.value })
                     }
-                    className="rounded-md border border-[#D9D9D4] px-2 py-1"
+                    className={selectClass}
                   >
                     <option value="">Авто</option>
                     {LAYOUTS.map((l) => (
@@ -131,11 +157,11 @@ export default function CatalogDetailPage() {
                       </option>
                     ))}
                   </select>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

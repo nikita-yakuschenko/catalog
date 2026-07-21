@@ -22,7 +22,7 @@ from app.sources.tilda.client import (
     product_url,
 )
 from app.sources.tilda.config import TildaSource, get_tilda_sources
-from app.sources.tilda.page_images import fetch_page_images
+from app.sources.tilda.page_images import fetch_merged_image_urls
 
 
 def _text_blob(product: dict[str, Any]) -> list[str]:
@@ -160,15 +160,10 @@ async def _upsert_product(
     assets_count = 0
     if download_assets:
         urls = gallery_urls(product)
-        # Enrich from product page — Tilda Store API usually has only 2–3 images
         try:
-            page_urls = await fetch_page_images(url)
-            for img_url in page_urls:
-                if img_url not in urls:
-                    urls.append(img_url)
+            urls = await fetch_merged_image_urls(url, urls)
         except Exception:
-            pass
-        urls = urls[:8]
+            urls = urls[: settings.max_sync_assets_per_project]
 
         project_dir = Path(settings.storage_dir) / "projects" / str(project.id)
 
@@ -177,6 +172,8 @@ async def _upsert_product(
         with session.no_autoflush:
             for idx, img_url in enumerate(urls):
                 meta = await ensure_asset(img_url, project_dir, idx)
+                if meta is None:
+                    continue
                 downloaded.append(meta)
 
         assets_result = await session.execute(

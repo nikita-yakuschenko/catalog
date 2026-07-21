@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Коммерческое предложение — {{ doc.project_name }}</title>
+  <style>
+    {% include 'styles/tokens.css' %}
+    {% include 'styles/proposal.css' %}
+  </style>
+</head>
+<body>
+  <div class="page proposal-page">
+    <header class="proposal-header">
+      <div class="proposal-brand">{{ brand }}</div>
+      <div class="proposal-meta">КП от {{ generated_at }}</div>
+    </header>
+
+    <h1 class="proposal-title">{{ doc.project_name or "Проект дома" }}</h1>
+    {% if doc.package_name %}
+      <p class="proposal-package">Комплектация: <strong>{{ doc.package_name }}</strong></p>
+    {% endif %}
+
+    {% if project_image_url %}
+      <div class="proposal-hero">
+        <img src="{{ project_image_url }}" alt="" class="proposal-hero-img" />
+      </div>
+    {% endif %}
+
+    <section class="proposal-block">
+      <h2 class="proposal-h2">Стоимость</h2>
+      <table class="proposal-table">
+        <tbody>
+          <tr>
+            <td>Дом{% if doc.package_name %} ({{ doc.package_name }}){% endif %}</td>
+            <td class="proposal-num">{{ doc.house_price | price }}</td>
+          </tr>
+          {% for opt in doc.options if opt.selected %}
+          <tr>
+            <td>{{ opt.title }}</td>
+            <td class="proposal-num">{{ opt.price | price }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="proposal-total-row">
+            <td>Итого</td>
+            <td class="proposal-num">{{ doc.totals.grand | price }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    {% if doc.client.name or doc.client.company %}
+    <section class="proposal-block">
+      <h2 class="proposal-h2">Клиент</h2>
+      <p class="proposal-text">
+        {% if doc.client.company %}{{ doc.client.company }}{% endif %}
+        {% if doc.client.name %}<br />{{ doc.client.name }}{% endif %}
+        {% if doc.client.phone %}<br />{{ doc.client.phone }}{% endif %}
+        {% if doc.client.email %}<br />{{ doc.client.email }}{% endif %}
+      </p>
+    </section>
+    {% endif %}
+
+    {% if doc.manager.name %}
+    <section class="proposal-block">
+      <h2 class="proposal-h2">Менеджер</h2>
+      <p class="proposal-text">
+        {{ doc.manager.name }}
+        {% if doc.manager.phone %}<br />{{ doc.manager.phone }}{% endif %}
+        {% if doc.manager.email %}<br />{{ doc.manager.email }}{% endif %}
+      </p>
+    </section>
+    {% endif %}
+
+    {% if doc.notes %}
+    <section class="proposal-block">
+      <h2 class="proposal-h2">Примечания</h2>
+      <p class="proposal-text">{{ doc.notes }}</p>
+    </section>
+    {% endif %}
+
+    <footer class="proposal-footer">avgst.ru · модульные и панельно-каркасные дома</footer>
+  </div>
+</body>
+</html>

@@ -69,12 +69,17 @@ def analyze_image(path: Path) -> dict:
         }
 
 
+def asset_meets_min_size(width: int, height: int, min_edge: int | None = None) -> bool:
+    edge = min_edge if min_edge is not None else settings.min_asset_edge_px
+    return width >= edge and height >= edge
+
+
 async def ensure_asset(
     url: str,
     project_dir: Path,
     sort_order: int,
-) -> dict:
-    """Download asset if missing; return metadata dict for ProjectAsset."""
+) -> dict | None:
+    """Download asset if missing; return metadata dict for ProjectAsset, or None if too small."""
     project_dir.mkdir(parents=True, exist_ok=True)
     data, mime = await download_bytes(url)
     checksum = hashlib.sha256(data).hexdigest()
@@ -90,12 +95,17 @@ async def ensure_asset(
 
     try:
         meta = analyze_image(local_path)
+        if not asset_meets_min_size(meta["width"], meta["height"]):
+            local_path.unlink(missing_ok=True)
+            return None
         quality = QualityStatus.ok
         if meta["width"] < 800 or meta["height"] < 600:
             quality = QualityStatus.warning
     except Exception:
+        local_path.unlink(missing_ok=True)
         meta = {"width": 0, "height": 0, "aspect_ratio": 0.0, "dpi": None}
         quality = QualityStatus.error
+        return None
 
     asset_type = classify_gallery_index(sort_order)
     return {
