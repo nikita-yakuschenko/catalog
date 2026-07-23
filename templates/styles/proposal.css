@@ -1,118 +1,468 @@
-:root {
-  --page-width: 210mm;
-  --page-height: 297mm;
+/* Commercial proposal — catalog-grade landscape spreads */
+
+.kp-page {
+  display: flex;
+  flex-direction: column;
 }
 
-@page {
-  size: A4 portrait;
-  margin: 12mm;
+/* —— Title / cover with hero —— */
+.kp-cover {
+  padding: 0;
+  background: #111;
+  color: #fff;
 }
 
-.proposal-page {
-  width: var(--page-width);
-  min-height: var(--page-height);
-  margin: 0 auto;
-  padding: 10mm 12mm 14mm;
-  background: var(--color-paper);
-  color: var(--color-ink);
-  box-sizing: border-box;
+.kp-cover-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  height: 100%;
 }
 
-.proposal-header {
+.kp-cover-visual {
+  position: relative;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+
+.kp-cover-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.kp-cover-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(17,17,17,0.15) 0%, rgba(17,17,17,0.55) 100%);
+}
+
+.kp-cover-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14mm 14mm 12mm;
+  background:
+    linear-gradient(160deg, #121412 0%, #1c241e 48%, #152018 100%);
+}
+
+.kp-cover-brand {
+  font-size: 11pt;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--color-brand);
+}
+
+.kp-cover-kicker {
+  margin: 10mm 0 3mm;
+  font-size: 8pt;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+}
+
+.kp-cover-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 36pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  text-transform: uppercase;
+}
+
+.kp-cover-package {
+  margin: 4mm 0 0;
+  font-size: 11pt;
+  font-weight: 300;
+  color: rgba(255,255,255,0.72);
+}
+
+.kp-cover-price-block {
+  margin-top: 10mm;
+  padding: 5mm 0 0;
+  border-top: 1px solid rgba(255,255,255,0.18);
+}
+
+.kp-cover-price-label {
+  font-size: 7pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+}
+
+.kp-cover-price {
+  margin-top: 2mm;
+  font-family: var(--font-display);
+  font-size: 26pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.kp-cover-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6mm;
+  margin-top: 8mm;
+}
+
+.kp-meta-label {
+  font-size: 6.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+}
+
+.kp-meta-value {
+  margin-top: 1.5mm;
+  font-size: 10pt;
+  font-weight: 300;
+  line-height: 1.35;
+}
+
+.kp-cover-foot {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 8mm;
+  font-size: 7pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+
+/* —— Shared inner page chrome —— */
+.kp-sheet {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 10mm var(--page-margin) 10mm;
+}
+
+.kp-brand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 7.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: 5mm;
+}
+
+.kp-page-num i {
+  display: inline-block;
+  width: 8mm;
+  height: 1px;
+  background: var(--color-line);
+  margin-right: 2.5mm;
+  vertical-align: middle;
+}
+
+.kp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 8mm;
+  margin-bottom: 5mm;
+}
+
+.kp-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26pt;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  line-height: 1.05;
+}
+
+.kp-kicker {
+  margin: 2mm 0 0;
   font-size: 8pt;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
 
-.proposal-brand {
-  color: var(--color-brand);
-  font-weight: 800;
-}
-
-.proposal-title {
-  font-size: 22pt;
-  font-weight: 800;
-  margin: 0 0 4mm;
-  line-height: 1.1;
-}
-
-.proposal-package {
-  margin: 0 0 8mm;
-  font-size: 10pt;
+.kp-foot {
+  margin-top: auto;
+  padding-top: 4mm;
+  display: flex;
+  justify-content: space-between;
+  font-size: 7pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--color-muted);
 }
 
-.proposal-hero {
-  height: 70mm;
-  margin-bottom: 8mm;
+/* —— Plans page —— */
+.kp-plans-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1.55fr 0.85fr;
+  gap: 7mm;
+}
+
+.kp-plans-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+  min-height: 0;
+}
+
+.kp-plans-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: 4mm;
+  background: var(--color-bg);
   border: 1px solid var(--color-line);
+  padding: 4mm;
+}
+
+.kp-plans-grid.one { grid-template-columns: 1fr; }
+.kp-plans-grid.two { grid-template-columns: 1fr 1fr; }
+
+.kp-plan-slot {
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid var(--color-soft);
   overflow: hidden;
 }
 
-.proposal-hero-img {
+.kp-plan-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.kp-plan-empty {
+  color: var(--color-muted);
+  font-size: 10pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kp-side {
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+  min-height: 0;
+}
+
+.kp-spec-list {
+  display: grid;
+  gap: 3mm;
+}
+
+.kp-spec {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3mm;
+  align-items: baseline;
+  padding: 3.2mm 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.kp-spec-label {
+  font-size: 7pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.kp-spec-value {
+  font-family: var(--font-display);
+  font-size: 12pt;
+  font-weight: 800;
+  text-align: right;
+}
+
+.kp-note {
+  margin-top: auto;
+  padding: 5mm;
+  border: 1px solid var(--color-line);
+  background: var(--color-bg);
+}
+
+.kp-note p {
+  margin: 0;
+  font-size: 9pt;
+  font-weight: 300;
+  line-height: 1.45;
+}
+
+/* —— Gallery pages —— */
+.kp-gallery-full {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: 4mm;
+}
+
+.kp-gallery-full.solo {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.kp-gallery-full.duo {
+  grid-template-columns: 1fr 1fr;
+}
+
+.kp-gallery-full.trio {
+  grid-template-columns: 1.4fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.kp-gallery-full.trio .kp-shot:first-child {
+  grid-row: 1 / span 2;
+}
+
+.kp-shot {
+  position: relative;
+  overflow: hidden;
+  background: #111;
+  border: 1px solid var(--color-line);
+  min-height: 0;
+}
+
+.kp-shot img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-.proposal-block {
-  margin-bottom: 8mm;
-}
-
-.proposal-h2 {
-  font-size: 9pt;
-  font-weight: 800;
+.kp-shot-caption {
+  position: absolute;
+  left: 4mm;
+  bottom: 3.5mm;
+  padding: 1.5mm 3mm;
+  background: rgba(255,255,255,0.92);
+  font-size: 7pt;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-brand);
-  margin: 0 0 3mm;
+  color: var(--color-ink);
 }
 
-.proposal-table {
+/* —— Complectation / pricing —— */
+.kp-package-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1.35fr 0.85fr;
+  gap: 8mm;
+}
+
+.kp-table-wrap {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.kp-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 9.5pt;
 }
 
-.proposal-table td {
-  padding: 2.5mm 2mm;
+.kp-table th {
+  text-align: left;
+  font-size: 7pt;
+  font-weight: 300;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  padding: 0 2mm 3mm;
   border-bottom: 1px solid var(--color-line);
+}
+
+.kp-table th:last-child,
+.kp-table td:last-child {
+  text-align: right;
+}
+
+.kp-table td {
+  padding: 3.2mm 2mm;
+  border-bottom: 1px solid var(--color-soft);
+  font-size: 10pt;
+  font-weight: 300;
   vertical-align: top;
 }
 
-.proposal-table td:first-child {
-  width: 72%;
-}
-
-.proposal-num {
-  text-align: right;
+.kp-table td:last-child {
+  font-family: var(--font-display);
   font-weight: 800;
   white-space: nowrap;
 }
 
-.proposal-total-row td {
-  border-top: 2px solid var(--color-brand);
-  border-bottom: none;
+.kp-table tr.is-house td {
   font-weight: 800;
-  padding-top: 4mm;
 }
 
-.proposal-text {
-  margin: 0;
-  font-size: 9.5pt;
-  line-height: 1.45;
+.kp-table tr.is-total td {
+  border-bottom: none;
+  border-top: 2px solid var(--color-brand);
+  padding-top: 4.5mm;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13pt;
 }
 
-.proposal-footer {
-  margin-top: 10mm;
-  font-size: 7.5pt;
-  letter-spacing: 0.1em;
+.kp-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+}
+
+.kp-summary-card {
+  border: 1px solid var(--color-line);
+  padding: 5mm;
+  background: #fff;
+}
+
+.kp-summary-card.accent {
+  background: var(--color-bg);
+  border-color: var(--color-brand);
+}
+
+.kp-summary-label {
+  font-size: 7pt;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-muted);
-  text-align: center;
+}
+
+.kp-summary-value {
+  margin-top: 2mm;
+  font-family: var(--font-display);
+  font-size: 18pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.kp-summary-text {
+  margin: 2mm 0 0;
+  font-size: 9.5pt;
+  font-weight: 300;
+  line-height: 1.4;
+}
+
+.kp-cta {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 12mm;
+  background: var(--color-brand);
+  color: #fff;
+  font-size: 9pt;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }

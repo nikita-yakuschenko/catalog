@@ -1,0 +1,24 @@
+{
+  "result": {
+    "categories": [
+      {
+        "id": 163,
+        "name": "Общая воронка",
+        "sort": 500,
+        "entityTypeId": 1240,
+        "isDefault": "Y"
+      }
+    ]
+  },
+  "total": 1,
+  "time": {
+    "start": 1784672626,
+    "finish": 1784672626.682306,
+    "duration": 0.6823060512542725,
+    "processing": 0,
+    "date_start": "2026-07-22T01:23:46+03:00",
+    "date_finish": "2026-07-22T01:23:46+03:00",
+    "operating_reset_at": 1784673226,
+    "operating": 0
+  }
+}

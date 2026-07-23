@@ -60,6 +60,19 @@ npm run dev
 
 Откройте http://localhost:3000
 
+### 5. Публичный URL для тестов (cloudflared)
+
+Нужны запущенные backend (`:8000`) и frontend (`:3000`). Next проксирует `/api`, `/storage`, `/output` на backend — достаточно одного туннеля на UI.
+
+```powershell
+winget install --id Cloudflare.cloudflared -e
+cloudflared tunnel --url http://localhost:3000
+```
+
+В выводе будет URL вида `https://….trycloudflare.com`. Откройте его в браузере (или отправьте коллеге). URL меняется при каждом запуске — для разовых тестов этого достаточно.
+
+`NEXT_PUBLIC_API_URL` оставьте пустым (same-origin). Если в `.env` ещё стоит `http://localhost:8000`, уберите или закомментируйте и перезапустите `npm run dev`.
+
 ### Docker Compose (полный стек)
 
 ```powershell
@@ -76,7 +89,8 @@ docker compose up --build
 | `DATABASE_URL` | PostgreSQL async URL |
 | `TILDA_*` | storepartuid / recid разделов каталога |
 | `STORAGE_DIR` / `OUTPUT_DIR` / `TEMPLATES_DIR` | пути данных |
-| `NEXT_PUBLIC_API_URL` | URL API для клиента |
+| `NEXT_PUBLIC_API_URL` | URL API для клиента; пусто = same-origin через Next proxy |
+| `BACKEND_URL` | Куда Next проксирует `/api` (по умолчанию `http://127.0.0.1:8000`) |
 | `PRINCE_BIN` | путь к PrinceXML (опционально) |
 
 ## Синхронизация Tilda
@@ -207,5 +221,7 @@ alembic upgrade head
   "manager": { "name": "Менеджер", "phone": "+7..." }
 }
 ```
+
+Исходящее событие Bitrix (`ONCRMDYNAMICITEMADD` и т.п.) тоже принимается: сервер по `ENTITY_TYPE_ID` + `ID` дергает входящий REST (`BITRIX_REST_WEBHOOK_URL`) → `crm.item.get`, скачивает исходный файл с Диска, прогоняет через MarkItDown, собирает КП и при наличии `BITRIX_KP_FOLDER_ID` (или папки исходника) заливает PDF обратно на Диск.
 
 По `project_name` выполняется привязка к проекту в каталоге (для фото в КП). Результат: `output/proposals/{id}/{build_id}/proposal.pdf`.

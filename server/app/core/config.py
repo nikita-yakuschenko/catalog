@@ -34,6 +34,16 @@ class Settings(BaseSettings):
     # Max images per project from Tilda API + product page (slider gallery)
     max_sync_assets_per_project: int = 24
     bitrix_webhook_secret: str = ""
+    # Incoming Bitrix REST webhook base, e.g. https://xxx.bitrix24.ru/rest/1/xxxxx/
+    bitrix_rest_webhook_url: str = ""
+    # Optional: UF field codes for source PDF / result KP; Disk folder for uploads
+    bitrix_source_file_field: str = ""
+    bitrix_result_file_field: str = ""
+    bitrix_kp_folder_id: str = ""
+    # SPA "База проектов" linked via parentId{N} on commercial proposal item
+    bitrix_project_entity_type_id: int = 1212
+    # Stage STATUS_ID for «КП Готово» (crm.status.list ENTITY_ID=DYNAMIC_{type}_STAGE_{category})
+    bitrix_ready_stage_id: str = "DT1240_163:CLIENT"
 
     @property
     def cors_origin_list(self) -> list[str]:

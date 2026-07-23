@@ -1,0 +1,278 @@
+[
+  {
+    "key": "id",
+    "type": "integer",
+    "title": "ID",
+    "upperName": "ID"
+  },
+  {
+    "key": "title",
+    "type": "string",
+    "title": "Название",
+    "upperName": "TITLE"
+  },
+  {
+    "key": "xmlId",
+    "type": "string",
+    "title": "Внешний код",
+    "upperName": "XML_ID"
+  },
+  {
+    "key": "createdTime",
+    "type": "datetime",
+    "title": "Когда создан",
+    "upperName": "CREATED_TIME"
+  },
+  {
+    "key": "updatedTime",
+    "type": "datetime",
+    "title": "Когда обновлён",
+    "upperName": "UPDATED_TIME"
+  },
+  {
+    "key": "createdBy",
+    "type": "user",
+    "title": "Кем создан",
+    "upperName": "CREATED_BY"
+  },
+  {
+    "key": "updatedBy",
+    "type": "user",
+    "title": "Кем обновлён",
+    "upperName": "UPDATED_BY"
+  },
+  {
+    "key": "assignedById",
+    "type": "user",
+    "title": "Ответственный",
+    "upperName": "ASSIGNED_BY_ID"
+  },
+  {
+    "key": "opened",
+    "type": "boolean",
+    "title": "Доступно для всех",
+    "upperName": "OPENED"
+  },
+  {
+    "key": "webformId",
+    "type": "crm_webform",
+    "title": "Создано CRM-формой",
+    "upperName": "WEBFORM_ID"
+  },
+  {
+    "key": "lastCommunicationTime",
+    "type": "string",
+    "title": "Дата последней коммуникации",
+    "upperName": "LAST_COMMUNICATION_TIME"
+  },
+  {
+    "key": "begindate",
+    "type": "date",
+    "title": "Дата начала",
+    "upperName": "BEGINDATE"
+  },
+  {
+    "key": "closedate",
+    "type": "date",
+    "title": "Дата завершения",
+    "upperName": "CLOSEDATE"
+  },
+  {
+    "key": "companyId",
+    "type": "crm_company",
+    "title": "Компания",
+    "upperName": "COMPANY_ID"
+  },
+  {
+    "key": "contactId",
+    "type": "crm_contact",
+    "title": "Контакт",
+    "upperName": "CONTACT_ID"
+  },
+  {
+    "key": "contactIds",
+    "type": "crm_contact",
+    "title": "Контакты",
+    "upperName": "CONTACT_IDS"
+  },
+  {
+    "key": "contacts",
+    "type": "crm_contact",
+    "title": "Контакты",
+    "upperName": "CONTACTS"
+  },
+  {
+    "key": "observers",
+    "type": "user",
+    "title": "Наблюдатели",
+    "upperName": "OBSERVERS"
+  },
+  {
+    "key": "categoryId",
+    "type": "crm_category",
+    "title": "Воронка",
+    "upperName": "CATEGORY_ID"
+  },
+  {
+    "key": "movedTime",
+    "type": "datetime",
+    "title": "Дата изменения стадии",
+    "upperName": "MOVED_TIME"
+  },
+  {
+    "key": "movedBy",
+    "type": "user",
+    "title": "Кто изменил стадию",
+    "upperName": "MOVED_BY"
+  },
+  {
+    "key": "stageId",
+    "type": "crm_status",
+    "title": "Стадия",
+    "upperName": "STAGE_ID"
+  },
+  {
+    "key": "previousStageId",
+    "type": "crm_status",
+    "title": "Предыдущая стадия",
+    "upperName": "PREVIOUS_STAGE_ID"
+  },
+  {
+    "key": "sourceId",
+    "type": "crm_status",
+    "title": "Источник",
+    "upperName": "SOURCE_ID"
+  },
+  {
+    "key": "sourceDescription",
+    "type": "text",
+    "title": "Дополнительно об источнике",
+    "upperName": "SOURCE_DESCRIPTION"
+  },
+  {
+    "key": "currencyId",
+    "type": "crm_currency",
+    "title": "Валюта",
+    "upperName": "CURRENCY_ID"
+  },
+  {
+    "key": "isManualOpportunity",
+    "type": "boolean",
+    "title": "Режим расчёта суммы",
+    "upperName": "IS_MANUAL_OPPORTUNITY"
+  },
+  {
+    "key": "opportunity",
+    "type": "double",
+    "title": "Сумма",
+    "upperName": "OPPORTUNITY"
+  },
+  {
+    "key": "taxValue",
+    "type": "double",
+    "title": "Сумма налога",
+    "upperName": "TAX_VALUE"
+  },
+  {
+    "key": "mycompanyId",
+    "type": "crm_company",
+    "title": "Реквизиты вашей компании",
+    "upperName": "MYCOMPANY_ID"
+  },
+  {
+    "key": "lastActivityBy",
+    "type": "user",
+    "title": "Автор последней активности в таймлайне",
+    "upperName": "LAST_ACTIVITY_BY"
+  },
+  {
+    "key": "lastActivityTime",
+    "type": "datetime",
+    "title": "Последняя активность",
+    "upperName": "LAST_ACTIVITY_TIME"
+  },
+  {
+    "key": "isRecurring",
+    "type": "boolean",
+    "title": "Регулярный элемент",
+    "upperName": "IS_RECURRING"
+  },
+  {
+    "key": "parentId2",
+    "type": "crm_entity",
+    "title": "Сделка",
+    "upperName": "PARENT_ID_2"
+  },
+  {
+    "key": "parentId1146",
+    "type": "crm_entity",
+    "title": "Контакт с клиентом",
+    "upperName": "PARENT_ID_1146"
+  },
+  {
+    "key": "parentId1150",
+    "type": "crm_entity",
+    "title": "Ипотека (кредит)",
+    "upperName": "PARENT_ID_1150"
+  },
+  {
+    "key": "parentId1164",
+    "type": "crm_entity",
+    "title": "✅ Проектирование",
+    "upperName": "PARENT_ID_1164"
+  },
+  {
+    "key": "parentId1212",
+    "type": "crm_entity",
+    "title": "✅ База проектов",
+    "upperName": "PARENT_ID_1212"
+  },
+  {
+    "key": "parentId1224",
+    "type": "crm_entity",
+    "title": "⛪️ Объект",
+    "upperName": "PARENT_ID_1224"
+  },
+  {
+    "key": "parentId1236",
+    "type": "crm_entity",
+    "title": "Посадка дома на участок",
+    "upperName": "PARENT_ID_1236"
+  },
+  {
+    "key": "lastCommunicationCallTime",
+    "type": "datetime",
+    "title": "Дата последнего звонка",
+    "upperName": "LAST_COMMUNICATION_CALL_TIME"
+  },
+  {
+    "key": "lastCommunicationEmailTime",
+    "type": "datetime",
+    "title": "Дата последнего e-mail",
+    "upperName": "LAST_COMMUNICATION_EMAIL_TIME"
+  },
+  {
+    "key": "lastCommunicationImolTime",
+    "type": "datetime",
+    "title": "Дата последнего диалога в открытой линии",
+    "upperName": "LAST_COMMUNICATION_IMOL_TIME"
+  },
+  {
+    "key": "lastCommunicationWebformTime",
+    "type": "datetime",
+    "title": "Дата последнего заполнения CRM-формы",
+    "upperName": "LAST_COMMUNICATION_WEBFORM_TIME"
+  },
+  {
+    "key": "UF_CRM_129_1784636008062",
+    "type": "file",
+    "title": "Файл с исходной информацией",
+    "upperName": "UF_CRM_129_1784636008062"
+  },
+  {
+    "key": "UF_CRM_129_1784671250",
+    "type": "file",
+    "title": "Готовое КП",
+    "upperName": "UF_CRM_129_1784671250"
+  }
+]

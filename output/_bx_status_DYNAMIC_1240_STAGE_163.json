@@ -1,0 +1,75 @@
+{
+  "result": [
+    {
+      "ID": "2193",
+      "ENTITY_ID": "DYNAMIC_1240_STAGE_163",
+      "STATUS_ID": "DT1240_163:NEW",
+      "NAME": "Новый запрос КП",
+      "NAME_INIT": "Начало",
+      "SORT": "10",
+      "SYSTEM": "Y",
+      "COLOR": "#22b9ff",
+      "SEMANTICS": null,
+      "CATEGORY_ID": "163"
+    },
+    {
+      "ID": "2195",
+      "ENTITY_ID": "DYNAMIC_1240_STAGE_163",
+      "STATUS_ID": "DT1240_163:PREPARATION",
+      "NAME": "Подготовка КП",
+      "NAME_INIT": "Подготовка",
+      "SORT": "20",
+      "SYSTEM": "N",
+      "COLOR": "#88b9ff",
+      "SEMANTICS": null,
+      "CATEGORY_ID": "163"
+    },
+    {
+      "ID": "2197",
+      "ENTITY_ID": "DYNAMIC_1240_STAGE_163",
+      "STATUS_ID": "DT1240_163:CLIENT",
+      "NAME": "КП Готово",
+      "NAME_INIT": "Согласование",
+      "SORT": "30",
+      "SYSTEM": "N",
+      "COLOR": "#10e5fc",
+      "SEMANTICS": null,
+      "CATEGORY_ID": "163"
+    },
+    {
+      "ID": "2199",
+      "ENTITY_ID": "DYNAMIC_1240_STAGE_163",
+      "STATUS_ID": "DT1240_163:SUCCESS",
+      "NAME": "Успех",
+      "NAME_INIT": "Успех",
+      "SORT": "40",
+      "SYSTEM": "Y",
+      "COLOR": "#00ff00",
+      "SEMANTICS": "S",
+      "CATEGORY_ID": "163"
+    },
+    {
+      "ID": "2201",
+      "ENTITY_ID": "DYNAMIC_1240_STAGE_163",
+      "STATUS_ID": "DT1240_163:FAIL",
+      "NAME": "Провал",
+      "NAME_INIT": "Провал",
+      "SORT": "50",
+      "SYSTEM": "Y",
+      "COLOR": "#ff0000",
+      "SEMANTICS": "F",
+      "CATEGORY_ID": "163"
+    }
+  ],
+  "total": 5,
+  "time": {
+    "start": 1784672627,
+    "finish": 1784672627.115787,
+    "duration": 0.11578702926635742,
+    "processing": 0,
+    "date_start": "2026-07-22T01:23:47+03:00",
+    "date_finish": "2026-07-22T01:23:47+03:00",
+    "operating_reset_at": 1784673227,
+    "operating": 0
+  }
+}

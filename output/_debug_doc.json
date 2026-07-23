@@ -1,0 +1,76 @@
+{
+  "meta": {
+    "bitrix": {
+      "title": "Коммерческое предложение #31",
+      "item_id": 31,
+      "stage_id": "DT1240_163:NEW",
+      "warnings": [],
+      "entity_type_id": 1240,
+      "source_filename": "source.pdf",
+      "source_disk_file_id": 461475,
+      "source_parent_folder_id": null
+    }
+  },
+  "notes": "",
+  "client": {
+    "name": "Василий",
+    "email": "",
+    "phone": "+71111111111",
+    "company": ""
+  },
+  "totals": {
+    "grand": 2771000,
+    "options": 3000
+  },
+  "manager": {
+    "name": "Никита Якущенко",
+    "email": "nikita.yakuschenko@yandex.ru",
+    "phone": "+79306705970"
+  },
+  "options": [
+    {
+      "price": null,
+      "title": "Стяжка пола",
+      "selected": true
+    },
+    {
+      "price": null,
+      "title": "Закрытие цоколя ЦСП без утепления (высота 400мм)",
+      "selected": true
+    },
+    {
+      "price": null,
+      "title": "Вентиляция",
+      "selected": true
+    },
+    {
+      "price": null,
+      "title": "Стоимость дома",
+      "selected": true
+    },
+    {
+      "price": null,
+      "title": "Дополнительные услуги",
+      "selected": true
+    },
+    {
+      "price": 3000,
+      "title": "Забивные сваи 150х150хмм",
+      "selected": true
+    },
+    {
+      "price": null,
+      "title": "Внутренняя контробрешетка наружных стен - брус 45х45мм",
+      "selected": true
+    },
+    {
+      "price": null,
+      "title": "Внутренняя контробрешетка по потолку - брус 45х45мм",
+      "selected": true
+    }
+  ],
+  "currency": "RUB",
+  "house_price": 2768000,
+  "package_name": "Премиум",
+  "project_name": "Коммерческое предложение #31"
+}

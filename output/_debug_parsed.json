@@ -1,0 +1,65 @@
+{
+  "project_name": "А-фрейм 54",
+  "package_name": "Премиум",
+  "house_price": 2768000,
+  "currency": "RUB",
+  "options": [
+    {
+      "title": "Стяжка пола",
+      "price": null,
+      "selected": true
+    },
+    {
+      "title": "Закрытие цоколя ЦСП без утепления (высота 400мм)",
+      "price": null,
+      "selected": true
+    },
+    {
+      "title": "Вентиляция",
+      "price": null,
+      "selected": true
+    },
+    {
+      "title": "Стоимость дома",
+      "price": null,
+      "selected": true
+    },
+    {
+      "title": "Дополнительные услуги",
+      "price": null,
+      "selected": true
+    },
+    {
+      "title": "Забивные сваи 150х150хмм",
+      "price": 3000,
+      "selected": true
+    },
+    {
+      "title": "Внутренняя контробрешетка наружных стен - брус 45х45мм",
+      "price": null,
+      "selected": true
+    },
+    {
+      "title": "Внутренняя контробрешетка по потолку - брус 45х45мм",
+      "price": null,
+      "selected": true
+    }
+  ],
+  "client": {
+    "name": "",
+    "company": "",
+    "phone": "",
+    "email": ""
+  },
+  "manager": {
+    "name": "",
+    "phone": "",
+    "email": ""
+  },
+  "notes": "",
+  "totals": {
+    "options": 3000,
+    "grand": 2771000
+  },
+  "meta": {}
+}
