@@ -62,11 +62,11 @@ npm run dev
 
 ### 5. Публичный URL для тестов (cloudflared)
 
-Нужны запущенные backend (`:8000`) и frontend (`:3000`). Next проксирует `/api`, `/storage`, `/output` на backend — достаточно одного туннеля на UI.
+Нужны запущенные backend (`:8000`) и frontend (`:3300`). Next проксирует `/api`, `/storage`, `/output` на backend — достаточно одного туннеля на UI.
 
 ```powershell
 winget install --id Cloudflare.cloudflared -e
-cloudflared tunnel --url http://localhost:3000
+cloudflared tunnel --url http://localhost:3300
 ```
 
 В выводе будет URL вида `https://….trycloudflare.com`. Откройте его в браузере (или отправьте коллеге). URL меняется при каждом запуске — для разовых тестов этого достаточно.

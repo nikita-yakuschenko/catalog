@@ -18,21 +18,28 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # Reuse enum from 001_initial (builds.status) — do not CREATE TYPE again
+    build_status = postgresql.ENUM(
+        "pending",
+        "running",
+        "ready",
+        "failed",
+        name="buildstatus",
+        create_type=False,
+    )
+    proposal_source = postgresql.ENUM("api", "bitrix", "pdf", name="proposalsource", create_type=False)
+    proposal_status = postgresql.ENUM(
+        "draft", "building", "ready", "failed", name="proposalstatus", create_type=False
+    )
+    proposal_source.create(op.get_bind(), checkfirst=True)
+    proposal_status.create(op.get_bind(), checkfirst=True)
+
     op.create_table(
         "commercial_proposals",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column(
-            "source",
-            sa.Enum("api", "bitrix", "pdf", name="proposalsource"),
-            nullable=False,
-        ),
+        sa.Column("source", proposal_source, nullable=False),
         sa.Column("external_id", sa.String(128), nullable=False, server_default=""),
-        sa.Column(
-            "status",
-            sa.Enum("draft", "building", "ready", "failed", name="proposalstatus"),
-            nullable=False,
-            server_default="draft",
-        ),
+        sa.Column("status", proposal_status, nullable=False, server_default="draft"),
         sa.Column("project_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("house_projects.id", ondelete="SET NULL")),
         sa.Column("request_payload", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("document", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
@@ -52,11 +59,7 @@ def upgrade() -> None:
             sa.ForeignKey("commercial_proposals.id", ondelete="CASCADE"),
             nullable=False,
         ),
-        sa.Column(
-            "status",
-            sa.Enum("pending", "running", "ready", "failed", name="buildstatus", create_type=False),
-            nullable=False,
-        ),
+        sa.Column("status", build_status, nullable=False),
         sa.Column("stage", sa.String(64), nullable=False),
         sa.Column("log", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("pdf_path", sa.String(1024), nullable=False, server_default=""),
