@@ -30,67 +30,114 @@
 
 {# ========== 1. Титул ========== #}
 <section class="page kp-page kp-cover">
-  <div class="kp-cover-grid">
+  <div class="kp-cover-stack">
     <div class="kp-cover-visual">
       {% if assets.exterior_url %}
       <img src="{{ assets.exterior_url }}" alt="{{ doc.project_name }}" style="object-position: {{ assets.object_position }};" />
       {% endif %}
     </div>
     <div class="kp-cover-panel">
-      <div>
-        <div class="kp-cover-brand">AVGST</div>
-        <p class="kp-cover-kicker">Коммерческое предложение · {{ generated_at }}</p>
-        <h1 class="kp-cover-title">{{ doc.project_name or "Проект дома" }}</h1>
-        {% if doc.package_name %}
-        <p class="kp-cover-package">Комплектация «{{ doc.package_name }}»</p>
-        {% endif %}
-        <div class="kp-cover-price-block">
-          <div class="kp-cover-price-label">Итоговая стоимость</div>
-          <div class="kp-cover-price">{{ doc.totals.grand | price }}</div>
+      <div class="kp-cover-panel-main">
+        <div class="kp-cover-col kp-cover-col--logo">
+          <div class="kp-logo kp-logo--cover" aria-hidden="true">{{ logo_svg }}</div>
         </div>
-        <div class="kp-cover-meta">
-          <div>
-            <div class="kp-meta-label">Клиент</div>
-            <div class="kp-meta-value">
-              {% if doc.client.company %}{{ doc.client.company }}<br />{% endif %}
-              {{ doc.client.name or "—" }}
-              {% if doc.client.phone %}<br />{{ doc.client.phone }}{% endif %}
-            </div>
-          </div>
-          <div>
-            <div class="kp-meta-label">Менеджер</div>
-            <div class="kp-meta-value">
-              {{ doc.manager.name or "AVGST" }}
-              {% if doc.manager.phone %}<br />{{ doc.manager.phone }}{% endif %}
-              {% if doc.manager.email %}<br />{{ doc.manager.email }}{% endif %}
-            </div>
+        <div class="kp-cover-col kp-cover-col--identity">
+          <p class="kp-cover-kicker">Коммерческое предложение · {{ generated_at }}</p>
+          <h1 class="kp-cover-title">{{ doc.project_name or "Проект дома" }}</h1>
+          {% if doc.package_name %}
+          <p class="kp-cover-package">Комплектация «{{ doc.package_name }}»</p>
+          {% endif %}
+        </div>
+        <div class="kp-cover-col kp-cover-col--client">
+          <div class="kp-meta-label">Клиент</div>
+          <div class="kp-meta-value">
+            {% if doc.client.company %}{{ doc.client.company }}<br />{% endif %}
+            {{ doc.client.name or "—" }}
+            {% if doc.client.phone %}<br />{{ doc.client.phone }}{% endif %}
+            {% if doc.region_label %}<br />Регион поставки: {{ doc.region_label }}{% endif %}
           </div>
         </div>
-      </div>
-      <div class="kp-cover-foot">
-        <span>Авангард Строй</span>
-        <span>avgst.ru · {{ year }}</span>
+        <div class="kp-cover-col kp-cover-col--manager">
+          <div class="kp-meta-label">Менеджер</div>
+          <div class="kp-meta-value">
+            {{ doc.manager.name or "AVGST" }}
+            {% if doc.manager.phone %}<br />{{ doc.manager.phone }}{% endif %}
+            {% if doc.manager.email %}<br />{{ doc.manager.email }}{% endif %}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-{# ========== 2. Планировка ========== #}
+{# ========== 2. Фасады и окружение ========== #}
+{% for spread in exterior_spreads %}
 <section class="page kp-page">
   <div class="kp-sheet">
-    <div class="kp-brand-row">
-      <span>AVGST · Планировка</span>
-      <span class="kp-page-num"><i></i>02</span>
-    </div>
     <div class="kp-head">
-      <div>
-        <h1 class="kp-title">{{ doc.project_name }}</h1>
-        <p class="kp-kicker">Планировочное решение</p>
+      <h1 class="kp-title">Фасады и окружение</h1>
+      <span class="kp-page-num"><i></i>{{ '%02d'|format(spread.page_num) }}</span>
+    </div>
+    <div class="kp-gallery-full {{ spread.layout }}">
+      {% for shot in spread.shots %}
+      <div class="kp-shot">
+        <img src="{{ shot.url }}" alt="{{ shot.caption }}" />
+        {% if shot.caption %}
+        <div class="kp-shot-caption">{{ shot.caption }}</div>
+        {% endif %}
       </div>
+      {% endfor %}
+    </div>
+    <div class="kp-foot">
+      <span class="kp-foot-brand">
+        <span class="kp-logo kp-logo--foot" aria-hidden="true">{{ logo_mark_svg }}</span>
+        <span>проектирование · производство · строительство</span>
+      </span>
+      <span>{{ year }}</span>
+    </div>
+  </div>
+</section>
+{% endfor %}
+
+{# ========== 3. Интерьеры ========== #}
+{% for spread in interior_spreads %}
+<section class="page kp-page">
+  <div class="kp-sheet">
+    <div class="kp-head">
+      <h1 class="kp-title">Интерьеры</h1>
+      <span class="kp-page-num"><i></i>{{ '%02d'|format(spread.page_num) }}</span>
+    </div>
+    <div class="kp-gallery-full {{ spread.layout }}">
+      {% for shot in spread.shots %}
+      <div class="kp-shot">
+        <img src="{{ shot.url }}" alt="{{ shot.caption }}" />
+        {% if shot.caption %}
+        <div class="kp-shot-caption">{{ shot.caption }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="kp-foot">
+      <span class="kp-foot-brand">
+        <span class="kp-logo kp-logo--foot" aria-hidden="true">{{ logo_mark_svg }}</span>
+        <span>проектирование · производство · строительство</span>
+      </span>
+      <span>{{ year }}</span>
+    </div>
+  </div>
+</section>
+{% endfor %}
+
+{# ========== 4. Планировочные решения ========== #}
+<section class="page kp-page">
+  <div class="kp-sheet">
+    <div class="kp-head">
+      <h1 class="kp-title">Планировочные решения</h1>
+      <span class="kp-page-num"><i></i>{{ '%02d'|format(plans_page_num) }}</span>
     </div>
     <div class="kp-plans-body">
       <div class="kp-plans-visual">
-        <div class="kp-plans-grid {% if assets.plan_urls|length > 1 %}two{% else %}one{% endif %}">
+        <div class="kp-plans-grid one">
           {% for plan_url in assets.plan_urls %}
           <div class="kp-plan-slot">
             <img src="{{ plan_url }}" alt="План {{ loop.index }}" />
@@ -106,7 +153,7 @@
           <div class="kp-spec"><span class="kp-spec-label">Площадь</span><span class="kp-spec-value">{{ project_specs.area }}</span></div>
           {% endif %}
           {% if project_specs.dimensions %}
-          <div class="kp-spec"><span class="kp-spec-label">Габариты</span><span class="kp-spec-value">{{ project_specs.dimensions }}</span></div>
+          <div class="kp-spec"><span class="kp-spec-label">Размеры</span><span class="kp-spec-value">{{ project_specs.dimensions }}</span></div>
           {% endif %}
           {% if project_specs.floors %}
           <div class="kp-spec"><span class="kp-spec-label">Этажность</span><span class="kp-spec-value">{{ project_specs.floors }}</span></div>
@@ -120,66 +167,28 @@
           {% if doc.package_name %}
           <div class="kp-spec"><span class="kp-spec-label">Комплектация</span><span class="kp-spec-value">{{ doc.package_name }}</span></div>
           {% endif %}
-          <div class="kp-spec"><span class="kp-spec-label">Дом</span><span class="kp-spec-value">{{ doc.house_price | price }}</span></div>
-        </div>
-        <div class="kp-note">
-          <p>Планировка адаптируется под участок и сценарий проживания. Состав опций — на следующем развороте комплектации.</p>
         </div>
       </aside>
     </div>
     <div class="kp-foot">
-      <span>Авангард Строй · avgst.ru</span>
+      <span class="kp-foot-brand">
+        <span class="kp-logo kp-logo--foot" aria-hidden="true">{{ logo_mark_svg }}</span>
+        <span>проектирование · производство · строительство</span>
+      </span>
       <span>{{ year }}</span>
     </div>
   </div>
 </section>
 
-{# ========== 3+. Галерея экстерьер / интерьер ========== #}
-{% for spread in gallery_spreads %}
+{# ========== 5. Состав предложения (возможны несколько страниц) ========== #}
+{% for pkg in package_pages %}
 <section class="page kp-page">
   <div class="kp-sheet">
-    <div class="kp-brand-row">
-      <span>AVGST · {{ spread.label }}</span>
-      <span class="kp-page-num"><i></i>{{ '%02d'|format(spread.page_num) }}</span>
-    </div>
-    <div class="kp-head">
-      <div>
-        <h1 class="kp-title">{{ spread.heading }}</h1>
-        <p class="kp-kicker">{{ spread.sub }}</p>
-      </div>
-    </div>
-    <div class="kp-gallery-full {{ spread.layout }}">
-      {% for shot in spread.shots %}
-      <div class="kp-shot">
-        <img src="{{ shot.url }}" alt="{{ shot.caption }}" />
-        {% if shot.caption %}
-        <div class="kp-shot-caption">{{ shot.caption }}</div>
-        {% endif %}
-      </div>
-      {% endfor %}
-    </div>
-    <div class="kp-foot">
-      <span>Авангард Строй · avgst.ru</span>
-      <span>{{ year }}</span>
-    </div>
-  </div>
-</section>
-{% endfor %}
-
-{# ========== Комплектация ========== #}
-<section class="page kp-page">
-  <div class="kp-sheet">
-    <div class="kp-brand-row">
-      <span>AVGST · Комплектация</span>
-      <span class="kp-page-num"><i></i>{{ '%02d'|format(package_page_num) }}</span>
-    </div>
-    <div class="kp-head">
-      <div>
-        <h1 class="kp-title">Состав предложения</h1>
-        <p class="kp-kicker">
-          {% if doc.package_name %}Комплектация «{{ doc.package_name }}» · {% endif %}
-          данные из исходной сметы
-        </p>
+    <div class="kp-head kp-head--table">
+      <h1 class="kp-title">Состав предложения</h1>
+      <div class="kp-head-meta">
+        <span class="kp-brand-date">расчёт от {{ generated_at }}</span>
+        <span class="kp-page-num"><i></i>{{ '%02d'|format(pkg.page_num) }}</span>
       </div>
     </div>
     <div class="kp-package-body">
@@ -192,60 +201,90 @@
             </tr>
           </thead>
           <tbody>
+            {% if pkg.is_first %}
             <tr class="is-house">
-              <td>Дом{% if doc.package_name %} · {{ doc.package_name }}{% endif %}</td>
+              <td>Домокомплект{% if doc.package_name %} · {{ doc.package_name }}{% endif %}</td>
               <td>{{ doc.house_price | price }}</td>
             </tr>
-            {% for opt in doc.options if opt.selected %}
+            {% if pkg.show_delivery %}
+            <tr class="is-emphasis">
+              <td>Доставка</td>
+              <td class="{% if doc.delivery_included %}is-muted{% endif %}">
+                {% if doc.delivery_price %}{{ doc.delivery_price | price }}{% else %}включена в стоимость{% endif %}
+              </td>
+            </tr>
+            <tr class="is-emphasis">
+              <td>Сборка</td>
+              <td class="is-muted">включена в стоимость</td>
+            </tr>
+            {% endif %}
+            {% endif %}
+            {% for opt in pkg.options %}
             <tr>
               <td>{{ opt.title }}</td>
               <td>{{ opt.price | price }}</td>
             </tr>
             {% endfor %}
-            <tr class="is-total">
-              <td>Итого</td>
-              <td>{{ doc.totals.grand | price }}</td>
+            {% if pkg.show_summary %}
+            <tr class="is-grand">
+              <td></td>
+              <td><span class="kp-table-grand">{{ doc.totals.grand | price }}</span></td>
             </tr>
+            {% endif %}
           </tbody>
         </table>
+        {% if pkg.show_summary and doc.delivery_footnote %}
+        <p class="kp-table-note">{{ doc.delivery_footnote }}</p>
+        {% endif %}
       </div>
-      <aside class="kp-summary">
-        <div class="kp-summary-card accent">
-          <div class="kp-summary-label">Итого к оплате</div>
-          <div class="kp-summary-value">{{ doc.totals.grand | price }}</div>
-        </div>
-        <div class="kp-summary-card">
-          <div class="kp-summary-label">Клиент</div>
-          <p class="kp-summary-text">
+      {% if pkg.show_summary %}
+      <div class="kp-package-bar">
+        <div class="kp-package-bar-col">
+          <div class="kp-meta-label">Клиент</div>
+          <div class="kp-meta-value">
             {% if doc.client.company %}{{ doc.client.company }}<br />{% endif %}
             {{ doc.client.name or "—" }}
             {% if doc.client.phone %}<br />{{ doc.client.phone }}{% endif %}
-            {% if doc.client.email %}<br />{{ doc.client.email }}{% endif %}
-          </p>
+            {% if doc.region_label %}<br />Регион поставки: {{ doc.region_label }}{% endif %}
+          </div>
         </div>
-        <div class="kp-summary-card">
-          <div class="kp-summary-label">Менеджер AVGST</div>
-          <p class="kp-summary-text">
-            {{ doc.manager.name or "—" }}
+        <div class="kp-package-bar-col">
+          <div class="kp-meta-label">Менеджер</div>
+          <div class="kp-meta-value">
+            {{ doc.manager.name or "AVGST" }}
             {% if doc.manager.phone %}<br />{{ doc.manager.phone }}{% endif %}
             {% if doc.manager.email %}<br />{{ doc.manager.email }}{% endif %}
-          </p>
+          </div>
         </div>
-        {% if doc.notes %}
-        <div class="kp-summary-card">
-          <div class="kp-summary-label">Примечания</div>
-          <p class="kp-summary-text">{{ doc.notes }}</p>
+        <div class="kp-package-bar-col kp-package-bar-col--project">
+          <p class="kp-cover-kicker">Коммерческое предложение · {{ generated_at }}</p>
+          <div class="kp-package-project-name">{{ doc.project_name or "Проект дома" }}</div>
+          {% if doc.package_name %}
+          <p class="kp-cover-package">Комплектация «{{ doc.package_name }}»</p>
+          {% endif %}
+        </div>
+        {% if qr_url %}
+        <div class="kp-package-bar-col kp-package-bar-col--qr">
+          <img class="kp-qr" src="{{ qr_url }}" alt="QR-код проекта" />
         </div>
         {% endif %}
-        <div class="kp-cta">avgst.ru</div>
-      </aside>
+      </div>
+      {% endif %}
     </div>
-    <div class="kp-foot">
-      <span>Авангард Строй · проектирование · производство · строительство</span>
+    <div class="kp-foot{% if pkg.show_summary %} kp-foot--closing{% endif %}">
+      <span class="kp-foot-brand">
+        {% if pkg.show_summary %}
+        <span class="kp-logo kp-logo--foot-full" aria-hidden="true">{{ logo_svg }}</span>
+        {% else %}
+        <span class="kp-logo kp-logo--foot" aria-hidden="true">{{ logo_mark_svg }}</span>
+        {% endif %}
+        <span>проектирование · производство · строительство</span>
+      </span>
       <span>{{ year }}</span>
     </div>
   </div>
 </section>
+{% endfor %}
 
 </body>
 </html>

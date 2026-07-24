@@ -105,7 +105,9 @@ def _pick_assets(project: HouseProject, selected_ids: list) -> dict[str, Any]:
         if filtered:
             assets = filtered
     exteriors = [a for a in assets if a.type == AssetType.exterior]
-    plans = [a for a in assets if a.type == AssetType.floor_plan]
+    plans_raw = [a for a in assets if a.type == AssetType.floor_plan]
+    # Одинаковые файлы (дубли из Tilda) — один раз; primary раньше остальных
+    plans = _unique_plans(plans_raw)
     others = [a for a in assets if a.type not in (AssetType.exterior, AssetType.floor_plan)]
     primary = next((a for a in exteriors if a.is_primary), None) or (exteriors[0] if exteriors else None)
     secondary = [a for a in exteriors if a is not primary]
@@ -132,10 +134,29 @@ def _pick_assets(project: HouseProject, selected_ids: list) -> dict[str, Any]:
     }
 
 
+def _unique_plans(plans: list) -> list:
+    """Drop duplicate floor plans by checksum; keep primary first."""
+    ordered = sorted(plans, key=lambda a: (not a.is_primary, a.sort_order or 0))
+    seen: set[str] = set()
+    unique: list = []
+    for a in ordered:
+        key = (a.checksum or "").strip() or f"id:{a.id}"
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(a)
+    return unique
+
+
 def format_price(value: Optional[int]) -> str:
+    """Format money for PDF/HTML: '4 250 000 руб.' (never ₽)."""
     if value is None:
         return ""
-    return f"{value:,}".replace(",", " ") + " ₽"
+    try:
+        amount = int(value)
+    except (TypeError, ValueError):
+        return ""
+    return f"{amount:,}".replace(",", "\u00a0") + "\u00a0руб."
 
 
 def format_area(value: Optional[float]) -> str:

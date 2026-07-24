@@ -1,11 +1,20 @@
 :root {
-  --color-brand: #3b774c;
+  /* AVGST Brand System 1.0 — colors; typeface remains Gilroy for PDF */
+  --color-brand: #48b062;
+  --color-brand-hover: #44a75d;
+  --color-brand-yellow: #fcc90c;
   --color-ink: #111111;
-  --color-muted: #8a8f88;
+  --color-graphite: #242424;
+  --color-muted: #999999;
   --color-paper: #ffffff;
-  --color-bg: #f3f4f1;
-  --color-line: #d9dcd6;
-  --color-soft: #e8ebe4;
+  --color-bg: #f5f6f8;
+  --color-mist: #eef0f4;
+  --color-line: #dbdbdb;
+  --color-soft: #eef0f4;
+  --color-silver: #c9c9c9;
+  --radius-control: 6px;
+  --radius-card: 8px;
+  --radius-media: 12px;
   --page-width: 297mm;
   --page-height: 210mm;
   --page-margin: 12mm;
@@ -302,6 +311,12 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: 0.02em;
   line-height: 1;
   white-space: nowrap;
+  border-radius: var(--radius-control);
+}
+
+.action-price,
+.price-inline-amount {
+  color: var(--color-brand);
 }
 
 .action-qr-wrap {

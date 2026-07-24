@@ -19,11 +19,76 @@ _SKIP_OPTION_TITLES = {
     "дополнительные услуги",
     "дополнительно",
     "проект дома",
+    "название проекта",
     "итого",
     "итог",
     "опции",
     "услуги",
+    "позиция",
+    "стоимость",
 }
+
+_REGION_NN = "Нижегородская область"
+_REGION_MO = "Московская область"
+_REGIONS_SHOWN_ON_CLIENT = {_REGION_NN, _REGION_MO}
+
+
+def client_region_label(region: Optional[str]) -> Optional[str]:
+    """В блоке «Клиент» показываем только НН / МО; «Другое» — пусто."""
+    name = (region or "").strip()
+    return name if name in _REGIONS_SHOWN_ON_CLIENT else None
+
+
+def _coerce_money(raw: Any) -> Optional[int]:
+    if raw in (None, "", [], {}, 0, "0"):
+        return None
+    if isinstance(raw, (int, float)):
+        amount = int(raw)
+        return amount if amount > 0 else None
+    text = str(raw).strip()
+    if "|" in text:
+        text = text.split("|", 1)[0].strip()
+    text = text.replace("\u00a0", "").replace(" ", "").replace(",", ".")
+    try:
+        amount = int(round(float(text)))
+    except ValueError:
+        return None
+    return amount if amount > 0 else None
+
+
+def delivery_footnote_for_region(region: Optional[str]) -> str:
+    """Сноска, когда отдельная цена доставки не задана."""
+    name = (region or "").strip()
+    if name == _REGION_NN:
+        return "Доставка на расстояние до 50 км включена в стоимость."
+    if name == _REGION_MO:
+        return "Доставка включена в стоимость из расчёта до г. Ногинск Московской области."
+    return "Доставка включена в стоимость."
+
+
+def resolve_delivery_block(
+    *,
+    region: Optional[str] = None,
+    delivery_price: Any = None,
+) -> dict[str, Any]:
+    """Цена из Bitrix → в таблицу; пусто/0 → «включена» + региональная сноска."""
+    price = _coerce_money(delivery_price)
+    region_name = (region or "").strip() or None
+    if price:
+        return {
+            "region": region_name,
+            "delivery_price": price,
+            "delivery_included": False,
+            "delivery_footnote": None,
+            "assembly_included": True,
+        }
+    return {
+        "region": region_name,
+        "delivery_price": None,
+        "delivery_included": True,
+        "delivery_footnote": delivery_footnote_for_region(region_name),
+        "assembly_included": True,
+    }
 
 
 def _parse_price(raw: str) -> Optional[int]:
@@ -88,6 +153,12 @@ def parse_markdown(text: str) -> dict[str, Any]:
                 prices.append(p)
             continue
 
+        # Явно пустая цена в смете ("-") — не сдвигает следующие суммы
+        if line in {"-", "—", "–"}:
+            if options and options[-1].get("price") is None:
+                options[-1]["price"] = 0
+            continue
+
         if not project_name and not _looks_like_option(line):
             project_name = line
             continue
@@ -114,6 +185,11 @@ def parse_markdown(text: str) -> dict[str, Any]:
     elif not options and option_prices:
         for idx, pr in enumerate(option_prices, start=1):
             options.append({"title": f"Опция {idx}", "price": pr, "selected": True})
+
+    # Нулевая цена (из "-") не участвует в итоге как опция с суммой
+    for opt in options:
+        if opt.get("price") == 0:
+            opt["price"] = None
 
     return normalize_document(
         {
@@ -153,8 +229,20 @@ def normalize_document(data: dict[str, Any]) -> dict[str, Any]:
     if house_price is not None:
         house_price = int(house_price)
 
-    options_total = sum(int(o["price"]) for o in options if o.get("selected") and o.get("price"))
-    grand_total = (house_price or 0) + options_total
+    # Прочерк / без цены — не входит в состав и в сумму
+    options = [
+        o
+        for o in options
+        if o.get("selected") and o.get("price") is not None and int(o["price"]) > 0
+    ]
+
+    delivery = resolve_delivery_block(
+        region=data.get("region"),
+        delivery_price=data.get("delivery_price"),
+    )
+    options_total = sum(int(o["price"]) for o in options)
+    delivery_amount = delivery["delivery_price"] or 0
+    grand_total = (house_price or 0) + options_total + delivery_amount
 
     client = data.get("client") or {}
     manager = data.get("manager") or {}
@@ -163,6 +251,12 @@ def normalize_document(data: dict[str, Any]) -> dict[str, Any]:
         "project_name": (data.get("project_name") or data.get("project") or "").strip(),
         "package_name": (data.get("package_name") or data.get("package") or "").strip() or None,
         "house_price": house_price,
+        "region": delivery["region"],
+        "region_label": client_region_label(delivery["region"]),
+        "delivery_price": delivery["delivery_price"],
+        "delivery_included": delivery["delivery_included"],
+        "delivery_footnote": delivery["delivery_footnote"],
+        "assembly_included": True,
         "currency": data.get("currency") or "RUB",
         "options": options,
         "client": {
@@ -179,6 +273,7 @@ def normalize_document(data: dict[str, Any]) -> dict[str, Any]:
         "notes": (data.get("notes") or "").strip(),
         "totals": {
             "options": options_total,
+            "delivery": delivery_amount or None,
             "grand": grand_total if grand_total else None,
         },
         "meta": data.get("meta") or {},
@@ -203,7 +298,7 @@ def merge_documents(structured: dict[str, Any], parsed: dict[str, Any]) -> dict[
     elif base.get("project_name"):
         merged["project_name"] = base["project_name"]
 
-    for key in ("package_name", "currency", "notes"):
+    for key in ("package_name", "currency", "notes", "region"):
         if incoming.get(key):
             merged[key] = incoming[key]
 
@@ -212,6 +307,12 @@ def merge_documents(structured: dict[str, Any], parsed: dict[str, Any]) -> dict[
         merged["house_price"] = incoming["house_price"]
     if incoming.get("options") and not base.get("options"):
         merged["options"] = incoming["options"]
+
+    # Стоимость доставки — поле Bitrix важнее PDF-опции «доставка и сборка»
+    if "delivery_price" in structured or incoming.get("delivery_price") is not None:
+        merged["delivery_price"] = incoming.get("delivery_price")
+    if incoming.get("region"):
+        merged["region"] = incoming["region"]
 
     if any(incoming.get("client", {}).values()):
         merged["client"] = incoming["client"]

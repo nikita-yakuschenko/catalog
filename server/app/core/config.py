@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     bitrix_project_entity_type_id: int = 1212
     # Stage STATUS_ID for «КП Готово» (crm.status.list ENTITY_ID=DYNAMIC_{type}_STAGE_{category})
     bitrix_ready_stage_id: str = "DT1240_163:CLIENT"
+    # КП SPA: регион поставки + стоимость доставки (crm.item.get useOriginalUfNames=Y)
+    bitrix_region_field: str = "UF_CRM_129_1784903637"
+    bitrix_delivery_price_field: str = "UF_CRM_129_1784904416453"
 
     @property
     def cors_origin_list(self) -> list[str]:

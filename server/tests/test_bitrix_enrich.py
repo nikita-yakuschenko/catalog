@@ -1,6 +1,10 @@
-"""Unit tests for Bitrix event → payload mapping (no network)."""
-
-from app.services.bitrix_enrich import collect_file_candidates, extract_entity_ref, item_to_payload
+from app.services.bitrix_enrich import (
+    collect_file_candidates,
+    extract_entity_ref,
+    item_to_payload,
+    parse_bitrix_money,
+    resolve_region_label,
+)
 
 
 def test_extract_entity_ref_from_dynamic_event():
@@ -36,3 +40,25 @@ def test_item_to_payload_maps_title_and_opportunity():
     assert payload["house_price"] == 2768000
     assert payload["client"]["name"] == "Иван"
     assert payload["meta"]["bitrix"]["entity_type_id"] == 1240
+
+
+def test_item_to_payload_region_and_delivery_money():
+    payload = item_to_payload(
+        event={},
+        item={
+            "title": "КП",
+            "UF_CRM_129_1784903637": "4499",
+            "UF_CRM_129_1784904416453": "120000|RUB",
+        },
+        entity_type_id=1240,
+        item_id=1,
+    )
+    assert payload["region"] == "Нижегородская область"
+    assert payload["delivery_price"] == 120000
+
+
+def test_parse_bitrix_money_and_region():
+    assert parse_bitrix_money("85000|RUB") == 85000
+    assert parse_bitrix_money(0) is None
+    assert resolve_region_label("4501") == "Московская область"
+    assert resolve_region_label("Московская область") == "Московская область"

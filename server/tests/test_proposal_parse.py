@@ -106,3 +106,65 @@ def test_normalize_totals():
     )
     assert doc["totals"]["options"] == 80_000
     assert doc["totals"]["grand"] == 1_080_000
+
+
+def test_skip_project_name_header_and_dash_prices():
+    doc = normalize_document(
+        {
+            "house_price": 4_250_000,
+            "options": [
+                {"title": "Название проекта", "price": 78_000},
+                {"title": "Забивные сваи 150х150х3000мм", "price": 357_000},
+                {"title": "Отопление радиаторами", "price": None},
+                {"title": "Перегородки", "price": 0},
+            ],
+        }
+    )
+    titles = [o["title"] for o in doc["options"]]
+    assert "Название проекта" not in titles
+    assert "Отопление радиаторами" not in titles
+    assert "Перегородки" not in titles
+    assert titles == ["Забивные сваи 150х150х3000мм"]
+    assert doc["totals"]["grand"] == 4_250_000 + 357_000
+
+
+def test_delivery_included_nizhny_footnote():
+    doc = normalize_document(
+        {
+            "house_price": 4_250_000,
+            "region": "Нижегородская область",
+            "delivery_price": None,
+            "options": [],
+        }
+    )
+    assert doc["delivery_included"] is True
+    assert doc["delivery_price"] is None
+    assert "50 км" in doc["delivery_footnote"]
+    assert doc["totals"]["grand"] == 4_250_000
+
+
+def test_delivery_price_from_field_no_footnote():
+    doc = normalize_document(
+        {
+            "house_price": 4_250_000,
+            "region": "Московская область",
+            "delivery_price": 85_000,
+            "options": [{"title": "Сваи", "price": 100_000, "selected": True}],
+        }
+    )
+    assert doc["delivery_included"] is False
+    assert doc["delivery_price"] == 85_000
+    assert doc["delivery_footnote"] is None
+    assert doc["totals"]["grand"] == 4_250_000 + 100_000 + 85_000
+
+
+def test_delivery_moscow_footnote():
+    doc = normalize_document({"house_price": 1, "region": "Московская область"})
+    assert "Ногинск" in doc["delivery_footnote"]
+    assert doc["region_label"] == "Московская область"
+
+
+def test_region_label_skips_other():
+    doc = normalize_document({"house_price": 1, "region": "Другое"})
+    assert doc["region"] == "Другое"
+    assert doc["region_label"] is None

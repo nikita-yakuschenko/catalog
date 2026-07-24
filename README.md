@@ -62,16 +62,72 @@ npm run dev
 
 ### 5. Публичный URL для тестов (cloudflared)
 
-Нужны запущенные backend (`:8000`) и frontend (`:3300`). Next проксирует `/api`, `/storage`, `/output` на backend — достаточно одного туннеля на UI.
+Quick Tunnel пробрасывает локальный сервис в интернет через `*.trycloudflare.com`. Нужен для проверки UI с телефона, отправки ссылки коллеге и **вебхуков Bitrix24** на `/api/...`.
+
+#### Порядок запуска
+
+1. **Backend** — `uvicorn` на `:8000` (см. §3).
+2. **Frontend** — `npm run dev` на `:3000` (см. §4).
+3. **Туннель** — отдельный терминал, команда ниже.
+
+Next проксирует `/api`, `/storage`, `/output` на backend — **одного туннеля на UI (`:3000`) достаточно** и для браузера, и для Bitrix.
+
+#### Установка (Windows)
 
 ```powershell
 winget install --id Cloudflare.cloudflared -e
-cloudflared tunnel --url http://localhost:3300
 ```
 
-В выводе будет URL вида `https://….trycloudflare.com`. Откройте его в браузере (или отправьте коллеге). URL меняется при каждом запуске — для разовых тестов этого достаточно.
+После установки **перезапустите терминал**. Если `cloudflared` не находится:
 
-`NEXT_PUBLIC_API_URL` оставьте пустым (same-origin). Если в `.env` ещё стоит `http://localhost:8000`, уберите или закомментируйте и перезапустите `npm run dev`.
+```powershell
+$env:Path += ";$env:LOCALAPPDATA\Microsoft\WinGet\Packages\Cloudflare.cloudflared_Microsoft.Winget.Source_8wekyb3d8bbwe"
+# или полный путь:
+& "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\Cloudflare.cloudflared_Microsoft.Winget.Source_8wekyb3d8bbwe\cloudflared.exe" version
+```
+
+#### Запуск туннеля
+
+На многих сетях (офис, провайдер, VPN) **UDP/QUIC на порт 7844 заблокирован**. Без флага cloudflared минуту крутит `Failed to dial a quic connection` и только потом переключается на HTTP/2.
+
+**Сразу используйте HTTP/2:**
+
+```powershell
+cloudflared tunnel --protocol http2 --url http://localhost:3000
+```
+
+В выводе ищите строку вида:
+
+```text
+https://….trycloudflare.com
+```
+
+URL **меняется при каждом запуске** — для разовых тестов нормально. Для Bitrix укажите, например:  
+`https://….trycloudflare.com/api/proposals/bitrix`
+
+#### Переменные клиента
+
+`NEXT_PUBLIC_API_URL` оставьте **пустым** (same-origin через Next). Если в `.env` ещё стоит `http://localhost:8000` — уберите или закомментируйте и **перезапустите** `npm run dev`.
+
+#### Если туннель не поднимается
+
+| Симптом | Что делать |
+|--------|------------|
+| `cloudflared` не найден | Перезапуск терминала или PATH из блока установки выше |
+| Долгие `Failed to dial a quic connection` | Добавьте `--protocol http2` (см. выше) |
+| Pre-check: UDP FAIL, TCP PASS | Ожидаемо — QUIC недоступен, HTTP/2 работает |
+| 502 / connection refused | Backend или frontend не запущены на `:8000` / `:3000` |
+| Bitrix не бьёт в API | URL должен вести на `:3000`, не на `:8000` напрямую |
+
+#### Только API (редко)
+
+Если нужен туннель **только** на backend (без UI):
+
+```powershell
+cloudflared tunnel --protocol http2 --url http://localhost:8000
+```
+
+В Bitrix тогда URL без префикса Next: `https://….trycloudflare.com/api/proposals/bitrix`.
 
 ### Docker Compose (полный стек)
 

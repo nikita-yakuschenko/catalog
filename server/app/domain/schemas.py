@@ -234,6 +234,8 @@ class ProposalCreate(BaseModel):
     project_name: str = ""
     package_name: Optional[str] = None
     house_price: Optional[int] = None
+    region: Optional[str] = None
+    delivery_price: Optional[int] = None
     currency: str = "RUB"
     options: list[ProposalOptionIn] = Field(default_factory=list)
     client: ProposalPartyIn = Field(default_factory=ProposalPartyIn)

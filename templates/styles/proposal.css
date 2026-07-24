@@ -1,136 +1,198 @@
-/* Commercial proposal — catalog-grade landscape spreads */
+/* Commercial proposal — AVGST Brand System 1.0 (Gilroy retained) */
+
+/* PDF: прямые углы везде, без UI-скруглений */
+.kp-page,
+.kp-page * {
+  border-radius: 0 !important;
+}
 
 .kp-page {
   display: flex;
   flex-direction: column;
+  background: var(--color-bg);
 }
 
-/* —— Title / cover with hero —— */
+/* —— Cover: full-width landscape hero + bottom info band —— */
 .kp-cover {
   padding: 0;
-  background: #111;
-  color: #fff;
+  background: var(--color-bg);
+  color: var(--color-ink);
 }
 
-.kp-cover-grid {
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
+.kp-cover-stack {
+  display: flex;
+  flex-direction: column;
   height: 100%;
 }
 
 .kp-cover-visual {
+  flex: 1 1 auto;
+  min-height: 0;
   position: relative;
   overflow: hidden;
-  background: #1a1a1a;
+  background: var(--color-mist);
 }
 
 .kp-cover-visual img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
   display: block;
 }
 
-.kp-cover-visual::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(17,17,17,0.15) 0%, rgba(17,17,17,0.55) 100%);
+.kp-cover-panel {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  min-height: 32mm;
+  padding: 7mm var(--page-margin);
+  background: var(--color-paper);
+  border-top: 1px solid var(--color-brand);
 }
 
-.kp-cover-panel {
+.kp-cover-panel-main {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1.35fr 0.95fr 1.05fr;
+  gap: 0;
+  align-items: stretch;
+}
+
+.kp-cover-col {
+  position: relative;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 14mm 14mm 12mm;
-  background:
-    linear-gradient(160deg, #121412 0%, #1c241e 48%, #152018 100%);
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0 6mm;
+  border-right: none;
 }
 
-.kp-cover-brand {
-  font-size: 11pt;
-  font-weight: 800;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: var(--color-brand);
+.kp-cover-col:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 1px;
+  background: var(--color-brand);
+}
+
+.kp-cover-col:last-child {
+  padding-right: 0;
+}
+
+.kp-cover-col--logo {
+  padding-left: 0;
+  padding-right: 6mm;
+  justify-content: flex-start;
+}
+
+.kp-cover-col--identity {
+  padding-left: 7mm;
+}
+
+.kp-cover-col--client,
+.kp-cover-col--manager {
+  padding-left: 7mm;
+}
+
+/* —— Brand logos (inline SVG) —— */
+.kp-logo {
+  display: block;
+  line-height: 0;
+}
+
+.kp-logo svg {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
+.kp-logo--cover svg {
+  width: 42mm;
+  height: auto;
+}
+
+.kp-logo--row svg {
+  width: 7mm;
+  height: 7mm;
+}
+
+.kp-logo--foot svg {
+  width: 6.5mm;
+  height: 6.5mm;
+}
+
+/* Полный wordmark в футере последнего листа */
+.kp-logo--foot-full svg {
+  width: 32mm;
+  height: auto;
 }
 
 .kp-cover-kicker {
-  margin: 10mm 0 3mm;
+  margin: 0 0 1.5mm;
   font-size: 8pt;
-  font-weight: 300;
-  letter-spacing: 0.18em;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.55);
+  color: var(--color-ink);
 }
 
 .kp-cover-title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 36pt;
+  font-size: 20pt;
   font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: 1.02;
-  text-transform: uppercase;
+  line-height: 1.1;
+  color: var(--color-ink);
 }
 
 .kp-cover-package {
-  margin: 4mm 0 0;
-  font-size: 11pt;
+  margin: 1.5mm 0 0;
+  font-size: 9.5pt;
   font-weight: 300;
-  color: rgba(255,255,255,0.72);
+  color: var(--color-muted);
 }
 
-.kp-cover-price-block {
-  margin-top: 10mm;
-  padding: 5mm 0 0;
-  border-top: 1px solid rgba(255,255,255,0.18);
+.kp-qr {
+  width: 18mm;
+  height: 18mm;
+  display: block;
+  flex-shrink: 0;
+  background: #fff;
+  border: none;
+  padding: 0;
+  object-fit: contain;
 }
 
-.kp-cover-price-label {
-  font-size: 7pt;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.5);
+.kp-qr--sm {
+  width: 16mm;
+  height: 16mm;
 }
 
-.kp-cover-price {
-  margin-top: 2mm;
-  font-family: var(--font-display);
-  font-size: 26pt;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #fff;
-}
-
-.kp-cover-meta {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6mm;
-  margin-top: 8mm;
+.kp-qr--lg {
+  width: 24mm;
+  height: 24mm;
 }
 
 .kp-meta-label {
-  font-size: 6.5pt;
-  letter-spacing: 0.14em;
+  font-size: 7.5pt;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.45);
+  color: var(--color-ink);
 }
 
 .kp-meta-value {
-  margin-top: 1.5mm;
-  font-size: 10pt;
+  margin-top: 1mm;
+  font-size: 9pt;
   font-weight: 300;
   line-height: 1.35;
-}
-
-.kp-cover-foot {
-  display: flex;
-  justify-content: space-between;
-  font-size: 7pt;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
+  color: var(--color-ink);
 }
 
 /* —— Shared inner page chrome —— */
@@ -139,24 +201,59 @@
   display: flex;
   flex-direction: column;
   padding: 10mm var(--page-margin) 10mm;
+  background: var(--color-paper);
 }
 
 .kp-brand-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 7.5pt;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-muted);
   margin-bottom: 5mm;
+}
+
+.kp-brand-row-left {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  min-width: 0;
+}
+
+.kp-brand-row-right {
+  display: flex;
+  align-items: center;
+  gap: 5mm;
+  flex-shrink: 0;
+}
+
+.kp-brand-row-label {
+  font-size: 8.5pt;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.kp-brand-date {
+  font-size: 8pt;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.kp-page-num {
+  font-size: 8.5pt;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink);
 }
 
 .kp-page-num i {
   display: inline-block;
   width: 8mm;
   height: 1px;
-  background: var(--color-line);
+  background: var(--color-brand);
   margin-right: 2.5mm;
   vertical-align: middle;
 }
@@ -164,38 +261,65 @@
 .kp-head {
   display: flex;
   justify-content: space-between;
-  align-items: end;
+  align-items: baseline;
   gap: 8mm;
   margin-bottom: 5mm;
+  padding-bottom: 3mm;
+  border-bottom: 1px solid var(--color-brand);
+}
+
+/* Шапка состава стыкуется с таблицей: одна полоса заголовков между двумя линиями */
+.kp-head--table {
+  margin-bottom: 0;
+  padding-bottom: 3mm;
+}
+
+.kp-head-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 5mm;
+  flex-shrink: 0;
 }
 
 .kp-title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 26pt;
+  font-size: 24pt;
   font-weight: 800;
   letter-spacing: -0.015em;
-  text-transform: uppercase;
-  line-height: 1.05;
+  line-height: 1.08;
+  color: var(--color-ink);
 }
 
 .kp-kicker {
   margin: 2mm 0 0;
-  font-size: 8pt;
-  letter-spacing: 0.14em;
+  font-size: 8.5pt;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-muted);
+  color: var(--color-ink);
 }
 
 .kp-foot {
   margin-top: auto;
   padding-top: 4mm;
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
-  font-size: 7pt;
-  letter-spacing: 0.1em;
+  align-items: center;
+  border-top: 1px solid var(--color-brand);
+  font-size: 8pt;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-muted);
+  color: var(--color-ink);
+}
+
+.kp-foot-brand {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+  color: var(--color-ink);
 }
 
 /* —— Plans page —— */
@@ -232,8 +356,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
-  border: 1px solid var(--color-soft);
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
   overflow: hidden;
 }
 
@@ -246,8 +370,7 @@
 .kp-plan-empty {
   color: var(--color-muted);
   font-size: 10pt;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .kp-side {
@@ -259,7 +382,7 @@
 
 .kp-spec-list {
   display: grid;
-  gap: 3mm;
+  gap: 0;
 }
 
 .kp-spec {
@@ -272,10 +395,11 @@
 }
 
 .kp-spec-label {
-  font-size: 7pt;
-  letter-spacing: 0.12em;
+  font-size: 8pt;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-muted);
+  color: var(--color-ink);
 }
 
 .kp-spec-value {
@@ -283,6 +407,7 @@
   font-size: 12pt;
   font-weight: 800;
   text-align: right;
+  color: var(--color-ink);
 }
 
 .kp-note {
@@ -297,6 +422,7 @@
   font-size: 9pt;
   font-weight: 300;
   line-height: 1.45;
+  color: var(--color-ink);
 }
 
 /* —— Gallery pages —— */
@@ -313,7 +439,9 @@
 }
 
 .kp-gallery-full.duo {
-  grid-template-columns: 1fr 1fr;
+  /* Два горизонтальных кадра друг под другом — без боковой «растяжки» */
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
 }
 
 .kp-gallery-full.trio {
@@ -328,7 +456,7 @@
 .kp-shot {
   position: relative;
   overflow: hidden;
-  background: #111;
+  background: var(--color-mist);
   border: 1px solid var(--color-line);
   min-height: 0;
 }
@@ -337,6 +465,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
   display: block;
 }
 
@@ -344,10 +473,13 @@
   position: absolute;
   left: 4mm;
   bottom: 3.5mm;
-  padding: 1.5mm 3mm;
-  background: rgba(255,255,255,0.92);
-  font-size: 7pt;
-  letter-spacing: 0.12em;
+  padding: 1.8mm 3.2mm;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--color-line);
+  border-left: 1.5px solid var(--color-brand);
+  font-size: 8pt;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-ink);
 }
@@ -356,12 +488,14 @@
 .kp-package-body {
   flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-columns: 1.35fr 0.85fr;
-  gap: 8mm;
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+  overflow: hidden;
 }
 
 .kp-table-wrap {
+  flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
 }
@@ -373,13 +507,14 @@
 
 .kp-table th {
   text-align: left;
-  font-size: 7pt;
-  font-weight: 300;
-  letter-spacing: 0.14em;
+  font-size: 8pt;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-muted);
-  padding: 0 2mm 3mm;
-  border-bottom: 1px solid var(--color-line);
+  color: var(--color-ink);
+  padding: 2.8mm 2mm;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--color-brand);
 }
 
 .kp-table th:last-child,
@@ -388,81 +523,150 @@
 }
 
 .kp-table td {
-  padding: 3.2mm 2mm;
+  padding: 2.4mm 2mm;
   border-bottom: 1px solid var(--color-soft);
   font-size: 10pt;
   font-weight: 300;
   vertical-align: top;
+  color: var(--color-ink);
 }
 
 .kp-table td:last-child {
   font-family: var(--font-display);
   font-weight: 800;
   white-space: nowrap;
+  color: var(--color-ink);
 }
 
 .kp-table tr.is-house td {
   font-weight: 800;
 }
 
-.kp-table tr.is-total td {
-  border-bottom: none;
-  border-top: 2px solid var(--color-brand);
-  padding-top: 4.5mm;
-  font-family: var(--font-display);
+.kp-table tr.is-house td:last-child {
+  color: var(--color-ink);
+  font-size: 11pt;
+}
+
+.kp-table tr.is-emphasis td {
   font-weight: 800;
-  font-size: 13pt;
+  font-family: var(--font-display);
 }
 
-.kp-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 4mm;
-}
-
-.kp-summary-card {
-  border: 1px solid var(--color-line);
-  padding: 5mm;
-  background: #fff;
-}
-
-.kp-summary-card.accent {
-  background: var(--color-bg);
-  border-color: var(--color-brand);
-}
-
-.kp-summary-label {
-  font-size: 7pt;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.kp-table td.is-muted {
+  font-family: var(--font-body, var(--font-display));
+  font-weight: 300;
+  font-size: 9pt;
   color: var(--color-muted);
+  white-space: normal;
 }
 
-.kp-summary-value {
-  margin-top: 2mm;
+.kp-table tr.is-grand td {
+  border-bottom: none;
+  padding-top: 5mm;
+  vertical-align: middle;
+}
+
+.kp-table tr.is-grand td:last-child {
+  text-align: right;
+}
+
+.kp-table-grand {
+  display: inline-block;
   font-family: var(--font-display);
   font-size: 18pt;
   font-weight: 800;
   letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--color-brand);
+  white-space: nowrap;
 }
 
-.kp-summary-text {
-  margin: 2mm 0 0;
-  font-size: 9.5pt;
+.kp-table-note {
+  margin: 3mm 0 0;
+  font-size: 8pt;
   font-weight: 300;
   line-height: 1.4;
+  color: var(--color-muted);
 }
 
-.kp-cta {
-  margin-top: auto;
+/* Подвал состава: короткие разделители, проект как на титуле */
+.kp-package-bar {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1.35fr auto;
+  align-items: stretch;
+  min-height: 24mm;
+  padding: 5mm 0 3mm;
+  border-top: 1px solid var(--color-brand);
+}
+
+.kp-package-bar-col {
+  position: relative;
+  min-width: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 12mm;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0 6mm;
+}
+
+.kp-package-bar-col:first-child {
+  padding-left: 0;
+}
+
+.kp-package-bar-col:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 1px;
   background: var(--color-brand);
-  color: #fff;
-  font-size: 9pt;
+}
+
+.kp-package-bar-col .kp-meta-label {
+  margin: 0;
+}
+
+.kp-package-bar-col .kp-meta-value {
+  margin-top: 1.5mm;
+}
+
+.kp-package-bar-col--project .kp-cover-kicker {
+  margin: 0 0 1.5mm;
+}
+
+.kp-package-project-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18pt;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--color-ink);
+}
+
+.kp-package-bar-col--project .kp-cover-package {
+  margin-top: 1.5mm;
+}
+
+.kp-package-bar-col--qr {
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+  padding: 2mm 0 2mm 6mm;
+}
+
+.kp-package-bar-col--qr .kp-qr {
+  width: 16mm;
+  height: 16mm;
+}
+
+.kp-foot--closing {
+  padding-top: 3.5mm;
+}
+
+.kp-foot--closing .kp-foot-brand {
+  gap: 4mm;
+  color: var(--color-ink);
 }

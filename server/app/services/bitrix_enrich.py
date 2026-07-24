@@ -43,6 +43,66 @@ def _as_int(value: Any) -> Optional[int]:
         return None
 
 
+def _item_field(item: dict[str, Any], *candidates: str) -> Any:
+    """Read UF by original (UF_CRM_…) or camelCase (ufCrm…) name."""
+    for key in candidates:
+        if key in item and item[key] not in (None, "", []):
+            return item[key]
+    lower_map = {str(k).lower(): v for k, v in item.items()}
+    for key in candidates:
+        value = lower_map.get(key.lower())
+        if value not in (None, "", []):
+            return value
+    return None
+
+
+# Регион поставки (строительства) — enum ID → подпись
+_REGION_BY_ID = {
+    "4499": "Нижегородская область",
+    "4501": "Московская область",
+    "4503": "Другое",
+}
+
+
+def parse_bitrix_money(raw: Any) -> Optional[int]:
+    """Bitrix money UF: '150000|RUB', {'amount': …}, or plain number → rubles int."""
+    if raw in (None, "", [], {}, 0, "0"):
+        return None
+    if isinstance(raw, dict):
+        raw = raw.get("amount") or raw.get("VALUE") or raw.get("value") or raw.get("sum")
+    text = str(raw).strip()
+    if "|" in text:
+        text = text.split("|", 1)[0].strip()
+    text = text.replace(" ", "").replace("\u00a0", "").replace(",", ".")
+    try:
+        amount = float(text)
+    except ValueError:
+        return None
+    if amount <= 0:
+        return None
+    return int(round(amount))
+
+
+def resolve_region_label(raw: Any) -> Optional[str]:
+    """Map Bitrix enumeration id/value to region title."""
+    if raw in (None, "", [], {}):
+        return None
+    if isinstance(raw, list) and raw:
+        raw = raw[0]
+    if isinstance(raw, dict):
+        raw = raw.get("value") or raw.get("VALUE") or raw.get("id") or raw.get("ID")
+    text = _as_str(raw)
+    if not text:
+        return None
+    if text in _REGION_BY_ID:
+        return _REGION_BY_ID[text]
+    low = text.lower()
+    for label in _REGION_BY_ID.values():
+        if label.lower() == low:
+            return label
+    return text
+
+
 def _dig(data: dict[str, Any], *path: str) -> Any:
     cur: Any = data
     for key in path:
@@ -285,6 +345,13 @@ def item_to_payload(
         except ValueError:
             house_price = None
 
+    region_field = settings.bitrix_region_field.strip()
+    delivery_field = settings.bitrix_delivery_price_field.strip()
+    region_keys = [region_field, "ufCrm129_1784903637", "UF_CRM_129_1784903637"]
+    delivery_keys = [delivery_field, "ufCrm129_1784904416453", "UF_CRM_129_1784904416453"]
+    region = resolve_region_label(_item_field(item, *[k for k in region_keys if k]))
+    delivery_price = parse_bitrix_money(_item_field(item, *[k for k in delivery_keys if k]))
+
     currency = _as_str(item.get("currencyId") or item.get("CURRENCY_ID") or "RUB") or "RUB"
     notes = _as_str(item.get("comments") or item.get("COMMENTS") or "")
 
@@ -302,6 +369,8 @@ def item_to_payload(
         "project_name": project_name,
         "package_name": _as_str(package_name) or None,
         "house_price": house_price,
+        "region": region,
+        "delivery_price": delivery_price,
         "currency": currency,
         "notes": notes,
         "options": [],
@@ -317,6 +386,8 @@ def item_to_payload(
                 "parent_project_id": _as_int(item.get(parent_key) or linked.get("id")),
                 "parent_project_title": linked_title or None,
                 "assigned_by_id": _as_int(item.get("assignedById") or item.get("ASSIGNED_BY_ID")),
+                "region": region,
+                "delivery_price": delivery_price,
             }
         },
         "raw": {"event": event, "item": item, "linked_project": linked or None},
@@ -533,7 +604,7 @@ async def upload_proposal_pdf(
         except Exception as exc:
             result["manager_lookup_error"] = str(exc)
 
-    amount_text = f"{int(opportunity):,}".replace(",", " ") + " ₽" if opportunity is not None else "—"
+    amount_text = f"{int(opportunity):,}".replace(",", " ") + " руб." if opportunity is not None else "—"
     title = project_name.strip() or f"элемент #{item_id}"
     notify_message = (
         f"КП готово: [b]{title}[/b]\n"
