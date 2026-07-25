@@ -14,8 +14,14 @@ from app.core.auth import require_user
 from app.core.config import settings
 from app.core.db import SessionLocal, get_db
 from app.domain.models import BuildStatus, CommercialProposal, ProposalBuild, ProposalSource
-from app.domain.schemas import ProposalBitrixIn, ProposalBuildOut, ProposalCreate, ProposalOut
-from app.services.bitrix_enrich import enrich_bitrix_event, extract_entity_ref
+from app.domain.schemas import (
+    ProposalBitrixIn,
+    ProposalBuildOut,
+    ProposalCreate,
+    ProposalListItem,
+    ProposalOut,
+)
+from app.services.bitrix_enrich import enrich_bitrix_event, extract_entity_ref, set_item_stage
 from app.services.proposal_build import run_proposal_build
 from app.services.proposal_service import create_proposal
 
@@ -29,6 +35,132 @@ def _verify_bitrix_secret(x_bitrix_webhook_secret: str | None = Header(default=N
         return
     if x_bitrix_webhook_secret != secret:
         raise HTTPException(401, "Неверный секрет вебхука Bitrix")
+
+
+def _proposal_list_item(proposal: CommercialProposal, build: ProposalBuild | None) -> ProposalListItem:
+    doc = proposal.document if isinstance(proposal.document, dict) else {}
+    client = doc.get("client") if isinstance(doc.get("client"), dict) else {}
+    manager = doc.get("manager") if isinstance(doc.get("manager"), dict) else {}
+    totals = doc.get("totals") if isinstance(doc.get("totals"), dict) else {}
+    pdf_path = (build.pdf_path if build else "") or ""
+    has_pdf = bool(pdf_path) and Path(pdf_path).exists() and (build.status == BuildStatus.ready if build else False)
+    return ProposalListItem(
+        id=proposal.id,
+        external_id=proposal.external_id or "",
+        source=proposal.source,
+        status=proposal.status,
+        project_name=str(doc.get("project_name") or ""),
+        client_name=str(client.get("name") or client.get("company") or ""),
+        manager_name=str(manager.get("name") or ""),
+        grand_total=totals.get("grand") if totals.get("grand") is not None else doc.get("house_price"),
+        created_at=proposal.created_at,
+        updated_at=proposal.updated_at,
+        build_status=build.status.value if build else None,
+        has_pdf=has_pdf,
+    )
+
+
+@router.get("/proposals", response_model=list[ProposalListItem], dependencies=[Depends(require_user)])
+async def list_proposals(db: AsyncSession = Depends(get_db)) -> list[ProposalListItem]:
+    result = await db.execute(select(CommercialProposal).order_by(CommercialProposal.created_at.desc()))
+    proposals = list(result.scalars().all())
+    if not proposals:
+        return []
+
+    ids = [p.id for p in proposals]
+    builds_result = await db.execute(
+        select(ProposalBuild)
+        .where(ProposalBuild.proposal_id.in_(ids))
+        .order_by(ProposalBuild.created_at.desc())
+    )
+    latest_by_proposal: dict[Any, ProposalBuild] = {}
+    for build in builds_result.scalars().all():
+        latest_by_proposal.setdefault(build.proposal_id, build)
+
+    return [_proposal_list_item(p, latest_by_proposal.get(p.id)) for p in proposals]
+
+
+@router.post("/proposals", response_model=ProposalOut, dependencies=[Depends(require_user)])
+async def create_proposal_api(
+    payload: ProposalCreate, db: AsyncSession = Depends(get_db)
+) -> CommercialProposal:
+    return await create_proposal(db, payload, source=ProposalSource.api)
+
+
+@router.post("/proposals/bitrix")
+async def create_proposal_bitrix(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    _: None = Depends(_verify_bitrix_secret),
+):
+    raw_data = await _read_bitrix_payload(request)
+    entity_type_id, item_id = extract_entity_ref(raw_data)
+    expected = int(settings.bitrix_kp_entity_type_id or 0)
+    if expected and entity_type_id != expected:
+        logger.info(
+            "bitrix webhook ignored: entityTypeId=%s item_id=%s (want KP=%s)",
+            entity_type_id,
+            item_id,
+            expected,
+        )
+        # 200 so Bitrix does not retry; no DB / MarkItDown / build
+        return {
+            "status": "ignored",
+            "reason": "unsupported_smart_process",
+            "entity_type_id": entity_type_id,
+            "item_id": item_id,
+            "expected_entity_type_id": expected,
+        }
+
+    # Сразу «Подготовка КП», пока идёт парсинг/сборка
+    prep_stage = settings.bitrix_prep_stage_id.strip()
+    if prep_stage and entity_type_id and item_id:
+        try:
+            await set_item_stage(
+                entity_type_id=int(entity_type_id),
+                item_id=int(item_id),
+                stage_id=prep_stage,
+            )
+        except Exception as exc:
+            logger.warning("bitrix prep stage failed entity=%s id=%s: %s", entity_type_id, item_id, exc)
+
+    enrichment = await enrich_bitrix_event(raw_data)
+    try:
+        payload = ProposalBitrixIn.model_validate(enrichment.payload)
+    except ValidationError as exc:
+        logger.warning("bitrix webhook validation failed: %s", exc.errors())
+        raise HTTPException(422, {"detail": exc.errors(), "received": enrichment.payload}) from exc
+
+    external_id = payload.deal_id or payload.lead_id or ""
+    body = payload.model_dump()
+    if enrichment.warnings:
+        body.setdefault("meta", {}).setdefault("bitrix", {})["warnings"] = enrichment.warnings
+
+    logger.info(
+        "bitrix webhook accepted deal_id=%s project_name=%s file=%s warnings=%s",
+        external_id,
+        payload.project_name,
+        enrichment.pdf_filename if enrichment.pdf_bytes else None,
+        enrichment.warnings,
+    )
+    proposal = await create_proposal(
+        db,
+        payload,
+        source=ProposalSource.bitrix,
+        external_id=str(external_id),
+        request_payload=body,
+        pdf_bytes=enrichment.pdf_bytes,
+        pdf_filename=enrichment.pdf_filename,
+    )
+
+    # Kick off KP PDF build when we have enough to render (or even without — assembler handles empty).
+    build = ProposalBuild(proposal_id=proposal.id, status=BuildStatus.pending, stage="queued")
+    db.add(build)
+    await db.commit()
+    await db.refresh(build)
+    background_tasks.add_task(_background_proposal_build, build.id)
+    return proposal
 
 
 def _expand_form_keys(flat: dict[str, Any]) -> dict[str, Any]:
@@ -77,83 +209,6 @@ async def _read_bitrix_payload(request: Request) -> dict[str, Any]:
 async def _background_proposal_build(build_id: UUID) -> None:
     async with SessionLocal() as session:
         await run_proposal_build(session, build_id)
-
-
-@router.get("/proposals", response_model=list[ProposalOut], dependencies=[Depends(require_user)])
-async def list_proposals(db: AsyncSession = Depends(get_db)) -> list[CommercialProposal]:
-    result = await db.execute(select(CommercialProposal).order_by(CommercialProposal.created_at.desc()))
-    return list(result.scalars().all())
-
-
-@router.post("/proposals", response_model=ProposalOut, dependencies=[Depends(require_user)])
-async def create_proposal_api(
-    payload: ProposalCreate, db: AsyncSession = Depends(get_db)
-) -> CommercialProposal:
-    return await create_proposal(db, payload, source=ProposalSource.api)
-
-
-@router.post("/proposals/bitrix")
-async def create_proposal_bitrix(
-    request: Request,
-    background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
-    _: None = Depends(_verify_bitrix_secret),
-):
-    raw_data = await _read_bitrix_payload(request)
-    entity_type_id, item_id = extract_entity_ref(raw_data)
-    expected = int(settings.bitrix_kp_entity_type_id or 0)
-    if expected and entity_type_id != expected:
-        logger.info(
-            "bitrix webhook ignored: entityTypeId=%s item_id=%s (want KP=%s)",
-            entity_type_id,
-            item_id,
-            expected,
-        )
-        # 200 so Bitrix does not retry; no DB / MarkItDown / build
-        return {
-            "status": "ignored",
-            "reason": "unsupported_smart_process",
-            "entity_type_id": entity_type_id,
-            "item_id": item_id,
-            "expected_entity_type_id": expected,
-        }
-
-    enrichment = await enrich_bitrix_event(raw_data)
-    try:
-        payload = ProposalBitrixIn.model_validate(enrichment.payload)
-    except ValidationError as exc:
-        logger.warning("bitrix webhook validation failed: %s", exc.errors())
-        raise HTTPException(422, {"detail": exc.errors(), "received": enrichment.payload}) from exc
-
-    external_id = payload.deal_id or payload.lead_id or ""
-    body = payload.model_dump()
-    if enrichment.warnings:
-        body.setdefault("meta", {}).setdefault("bitrix", {})["warnings"] = enrichment.warnings
-
-    logger.info(
-        "bitrix webhook accepted deal_id=%s project_name=%s file=%s warnings=%s",
-        external_id,
-        payload.project_name,
-        enrichment.pdf_filename if enrichment.pdf_bytes else None,
-        enrichment.warnings,
-    )
-    proposal = await create_proposal(
-        db,
-        payload,
-        source=ProposalSource.bitrix,
-        external_id=str(external_id),
-        request_payload=body,
-        pdf_bytes=enrichment.pdf_bytes,
-        pdf_filename=enrichment.pdf_filename,
-    )
-
-    # Kick off KP PDF build when we have enough to render (or even without — assembler handles empty).
-    build = ProposalBuild(proposal_id=proposal.id, status=BuildStatus.pending, stage="queued")
-    db.add(build)
-    await db.commit()
-    await db.refresh(build)
-    background_tasks.add_task(_background_proposal_build, build.id)
-    return proposal
 
 
 @router.post("/proposals/from-pdf", response_model=ProposalOut, dependencies=[Depends(require_user)])

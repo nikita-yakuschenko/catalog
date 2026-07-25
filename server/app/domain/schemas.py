@@ -267,6 +267,23 @@ class ProposalOut(ORMModel):
     updated_at: datetime
 
 
+class ProposalListItem(BaseModel):
+    """Лёгкая строка таблицы UI «Коммерческие предложения»."""
+
+    id: UUID
+    external_id: str
+    source: ProposalSource
+    status: ProposalStatus
+    project_name: str = ""
+    client_name: str = ""
+    manager_name: str = ""
+    grand_total: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    build_status: Optional[str] = None
+    has_pdf: bool = False
+
+
 class ProposalBuildOut(ORMModel):
     id: UUID
     proposal_id: UUID
@@ -277,4 +294,4 @@ class ProposalBuildOut(ORMModel):
     html_path: str
     error_message: str
     created_at: datetime
-    finished_at: Optional[datetime]
+    finished_at: Optional[datetime] = None

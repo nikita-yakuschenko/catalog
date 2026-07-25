@@ -104,12 +104,29 @@ export type Build = {
   preflight_report: Record<string, unknown>;
 };
 
+export type ProposalListItem = {
+  id: string;
+  external_id: string;
+  source: string;
+  status: string;
+  project_name: string;
+  client_name: string;
+  manager_name: string;
+  grand_total: number | null;
+  created_at: string;
+  updated_at: string;
+  build_status: string | null;
+  has_pdf: boolean;
+};
+
 export const api = {
   authStatus: () => request<AuthStatus>("/api/auth/status"),
   me: () => request<AuthUser>("/api/auth/me"),
   logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
   loginUrl: () => `${API_URL}/api/auth/bitrix/login`,
   sync: () => request<Record<string, unknown>>("/api/sync/tilda", { method: "POST" }),
+  proposals: () => request<ProposalListItem[]>("/api/proposals"),
+  proposalDownloadUrl: (id: string) => `${API_URL}/api/proposals/${id}/download`,
   projects: (params?: { technology?: string; q?: string }) => {
     const qs = new URLSearchParams();
     if (params?.technology) qs.set("technology", params.technology);

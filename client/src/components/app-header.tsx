@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconBooks, IconFolder, IconLogout, IconPlus, IconSparkles } from "@tabler/icons-react";
+import { IconBooks, IconFileText, IconFolder, IconLogout, IconPlus, IconSparkles } from "@tabler/icons-react";
 
 import { useAuth } from "@/components/auth-provider";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 const nav = [
   { href: "/projects", label: "Проекты", icon: IconFolder },
+  { href: "/proposals", label: "Коммерческие предложения", icon: IconFileText },
   { href: "/catalogs", label: "Каталоги", icon: IconBooks },
   { href: "/catalogs/new", label: "Новый каталог", icon: IconPlus },
 ] as const;

@@ -568,6 +568,28 @@ async def enrich_bitrix_event(event: dict[str, Any]) -> BitrixEnrichment:
     )
 
 
+async def set_item_stage(
+    *,
+    entity_type_id: int,
+    item_id: int,
+    stage_id: str,
+) -> dict[str, Any]:
+    """Move SPA item to a pipeline stage (e.g. Подготовка КП)."""
+    stage = (stage_id or "").strip()
+    if not stage:
+        return {"skipped": True, "reason": "empty stage"}
+    if not settings.bitrix_rest_webhook_url.strip():
+        return {"skipped": True, "reason": "no webhook url"}
+    client = BitrixRestClient()
+    updated = await client.update_item_fields(
+        int(entity_type_id),
+        int(item_id),
+        {"stageId": stage},
+    )
+    logger.info("bitrix stage set entity=%s id=%s stage=%s", entity_type_id, item_id, stage)
+    return {"stage_id": stage, "item_update": updated}
+
+
 async def upload_proposal_pdf(
     *,
     pdf_path: Path,

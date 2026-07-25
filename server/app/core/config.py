@@ -44,7 +44,8 @@ class Settings(BaseSettings):
     bitrix_kp_entity_type_id: int = 1240
     # SPA "База проектов" linked via parentId{N} on commercial proposal item
     bitrix_project_entity_type_id: int = 1212
-    # Stage STATUS_ID for «КП Готово» (crm.status.list ENTITY_ID=DYNAMIC_{type}_STAGE_{category})
+    # Stage STATUS_ID for «Подготовка КП» / «КП Готово»
+    bitrix_prep_stage_id: str = "DT1240_163:PREPARATION"
     bitrix_ready_stage_id: str = "DT1240_163:CLIENT"
     # КП SPA: регион поставки + стоимость доставки (crm.item.get useOriginalUfNames=Y)
     bitrix_region_field: str = "UF_CRM_129_1784903637"
