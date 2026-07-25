@@ -30,13 +30,15 @@ _SKIP_OPTION_TITLES = {
 
 _REGION_NN = "Нижегородская область"
 _REGION_MO = "Московская область"
-_REGIONS_SHOWN_ON_CLIENT = {_REGION_NN, _REGION_MO}
+_REGION_OTHER = "Другое"
 
 
 def client_region_label(region: Optional[str]) -> Optional[str]:
-    """В блоке «Клиент» показываем только НН / МО; «Другое» — пусто."""
+    """В блоке «Клиент» — название региона; «Другое» и пустые/цифровые ID скрываем."""
     name = (region or "").strip()
-    return name if name in _REGIONS_SHOWN_ON_CLIENT else None
+    if not name or name.isdigit() or name.lower() == _REGION_OTHER.lower():
+        return None
+    return name
 
 
 def _coerce_money(raw: Any) -> Optional[int]:

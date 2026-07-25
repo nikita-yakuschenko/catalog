@@ -54,7 +54,7 @@
             {% if doc.client.company %}{{ doc.client.company }}<br />{% endif %}
             {{ doc.client.name or "—" }}
             {% if doc.client.phone %}<br />{{ doc.client.phone }}{% endif %}
-            {% if doc.region_label %}<br />Регион поставки: {{ doc.region_label }}{% endif %}
+            {% if doc.region_label %}<br />{{ doc.region_label }}{% endif %}
           </div>
         </div>
         <div class="kp-cover-col kp-cover-col--manager">
@@ -245,7 +245,7 @@
             {% if doc.client.company %}{{ doc.client.company }}<br />{% endif %}
             {{ doc.client.name or "—" }}
             {% if doc.client.phone %}<br />{{ doc.client.phone }}{% endif %}
-            {% if doc.region_label %}<br />Регион поставки: {{ doc.region_label }}{% endif %}
+            {% if doc.region_label %}<br />{{ doc.region_label }}{% endif %}
           </div>
         </div>
         <div class="kp-package-bar-col">

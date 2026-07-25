@@ -168,3 +168,13 @@ def test_region_label_skips_other():
     doc = normalize_document({"house_price": 1, "region": "Другое"})
     assert doc["region"] == "Другое"
     assert doc["region_label"] is None
+
+
+def test_region_label_shows_new_regions():
+    doc = normalize_document({"house_price": 1, "region": "Ленинградская область"})
+    assert doc["region_label"] == "Ленинградская область"
+
+
+def test_region_label_hides_numeric_ids():
+    doc = normalize_document({"house_price": 1, "region": "4501"})
+    assert doc["region_label"] is None

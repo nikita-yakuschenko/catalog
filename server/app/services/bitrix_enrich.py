@@ -56,12 +56,16 @@ def _item_field(item: dict[str, Any], *candidates: str) -> Any:
     return None
 
 
-# Регион поставки (строительства) — enum ID → подпись
+# Fallback, если crm.item.fields недоступен (offline / тесты)
 _REGION_BY_ID = {
     "4499": "Нижегородская область",
     "4501": "Московская область",
     "4503": "Другое",
 }
+
+# entityTypeId → {enumId → label}, TTL через timestamp
+_region_enum_cache: dict[int, tuple[float, dict[str, str]]] = {}
+_REGION_ENUM_TTL_SEC = 3600.0
 
 
 def parse_bitrix_money(raw: Any) -> Optional[int]:
@@ -83,8 +87,8 @@ def parse_bitrix_money(raw: Any) -> Optional[int]:
     return int(round(amount))
 
 
-def resolve_region_label(raw: Any) -> Optional[str]:
-    """Map Bitrix enumeration id/value to region title."""
+def resolve_region_label(raw: Any, region_map: Optional[dict[str, str]] = None) -> Optional[str]:
+    """Map Bitrix enumeration id/value to region title. Bare numeric IDs without a map → None."""
     if raw in (None, "", [], {}):
         return None
     if isinstance(raw, list) and raw:
@@ -94,13 +98,99 @@ def resolve_region_label(raw: Any) -> Optional[str]:
     text = _as_str(raw)
     if not text:
         return None
-    if text in _REGION_BY_ID:
-        return _REGION_BY_ID[text]
+    mapping = {**_REGION_BY_ID, **(region_map or {})}
+    if text in mapping:
+        return mapping[text]
     low = text.lower()
-    for label in _REGION_BY_ID.values():
+    for label in mapping.values():
         if label.lower() == low:
             return label
+    # Не светим сырой enum/file id в КП
+    if text.isdigit():
+        return None
     return text
+
+
+def _uf_name_variants(code: str) -> set[str]:
+    """UF_CRM_129_… и ufCrm129_… — оба варианта имён Bitrix."""
+    code = (code or "").strip()
+    if not code:
+        return set()
+    out = {code}
+    upper = code.upper()
+    if upper.startswith("UF_CRM_"):
+        tail = code[len("UF_CRM_") :]
+        out.add(f"UF_CRM_{tail}")
+        out.add(f"ufCrm{tail}")
+        out.add(upper)
+    elif code.lower().startswith("ufcrm"):
+        # ufCrm129_178… / ufcrm129_…
+        tail = code[5:]
+        out.add(f"ufCrm{tail}")
+        out.add(f"UF_CRM_{tail}")
+    return {x for x in out if x}
+
+
+def enumeration_map_from_fields(fields: dict[str, Any], field_code: str) -> dict[str, str]:
+    """Достать ID→VALUE из crm.item.fields для enumeration UF."""
+    if not isinstance(fields, dict) or not field_code:
+        return {}
+    field = None
+    for key in _uf_name_variants(field_code):
+        if key in fields and isinstance(fields[key], dict):
+            field = fields[key]
+            break
+    if field is None:
+        lower = {str(k).lower(): v for k, v in fields.items()}
+        for key in _uf_name_variants(field_code):
+            cand = lower.get(key.lower())
+            if isinstance(cand, dict):
+                field = cand
+                break
+    if not isinstance(field, dict):
+        return {}
+    items = field.get("items") or field.get("list") or []
+    out: dict[str, str] = {}
+    if not isinstance(items, list):
+        return out
+    for it in items:
+        if not isinstance(it, dict):
+            continue
+        eid = _as_str(it.get("ID") or it.get("id"))
+        val = _as_str(it.get("VALUE") or it.get("value"))
+        if eid and val:
+            out[eid] = val
+    return out
+
+
+async def fetch_region_enum_map(client: BitrixRestClient, entity_type_id: int) -> dict[str, str]:
+    """Подтянуть список регионов из Bitrix (с кэшем), чтобы новые enum не ломали КП."""
+    import time
+
+    now = time.time()
+    cached = _region_enum_cache.get(int(entity_type_id))
+    if cached and (now - cached[0]) < _REGION_ENUM_TTL_SEC and cached[1]:
+        return cached[1]
+
+    field_code = settings.bitrix_region_field.strip()
+    mapping = dict(_REGION_BY_ID)
+    if not field_code:
+        return mapping
+    try:
+        result = await client.call(
+            "crm.item.fields",
+            {"entityTypeId": int(entity_type_id), "useOriginalUfNames": "Y"},
+        )
+        fields = result.get("fields") if isinstance(result, dict) and "fields" in result else result
+        if isinstance(fields, dict):
+            live = enumeration_map_from_fields(fields, field_code)
+            if live:
+                mapping = {**mapping, **live}
+                _region_enum_cache[int(entity_type_id)] = (now, mapping)
+                return mapping
+    except Exception as exc:
+        logger.warning("crm.item.fields region enum failed: %s", exc)
+    return mapping
 
 
 def _dig(data: dict[str, Any], *path: str) -> Any:
@@ -208,37 +298,35 @@ def _looks_like_doc_name(name: str) -> bool:
 
 
 def _non_file_uf_fields() -> set[str]:
-    """UF that must never be treated as source documents."""
-    return {
-        f.strip()
-        for f in (
-            settings.bitrix_region_field,
-            settings.bitrix_delivery_price_field,
-            settings.bitrix_result_file_field,
-        )
-        if f and f.strip()
-    }
+    """UF that must never be treated as source documents (region/money/result + aliases)."""
+    names: set[str] = set()
+    for f in (
+        settings.bitrix_region_field,
+        settings.bitrix_delivery_price_field,
+        settings.bitrix_result_file_field,
+    ):
+        names |= _uf_name_variants(f)
+    return names
 
 
-def _file_refs_from_value(value: Any, *, allow_bare_id: bool = False) -> list[dict[str, Any]]:
+def _file_refs_from_value(value: Any) -> list[dict[str, Any]]:
     """Normalize Bitrix UF file values into {id?, url?, name?} dicts.
 
-    Bare integers (enumeration IDs like region=4499) are NOT file refs unless
-    allow_bare_id=True for an explicitly configured source-file field.
+    Hard rule: bare integers / digit strings are NEVER file refs
+    (enumeration IDs like region 4499/4501 must not become disk.file ids).
+    Only objects with a real download URL (urlMachine / …) count.
     """
     out: list[dict[str, Any]] = []
     if value in (None, "", [], {}):
         return out
     if isinstance(value, (int, float)) or (isinstance(value, str) and value.strip().isdigit()):
-        if allow_bare_id:
-            out.append({"id": int(value)})
         return out
     if isinstance(value, str) and value.startswith("http"):
         out.append({"url": value, "name": value.rsplit("/", 1)[-1]})
         return out
     if isinstance(value, dict):
         fid = _as_int(value.get("id") or value.get("ID") or value.get("fileId") or value.get("FILE_ID"))
-        url = (
+        url = _as_str(
             value.get("urlMachine")
             or value.get("urlDownload")
             or value.get("downloadUrl")
@@ -247,26 +335,28 @@ def _file_refs_from_value(value: Any, *, allow_bare_id: bool = False) -> list[di
             or value.get("showUrl")
         )
         name = _as_str(value.get("name") or value.get("NAME") or value.get("fileName"))
-        # Real CRM file objects always expose urlMachine/url; bare {id: N} is not enough
-        if url or (fid and name):
+        # Без URL не трогаем Disk — CRM id ≠ disk.file id
+        if url.startswith("http"):
             out.append({"id": fid, "url": url, "name": name})
         return out
     if isinstance(value, list):
         for item in value:
-            out.extend(_file_refs_from_value(item, allow_bare_id=allow_bare_id))
+            out.extend(_file_refs_from_value(item))
     return out
 
 
 def collect_file_candidates(item: dict[str, Any], preferred_field: str = "") -> list[dict[str, Any]]:
     preferred = preferred_field.strip()
+    preferred_aliases = _uf_name_variants(preferred) if preferred else set()
     skip_fields = _non_file_uf_fields()
     candidates: list[dict[str, Any]] = []
 
-    def add_from(field: str, value: Any, *, priority: int, allow_bare_id: bool = False) -> None:
-        for ref in _file_refs_from_value(value, allow_bare_id=allow_bare_id):
+    def add_from(field: str, value: Any, *, priority: int) -> None:
+        for ref in _file_refs_from_value(value):
             name = _as_str(ref.get("name"))
             url = _as_str(ref.get("url"))
-            # Prefer real CRM download URLs over Disk id guesses
+            if not url.startswith("http"):
+                continue
             score = priority
             if url:
                 score -= 5
@@ -274,24 +364,25 @@ def collect_file_candidates(item: dict[str, Any], preferred_field: str = "") -> 
                 score -= 2
             elif name and not _looks_like_doc_name(name):
                 score += 50
-            elif not name and not url:
-                # bare id only — last resort
-                score += 80
             ref["priority"] = score
             ref["field"] = field
             candidates.append(ref)
 
-    if preferred and preferred in item:
-        add_from(preferred, item.get(preferred), priority=0, allow_bare_id=True)
+    for key in list(item.keys()):
+        if key in preferred_aliases or (preferred and key == preferred):
+            add_from(key, item.get(key), priority=0)
 
     for key, value in item.items():
         key_l = key.lower()
-        if preferred and key == preferred:
+        if key in preferred_aliases or (preferred and key == preferred):
             continue
         if key in skip_fields:
             continue
+        # Любые имена-алиасы региона/доставки/результата
+        if any(key == a or key_l == a.lower() for a in skip_fields):
+            continue
         if key_l.startswith("uf") or "file" in key_l or key_l in {"files", "documents"}:
-            add_from(key, value, priority=10, allow_bare_id=False)
+            add_from(key, value, priority=10)
 
     candidates.sort(key=lambda r: int(r.get("priority") or 99))
     return candidates
@@ -310,6 +401,7 @@ def _guess_filename(name: str, content: bytes) -> str:
 async def _download_first_doc(
     client: BitrixRestClient, candidates: list[dict[str, Any]]
 ) -> tuple[Optional[bytes], str, Optional[int], Optional[int], list[str]]:
+    """Скачиваем только по HTTP URL из CRM UF. disk.file.get по «голому» id — запрещён."""
     warnings: list[str] = []
     for ref in candidates:
         try:
@@ -318,27 +410,13 @@ async def _download_first_doc(
             name = _as_str(ref.get("name")) or "source.bin"
             parent_id: Optional[int] = None
 
-            # CRM UF files expose urlMachine; id is NOT always a Disk file id.
-            if url:
-                content = await client.download_url(url)
-                name = _guess_filename(name, content)
-                return content, name, fid, parent_id, warnings
+            if not url.startswith("http"):
+                warnings.append(f"skip file ref without url (id={fid})")
+                continue
 
-            if fid:
-                meta = await client.get_disk_file(fid)
-                parent_id = _as_int(meta.get("PARENT_ID") or meta.get("parentId"))
-                name = _as_str(meta.get("NAME") or meta.get("name") or name) or f"file-{fid}"
-                download = _as_str(meta.get("DOWNLOAD_URL") or meta.get("downloadUrl"))
-                if not download:
-                    warnings.append(f"file #{fid}: нет DOWNLOAD_URL")
-                    continue
-                if not _looks_like_doc_name(name) and any(
-                    _looks_like_doc_name(_as_str(c.get("name"))) for c in candidates
-                ):
-                    continue
-                content = await client.download_url(download)
-                name = _guess_filename(name, content)
-                return content, name, fid, parent_id, warnings
+            content = await client.download_url(url)
+            name = _guess_filename(name, content)
+            return content, name, fid, parent_id, warnings
         except Exception as exc:
             warnings.append(f"download failed: {exc}")
             logger.warning("bitrix source download failed: %s", exc)
@@ -354,6 +432,7 @@ def item_to_payload(
     client_party: Optional[dict[str, str]] = None,
     manager_party: Optional[dict[str, str]] = None,
     linked_project: Optional[dict[str, Any]] = None,
+    region_map: Optional[dict[str, str]] = None,
 ) -> dict[str, Any]:
     title = _as_str(item.get("title") or item.get("TITLE") or item.get("name") or item.get("NAME"))
     linked = linked_project or {}
@@ -377,10 +456,15 @@ def item_to_payload(
 
     region_field = settings.bitrix_region_field.strip()
     delivery_field = settings.bitrix_delivery_price_field.strip()
-    region_keys = [region_field, "ufCrm129_1784903637", "UF_CRM_129_1784903637"]
-    delivery_keys = [delivery_field, "ufCrm129_1784904416453", "UF_CRM_129_1784904416453"]
-    region = resolve_region_label(_item_field(item, *[k for k in region_keys if k]))
-    delivery_price = parse_bitrix_money(_item_field(item, *[k for k in delivery_keys if k]))
+    region_keys = list(_uf_name_variants(region_field)) if region_field else []
+    region_keys.extend(["ufCrm129_1784903637", "UF_CRM_129_1784903637"])
+    delivery_keys = list(_uf_name_variants(delivery_field)) if delivery_field else []
+    delivery_keys.extend(["ufCrm129_1784904416453", "UF_CRM_129_1784904416453"])
+    region = resolve_region_label(
+        _item_field(item, *[k for k in dict.fromkeys(region_keys) if k]),
+        region_map=region_map,
+    )
+    delivery_price = parse_bitrix_money(_item_field(item, *[k for k in dict.fromkeys(delivery_keys) if k]))
 
     currency = _as_str(item.get("currencyId") or item.get("CURRENCY_ID") or "RUB") or "RUB"
     notes = _as_str(item.get("comments") or item.get("COMMENTS") or "")
@@ -517,6 +601,7 @@ async def enrich_bitrix_event(event: dict[str, Any]) -> BitrixEnrichment:
         except Exception as exc:
             warnings.append(f"user: {exc}")
 
+    region_map = await fetch_region_enum_map(client, entity_type_id)
     payload = item_to_payload(
         event=event,
         item=item,
@@ -525,6 +610,7 @@ async def enrich_bitrix_event(event: dict[str, Any]) -> BitrixEnrichment:
         client_party=client_party,
         manager_party=manager_party,
         linked_project=linked_project,
+        region_map=region_map,
     )
 
     preferred = settings.bitrix_source_file_field.strip()
