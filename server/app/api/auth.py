@@ -33,6 +33,23 @@ def _portal_base() -> str:
     return settings.bitrix_portal_url.rstrip("/")
 
 
+def _photo_from_profile(profile: dict[str, Any]) -> str:
+    raw = profile.get("PERSONAL_PHOTO") or profile.get("personal_photo") or ""
+    if isinstance(raw, str) and raw.startswith(("http://", "https://")):
+        return raw
+    return ""
+
+
+def _user_payload(user: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": user.get("uid"),
+        "name": user.get("name"),
+        "last_name": user.get("last_name"),
+        "email": user.get("email"),
+        "photo": user.get("photo") or "",
+    }
+
+
 @router.get("/status")
 async def get_auth_status(
     avgst_session: Optional[str] = Cookie(default=None, alias=SESSION_COOKIE),
@@ -42,36 +59,22 @@ async def get_auth_status(
     if avgst_session:
         user = unsign_payload(avgst_session, settings.session_secret)
     elif not enabled:
-        user = {"uid": "local", "name": "Local", "last_name": "Dev", "email": ""}
+        user = {"uid": "local", "name": "Local", "last_name": "Dev", "email": "", "photo": ""}
     return {
         "auth_enabled": enabled,
         "authenticated": bool(user),
-        "user": (
-            {
-                "id": user.get("uid"),
-                "name": user.get("name"),
-                "last_name": user.get("last_name"),
-                "email": user.get("email"),
-            }
-            if user
-            else None
-        ),
+        "user": _user_payload(user) if user else None,
     }
 
 
 @router.get("/me")
 async def me(avgst_session: Optional[str] = Cookie(default=None, alias=SESSION_COOKIE)) -> dict[str, Any]:
     if not settings.auth_enabled:
-        return {"id": "local", "name": "Local", "last_name": "Dev", "email": ""}
+        return {"id": "local", "name": "Local", "last_name": "Dev", "email": "", "photo": ""}
     user = unsign_payload(avgst_session or "", settings.session_secret) if avgst_session else None
     if not user:
         raise HTTPException(401, "Не авторизован")
-    return {
-        "id": user.get("uid"),
-        "name": user.get("name"),
-        "last_name": user.get("last_name"),
-        "email": user.get("email"),
-    }
+    return _user_payload(user)
 
 
 @router.get("/bitrix/login")
@@ -174,6 +177,7 @@ async def bitrix_callback(
         name=str(profile.get("NAME") or ""),
         last_name=str(profile.get("LAST_NAME") or ""),
         email=str(profile.get("EMAIL") or ""),
+        photo=_photo_from_profile(profile),
         secret=settings.session_secret,
         ttl_sec=settings.auth_session_ttl_sec,
     )

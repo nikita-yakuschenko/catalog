@@ -55,6 +55,7 @@ def make_session_token(
     email: str,
     secret: str,
     ttl_sec: int,
+    photo: str = "",
 ) -> str:
     now = int(time.time())
     return sign_payload(
@@ -63,6 +64,7 @@ def make_session_token(
             "name": name or "",
             "last_name": last_name or "",
             "email": email or "",
+            "photo": photo or "",
             "iat": now,
             "exp": now + int(ttl_sec),
         },
