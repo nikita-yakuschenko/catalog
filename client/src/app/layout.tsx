@@ -14,8 +14,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AVGST Catalog Builder",
-  description: "Сборка PDF-каталогов проектов домов AVGST",
+  title: "Конструктор коммерческих предложений и каталогов",
+  description: "Сборка PDF коммерческих предложений и каталогов проектов домов AVGST",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
