@@ -115,47 +115,22 @@ def _is_generic_project_title(name: str) -> bool:
 
 def _extract_inline_price(line: str) -> tuple[str, Optional[int]]:
     """Pull trailing money amount from a title; ignore dimension digits like 150x3000мм."""
-    # OCR-таблица: «…150х150х3000мм  357 000» — цена в конце, размеры не трогаем
-    m_all = list(_OPTION_PRICE_RE.finditer(line))
-    if not m_all:
+    if _DIM_RE.search(line) or "мм" in line.lower():
         return line, None
-
-    price = None
-    match = None
-    for m in reversed(m_all):
-        candidate = _parse_price(m.group(1))
-        if candidate is None or candidate < 1000:
-            continue
-        after = line[m.end() :].strip().lower()
-        before = line[: m.start()]
-        if after.startswith("мм") or after.startswith("m"):
-            continue
-        if before.rstrip().endswith(("x", "х", "×")):
-            continue
-        # Размерность без пробелов «150х3000» — сам match не должен быть куском mm-блока
-        window = line[max(0, m.start() - 1) : m.end() + 2]
-        if re.search(r"[xх×]\s*$", before.rstrip()) or re.match(r"^\s*[xх×]", after):
-            continue
-        if "мм" in window.lower() and candidate < 100_000 and " " not in m.group(1).strip():
-            # одиночное «3000» внутри «3000мм»
-            if re.search(rf"{re.escape(m.group(1).strip())}\s*мм", line, re.I):
-                continue
-        price = candidate
-        match = m
-        break
-
-    if price is None or match is None:
+    m = _OPTION_PRICE_RE.search(line)
+    if not m:
         return line, None
-    title = (line[: match.start()] + line[match.end() :]).strip(" -—:\t")
-    title = re.sub(r"\s{2,}", " ", title).strip()
+    price = _parse_price(m.group(1))
+    if price is None or price < 1000:
+        return line, None
+    title = line.replace(m.group(1), "").strip(" -—:\t")
     return title or line, price
 
 
 def parse_markdown(text: str) -> dict[str, Any]:
-    """Heuristic parser for estimator PDFs / OCR tables.
+    """Heuristic parser for estimator PDFs (project, package, prices, options).
 
-    MarkItDown: title, package, price column, then 'Итого', then labels.
-    OCR tables: row-grouped lines like 'Забивные сваи …  357 000'.
+    MarkItDown often yields: title, package, price column, then 'Итого', then labels.
     """
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     project_name = ""
@@ -174,40 +149,16 @@ def parse_markdown(text: str) -> dict[str, Any]:
         if _is_section_header(line):
             continue
 
-        # OCR header rows
-        if low.startswith("название проекта"):
-            rest = re.sub(r"(?i)^название проекта\s*:?\s*", "", line).strip(" -—:\t")
-            if rest and not _is_price_line(rest):
-                project_name = rest
-            continue
-        if low.startswith("стоимость дома"):
-            _, price = _extract_inline_price(line)
-            if price is None:
-                tail = re.sub(r"(?i)^стоимость дома\s*:?\s*", "", line).strip()
-                price = _parse_price(tail) if _is_price_line(tail) else None
-            if price is not None:
-                prices = [price] + [p for p in prices if p != price]
-            continue
-
         if _is_price_line(line):
             p = _parse_price(line)
             if p is not None:
                 prices.append(p)
             continue
 
+        # Явно пустая цена в смете ("-") — не сдвигает следующие суммы
         if line in {"-", "—", "–"}:
             if options and options[-1].get("price") is None:
                 options[-1]["price"] = 0
-            continue
-
-        # OCR: title + price on one line
-        title, inline_price = _extract_inline_price(line)
-        if (
-            inline_price is not None
-            and len(title) > 2
-            and title.lower().strip(" :.—-") not in _SKIP_OPTION_TITLES
-        ):
-            options.append({"title": title, "price": inline_price, "selected": True})
             continue
 
         if not project_name and not _looks_like_option(line):
@@ -219,14 +170,16 @@ def parse_markdown(text: str) -> dict[str, Any]:
                 package_name = line
                 continue
 
+        # Option titles usually appear after the price column / "Итого"
         if in_totals or prices:
-            title2, price2 = _extract_inline_price(line)
-            if len(title2) > 2:
-                options.append({"title": title2, "price": price2, "selected": True})
+            title, price = _extract_inline_price(line)
+            if len(title) > 2:
+                options.append({"title": title, "price": price, "selected": True})
 
     house_price = prices[0] if prices else None
     option_prices = prices[1:] if len(prices) > 1 else []
 
+    # Pair price-column leftovers with option titles (common MarkItDown table split)
     if options and option_prices:
         unmatched = [o for o in options if o.get("price") is None]
         for opt, pr in zip(unmatched, option_prices, strict=False):
@@ -235,6 +188,7 @@ def parse_markdown(text: str) -> dict[str, Any]:
         for idx, pr in enumerate(option_prices, start=1):
             options.append({"title": f"Опция {idx}", "price": pr, "selected": True})
 
+    # Нулевая цена (из "-") не участвует в итоге как опция с суммой
     for opt in options:
         if opt.get("price") == 0:
             opt["price"] = None

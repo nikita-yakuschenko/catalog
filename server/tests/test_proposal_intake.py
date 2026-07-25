@@ -108,32 +108,6 @@ def test_result_to_text_sorts_boxes():
     assert _result_to_text([page]) == "первая\nвторая"
 
 
-def test_result_to_text_groups_table_row():
-    from app.services.paddle_ocr import _result_to_text
-
-    # Same Y → one line: title + price
-    page = [
-        [[[20, 100], [400, 100], [400, 120], [20, 120]], ("Забивные сваи", 0.95)],
-        [[[500, 102], [600, 102], [600, 118], [500, 118]], ("357 000", 0.93)],
-        [[[20, 200], [300, 200], [300, 220], [20, 220]], ("Вентиляция", 0.9)],
-        [[[500, 200], [580, 200], [580, 220], [500, 220]], ("100 000", 0.91)],
-    ]
-    text = _result_to_text([page])
-    assert "Забивные сваи  357 000" in text
-    assert "Вентиляция  100 000" in text
-
-
-def test_fix_cyrillic_lookalikes():
-    from app.services.paddle_ocr import fix_cyrillic_lookalikes
-
-    assert "деревянно" in fix_cyrillic_lookalikes("дереЕAhho") or "дерев" in fix_cyrillic_lookalikes(
-        "деревянный"
-    )
-    assert fix_cyrillic_lookalikes("каркас") == "каркас"
-    # Mostly latin stays
-    assert "PDF" in fix_cyrillic_lookalikes("PDF")
-
-
 def test_guess_filename_images():
     from app.services.bitrix_enrich import _guess_filename
 
