@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import require_user
 from app.core.config import settings
 from app.core.db import SessionLocal, get_db
 from app.domain.models import BuildStatus, CommercialProposal, ProposalBuild, ProposalSource
@@ -78,13 +79,13 @@ async def _background_proposal_build(build_id: UUID) -> None:
         await run_proposal_build(session, build_id)
 
 
-@router.get("/proposals", response_model=list[ProposalOut])
+@router.get("/proposals", response_model=list[ProposalOut], dependencies=[Depends(require_user)])
 async def list_proposals(db: AsyncSession = Depends(get_db)) -> list[CommercialProposal]:
     result = await db.execute(select(CommercialProposal).order_by(CommercialProposal.created_at.desc()))
     return list(result.scalars().all())
 
 
-@router.post("/proposals", response_model=ProposalOut)
+@router.post("/proposals", response_model=ProposalOut, dependencies=[Depends(require_user)])
 async def create_proposal_api(
     payload: ProposalCreate, db: AsyncSession = Depends(get_db)
 ) -> CommercialProposal:
@@ -155,7 +156,7 @@ async def create_proposal_bitrix(
     return proposal
 
 
-@router.post("/proposals/from-pdf", response_model=ProposalOut)
+@router.post("/proposals/from-pdf", response_model=ProposalOut, dependencies=[Depends(require_user)])
 async def create_proposal_from_pdf(
     file: UploadFile = File(...),
     payload_json: str = Form(default="{}"),
@@ -180,7 +181,7 @@ async def create_proposal_from_pdf(
     )
 
 
-@router.get("/proposals/{proposal_id}", response_model=ProposalOut)
+@router.get("/proposals/{proposal_id}", response_model=ProposalOut, dependencies=[Depends(require_user)])
 async def get_proposal(proposal_id: UUID, db: AsyncSession = Depends(get_db)) -> CommercialProposal:
     result = await db.execute(select(CommercialProposal).where(CommercialProposal.id == proposal_id))
     proposal = result.scalar_one_or_none()
@@ -189,7 +190,7 @@ async def get_proposal(proposal_id: UUID, db: AsyncSession = Depends(get_db)) ->
     return proposal
 
 
-@router.post("/proposals/{proposal_id}/build", response_model=ProposalBuildOut)
+@router.post("/proposals/{proposal_id}/build", response_model=ProposalBuildOut, dependencies=[Depends(require_user)])
 async def build_proposal(
     proposal_id: UUID,
     background_tasks: BackgroundTasks,
@@ -207,7 +208,7 @@ async def build_proposal(
     return build
 
 
-@router.get("/proposals/{proposal_id}/status")
+@router.get("/proposals/{proposal_id}/status", dependencies=[Depends(require_user)])
 async def proposal_status(proposal_id: UUID, db: AsyncSession = Depends(get_db)) -> dict:
     prop = await db.execute(select(CommercialProposal).where(CommercialProposal.id == proposal_id))
     proposal = prop.scalar_one_or_none()
@@ -225,7 +226,7 @@ async def proposal_status(proposal_id: UUID, db: AsyncSession = Depends(get_db))
     }
 
 
-@router.get("/proposals/{proposal_id}/download")
+@router.get("/proposals/{proposal_id}/download", dependencies=[Depends(require_user)])
 async def download_proposal(proposal_id: UUID, db: AsyncSession = Depends(get_db)) -> FileResponse:
     build_result = await db.execute(
         select(ProposalBuild)

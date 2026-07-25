@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.auth import require_user
 from app.core.db import SessionLocal, get_db
 from app.domain.models import (
     Build,
@@ -26,7 +27,7 @@ from app.domain.schemas import (
 from app.services.build import run_build
 from app.services.preflight import PreflightService
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_user)])
 
 
 def _catalog_query():

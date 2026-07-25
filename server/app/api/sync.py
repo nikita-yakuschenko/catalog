@@ -4,11 +4,12 @@ import logging
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import require_user
 from app.core.db import SessionLocal, get_db
 from app.domain.schemas import SyncResult
 from app.services.sync import sync_projects
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_user)])
 logger = logging.getLogger(__name__)
 
 _sync_lock = asyncio.Lock()

@@ -1,9 +1,18 @@
 // Empty = same-origin (Next rewrites → backend). Set NEXT_PUBLIC_API_URL only for direct API access.
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers || {}),
@@ -12,13 +21,26 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || res.statusText);
+    throw new ApiError(res.status, text || res.statusText);
   }
   if (res.status === 204) return undefined as T;
   return res.json();
 }
 
 export type Technology = "modular" | "panel";
+
+export type AuthUser = {
+  id: string;
+  name: string;
+  last_name: string;
+  email: string;
+};
+
+export type AuthStatus = {
+  auth_enabled: boolean;
+  authenticated: boolean;
+  user: AuthUser | null;
+};
 
 export type Project = {
   id: string;
@@ -83,6 +105,10 @@ export type Build = {
 };
 
 export const api = {
+  authStatus: () => request<AuthStatus>("/api/auth/status"),
+  me: () => request<AuthUser>("/api/auth/me"),
+  logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
+  loginUrl: () => `${API_URL}/api/auth/bitrix/login`,
   sync: () => request<Record<string, unknown>>("/api/sync/tilda", { method: "POST" }),
   projects: (params?: { technology?: string; q?: string }) => {
     const qs = new URLSearchParams();

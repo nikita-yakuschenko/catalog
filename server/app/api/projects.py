@@ -6,11 +6,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.auth import require_user
 from app.core.db import get_db
 from app.domain.models import HouseProject, ProjectAsset, Technology
 from app.domain.schemas import AssetOut, AssetUpdate, ProjectOut, ProjectUpdate
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_user)])
 
 
 @router.get("/projects", response_model=list[ProjectOut])

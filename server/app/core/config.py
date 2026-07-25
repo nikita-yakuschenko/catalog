@@ -50,9 +50,41 @@ class Settings(BaseSettings):
     bitrix_region_field: str = "UF_CRM_129_1784903637"
     bitrix_delivery_price_field: str = "UF_CRM_129_1784904416453"
 
+    # Bitrix24 OAuth (локальное приложение) — вход в UI каталога
+    # Если client_id пуст — авторизация отключена (удобно для локальной разработки)
+    bitrix_oauth_client_id: str = ""
+    bitrix_oauth_client_secret: str = ""
+    # Портал без слэша: https://avgstroy.bitrix24.ru
+    bitrix_portal_url: str = "https://avgstroy.bitrix24.ru"
+    # Публичный URL приложения (куда редиректим после логина), без слэша
+    app_public_url: str = "http://localhost:3000"
+    # Callback должен совпадать с Redirect URI в настройках локального приложения Bitrix
+    # Пример: https://catalog.avgst.ru/api/auth/bitrix/callback
+    bitrix_oauth_redirect_uri: str = ""
+    # Секрет подписи cookie-сессии (если пуст — берём client_secret)
+    auth_session_secret: str = ""
+    # Срок жизни сессии UI, секунды (7 дней)
+    auth_session_ttl_sec: int = 60 * 60 * 24 * 7
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def auth_enabled(self) -> bool:
+        return bool(self.bitrix_oauth_client_id.strip())
+
+    @property
+    def session_secret(self) -> str:
+        return (self.auth_session_secret or self.bitrix_oauth_client_secret or "dev-insecure").strip()
+
+    @property
+    def oauth_redirect_uri(self) -> str:
+        explicit = self.bitrix_oauth_redirect_uri.strip()
+        if explicit:
+            return explicit
+        base = self.app_public_url.rstrip("/")
+        return f"{base}/api/auth/bitrix/callback"
 
 
 settings = Settings()

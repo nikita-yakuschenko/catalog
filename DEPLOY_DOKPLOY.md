@@ -6,7 +6,7 @@ Postgres создаётся отдельным сервисом Dokploy, при�
 ## Что потребуется
 
 - VPS с установленным Dokploy (панель доступна по `http://IP:3000`)
-- Домен (например `catalog.example.ru`) с доступом к DNS
+- Домен (например `catalog.avgst.ru`) с доступом к DNS
 - Доступ к GitHub-репозиторию `nikita-yakuschenko/catalog`
 - Данные Bitrix24: URL входящего REST-вебхука, ID смарт-процессов
 
@@ -58,11 +58,12 @@ git push origin main
 Вкладка **Environment** compose-сервиса (Dokploy сам запишет это в `.env` рядом с compose-файлом):
 
 ```env
-# Обязательно: internal host из шага 1
+# Обязательно: Internal Connection URL из шага 1, но с драйвером asyncpg.
+# Dokploy показывает postgresql://... — допишите "+asyncpg" после postgresql:
 DATABASE_URL=postgresql+asyncpg://avgst:ПАРОЛЬ@INTERNAL_HOST:5432/avgst_catalog
 
 # Домен клиента (для CORS; при same-origin прокси можно оставить *)
-CORS_ORIGINS=https://catalog.example.ru
+CORS_ORIGINS=https://catalog.avgst.ru
 
 # Bitrix24
 BITRIX_REST_WEBHOOK_URL=https://avgstroy.bitrix24.ru/rest/1/XXXXXXXX/
@@ -76,6 +77,14 @@ BITRIX_DELIVERY_PRICE_FIELD=UF_CRM_129_1784904416453
 # BITRIX_SOURCE_FILE_FIELD=
 # BITRIX_RESULT_FILE_FIELD=
 # BITRIX_KP_FOLDER_ID=
+
+# Вход в UI через Bitrix24 OAuth (локальное приложение)
+APP_PUBLIC_URL=https://catalog.avgst.ru
+BITRIX_PORTAL_URL=https://avgstroy.bitrix24.ru
+BITRIX_OAUTH_CLIENT_ID=local.xxxxxxxx
+BITRIX_OAUTH_CLIENT_SECRET=xxxxxxxx
+BITRIX_OAUTH_REDIRECT_URI=https://catalog.avgst.ru/api/auth/bitrix/callback
+AUTH_SESSION_SECRET=случайная-длинная-строка
 ```
 
 Tilda-параметры (`TILDA_*`) задавать не нужно — рабочие значения зашиты по умолчанию в `server/app/core/config.py`.
@@ -93,7 +102,7 @@ Tilda-параметры (`TILDA_*`) задавать не нужно — раб
 
 1. В DNS домена создайте **A-запись** на IP VPS.
 2. В compose-сервисе: вкладка **Domains → Add Domain**:
-   - Host: `catalog.example.ru`
+   - Host: `catalog.avgst.ru`
    - Service Name: `client`
    - Container Port: `3012`
    - HTTPS: включить, сертификат **Let's Encrypt**
@@ -103,10 +112,10 @@ Tilda-параметры (`TILDA_*`) задавать не нужно — раб
 
 ```powershell
 # API жив (проксируется через клиент к серверу)
-curl https://catalog.example.ru/health
+curl https://catalog.avgst.ru/health
 
 # UI открывается
-start https://catalog.example.ru
+start https://catalog.avgst.ru
 ```
 
 Далее в UI: страница «Проекты» → «Синхронизировать с Tilda» (выполняется в фоне) → проекты и изображения появляются.
@@ -115,12 +124,27 @@ start https://catalog.example.ru
 
 1. **Исходящий вебхук** (Bitrix → приложение): Разработчикам → Другое → Исходящий вебхук:
    - Событие: `ONCRMDYNAMICITEMADD` (создание элемента смарт-процесса)
-   - URL: `https://catalog.example.ru/api/proposals/bitrix`
-   - Заголовок `X-Bitrix-Webhook-Secret` = значение `BITRIX_WEBHOOK_SECRET` (если задавали)
+   - URL: `https://catalog.avgst.ru/api/proposals/bitrix`
+   - `BITRIX_WEBHOOK_SECRET` для стандартного исходящего вебхука можно оставить пустым (заголовков нет)
 2. Входящий REST-вебхук уже указан в `BITRIX_REST_WEBHOOK_URL` (шаг 3) — по нему сервер читает элемент, контакт, файлы Диска и выгружает готовое КП.
 3. События от любых смарт-процессов, кроме «Коммерческое предложение» (`entityTypeId` ≠ `BITRIX_KP_ENTITY_TYPE_ID`), сервер отвечает `200 {"status":"ignored"}` и ничего не запускает.
 
 Тест: создайте элемент в СП «Коммерческое предложение» с прикреплённым PDF → в UI на странице предложений появится запись и запустится сборка КП.
+
+## Шаг 8. OAuth — вход сотрудников в UI
+
+Без OAuth UI открыт всем, кто знает URL. Чтобы закрыть каталог сотрудниками портала:
+
+1. В Bitrix24: **Разработчикам → Другое → Локальное приложение** → добавить:
+   - Название: `AVGST Catalog`
+   - Путь вашего обработчика / Redirect URI: `https://catalog.avgst.ru/api/auth/bitrix/callback`
+   - Права: как минимум `user` (или `user_brief`) — для `user.current`
+   - Можно отметить «Использует только API», если не нужна встройка во фрейм
+2. Скопируйте **код приложения** (`client_id`) и **ключ приложения** (`client_secret`) в Environment (шаг 3).
+3. **Deploy** в Dokploy.
+4. Откройте `https://catalog.avgst.ru` → редирект на `/login` → «Войти через Bitrix24».
+
+Пока `BITRIX_OAUTH_CLIENT_ID` пуст — защита UI выключена (удобно для отладки). Вебхук КП при этом работает независимо.
 
 ## Обновления
 
@@ -137,4 +161,5 @@ start https://catalog.example.ru
 | Домен отдаёт 404/502 | Traefik не видит сервис | В Domains указан Service `client`, порт `3012`; сервисы в `dokploy-network` |
 | Bitrix-вебхук не доходит | HTTP вместо HTTPS, либо URL без `/api` | URL строго `https://ДОМЕН/api/proposals/bitrix` |
 | В ответ на вебхук `{"status":"ignored"}` | Событие от другого смарт-процесса | Это норма; если игнорируется нужный СП — сверить `BITRIX_KP_ENTITY_TYPE_ID` с реальным entityTypeId в портале |
-| КП создаётся без файла | Не найден файл на Диске/в UF | Проверить `BITRIX_SOURCE_FILE_FIELD` и warnings в meta предложения |
+| Вход через Bitrix: `redirect_uri` mismatch | URI в приложении ≠ env | Должно быть точно `https://catalog.avgst.ru/api/auth/bitrix/callback` |
+| После логина снова `/login` | Cookie не ставится / CORS | `APP_PUBLIC_URL=https://...`, `CORS_ORIGINS` включает домен; проверка в DevTools → Application → Cookies `avgst_session` |

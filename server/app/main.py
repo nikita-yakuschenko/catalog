@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api import builds, catalogs, health, projects, proposals, sync
+from app.api import auth, builds, catalogs, health, projects, proposals, sync
 from app.core.config import settings
 from pathlib import Path
 
@@ -26,6 +26,7 @@ def create_app() -> FastAPI:
     app.mount("/output", StaticFiles(directory=str(output)), name="output")
 
     app.include_router(health.router, tags=["health"])
+    app.include_router(auth.router, prefix="/api", tags=["auth"])
     app.include_router(sync.router, prefix="/api", tags=["sync"])
     app.include_router(projects.router, prefix="/api", tags=["projects"])
     app.include_router(catalogs.router, prefix="/api", tags=["catalogs"])

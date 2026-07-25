@@ -6,12 +6,13 @@ from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import require_user
 from app.core.config import settings
 from app.core.db import get_db
 from app.domain.models import Build
 from app.domain.schemas import BuildOut
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_user)])
 
 
 def _preview_urls(build: Build) -> list[str]:
