@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { IconDownload } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
+import { StickyChrome } from "@/components/sticky-chrome";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
@@ -22,23 +23,25 @@ export default function CatalogPreviewPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        backHref={`/catalogs/${id}`}
-        backLabel="Настройки каталога"
-        title="Превью каталога"
-        description={
-          data ? `${data.page_count} страниц` : "После успешной сборки здесь появятся страницы"
-        }
-        actions={
-          <a
-            href={api.downloadUrl(id)}
-            className={cn(buttonVariants())}
-          >
-            <IconDownload className="size-4" stroke={1.75} />
-            Скачать PDF
-          </a>
-        }
-      />
+      <StickyChrome>
+        <PageHeader
+          backHref={`/catalogs/${id}`}
+          backLabel="Настройки каталога"
+          title="Превью каталога"
+          description={
+            data ? `${data.page_count} страниц` : "После успешной сборки здесь появятся страницы"
+          }
+          actions={
+            <a
+              href={api.downloadUrl(id)}
+              className={cn(buttonVariants())}
+            >
+              <IconDownload className="size-4" stroke={1.75} />
+              Скачать PDF
+            </a>
+          }
+        />
+      </StickyChrome>
 
       {isLoading && <p className="text-muted-foreground">Загрузка…</p>}
       {error && (

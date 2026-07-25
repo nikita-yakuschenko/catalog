@@ -8,6 +8,8 @@
   --color-paper: #ffffff;
   --color-bg: #f2f2ef;
   --color-line: #d9d9d4;
+  --app-header-height: 3.5rem;
+  --page-chrome-height: 0px;
 }
 
 button {

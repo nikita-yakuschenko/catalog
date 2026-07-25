@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { IconEye, IconPlus, IconTrash } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
+import { StickyChrome } from "@/components/sticky-chrome";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,16 +30,18 @@ export default function CatalogsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Каталоги"
-        description="Созданные сборки и их статус"
-        actions={
-          <Link href="/catalogs/new" className={cn(buttonVariants())}>
-            <IconPlus className="size-4" stroke={1.75} />
-            Новый каталог
-          </Link>
-        }
-      />
+      <StickyChrome>
+        <PageHeader
+          title="Каталоги"
+          description="Созданные сборки и их статус"
+          actions={
+            <Link href="/catalogs/new" className={cn(buttonVariants())}>
+              <IconPlus className="size-4" stroke={1.75} />
+              Новый каталог
+            </Link>
+          }
+        />
+      </StickyChrome>
 
       <div className="grid gap-4">
         {isLoading && <p className="text-muted-foreground">Загрузка…</p>}

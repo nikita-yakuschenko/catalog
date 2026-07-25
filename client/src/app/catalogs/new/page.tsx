@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/page-header";
+import { StickyChrome } from "@/components/sticky-chrome";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -54,7 +55,9 @@ export default function NewCatalogPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader backHref="/catalogs" backLabel="К списку каталогов" title="Новый каталог" />
+      <StickyChrome>
+        <PageHeader backHref="/catalogs" backLabel="К списку каталогов" title="Новый каталог" />
+      </StickyChrome>
 
       <Card>
         <CardHeader>

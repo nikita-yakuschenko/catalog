@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLayoutEffect, useRef } from "react";
 import { IconBooks, IconFileText, IconFolder, IconLogout, IconPlus } from "@tabler/icons-react";
 
 import { useAuth } from "@/components/auth-provider";
@@ -19,11 +20,27 @@ export function AppHeader() {
   const pathname = usePathname();
   const { user, status, logout, loading } = useAuth();
   const onLogin = pathname === "/login";
+  const headerRef = useRef<HTMLElement>(null);
   const displayName =
     user && ([user.name, user.last_name].filter(Boolean).join(" ") || user.email || user.id);
 
+  useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const apply = () => {
+      document.documentElement.style.setProperty("--app-header-height", `${el.offsetHeight}px`);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <header className="border-b border-border bg-card">
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80"
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
         {!onLogin ? (
           <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">

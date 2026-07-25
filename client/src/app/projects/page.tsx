@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { IconExternalLink, IconFilterOff, IconRefresh } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
+import { StickyChrome } from "@/components/sticky-chrome";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -244,154 +245,140 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Проекты"
-        description={
-          <>
-            Показано {counts.all} из {allProjects.length}: модульные {counts.modular}, панельно-каркасные{" "}
-            {counts.panel}
-          </>
-        }
-        actions={
-          <Button onClick={() => sync.mutate()} disabled={sync.isPending}>
-            <IconRefresh className={cn("size-4", sync.isPending && "animate-spin")} stroke={1.75} />
-            {sync.isPending ? "Синхронизация…" : "Синхронизировать с Tilda"}
-          </Button>
-        }
-      />
-
-      <Card>
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-          <CardTitle className="text-base">Фильтры</CardTitle>
-          {(hasExtraFilters || q) && (
-            <Button type="button" variant="ghost" size="sm" onClick={resetFilters}>
-              <IconFilterOff className="size-4" stroke={1.75} />
-              Сбросить
+      <StickyChrome>
+        <PageHeader
+          title="Проекты"
+          description={
+            <>
+              Показано {counts.all} из {allProjects.length}: модульные {counts.modular}, панельно-каркасные{" "}
+              {counts.panel}
+            </>
+          }
+          actions={
+            <Button onClick={() => sync.mutate()} disabled={sync.isPending}>
+              <IconRefresh className={cn("size-4", sync.isPending && "animate-spin")} stroke={1.75} />
+              {sync.isPending ? "Синхронизация…" : "Синхронизировать с Tilda"}
             </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-end gap-x-6 gap-y-5">
-            <div className="space-y-1.5">
-              <Label htmlFor="technology">Технология</Label>
-              <select
-                id="technology"
-                value={technology}
-                onChange={(e) => setTechnology(e.target.value)}
-                className={selectClass}
-              >
-                <option value="">Все технологии</option>
-                <option value="modular">Модульные</option>
-                <option value="panel">Панельно-каркасные</option>
-              </select>
-            </div>
-            <div className="min-w-[200px] flex-1 space-y-1.5">
-              <Label htmlFor="search">Поиск</Label>
-              <Input
-                id="search"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="По названию"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="area-min">Площадь от, м²</Label>
-              <Input
-                id="area-min"
-                type="number"
-                min={0}
-                step={0.1}
-                value={areaMin}
-                onChange={(e) => setAreaMin(e.target.value)}
-                placeholder="мин"
-                className="w-28"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="area-max">до, м²</Label>
-              <Input
-                id="area-max"
-                type="number"
-                min={0}
-                step={0.1}
-                value={areaMax}
-                onChange={(e) => setAreaMax(e.target.value)}
-                placeholder="макс"
-                className="w-28"
-              />
-            </div>
+          }
+        />
 
-            {floorOptions.length > 0 && (
-              <FilterGroup label="Этажность">
-                {floorOptions.map((n) => (
-                  <FilterChip
-                    key={n}
-                    selected={floors.includes(n)}
-                    onClick={() => toggleFloor(n)}
-                  >
-                    {floorFilterLabel(n)}
-                  </FilterChip>
-                ))}
-              </FilterGroup>
+        <Card>
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
+            <CardTitle className="text-base">Фильтры</CardTitle>
+            {(hasExtraFilters || q) && (
+              <Button type="button" variant="ghost" size="sm" onClick={resetFilters}>
+                <IconFilterOff className="size-4" stroke={1.75} />
+                Сбросить
+              </Button>
             )}
-            {bedroomOptions.length > 0 && (
-              <FilterGroup label="Спальни">
-                {bedroomOptions.map((n) => (
-                  <FilterChip
-                    key={n}
-                    selected={bedrooms.includes(n)}
-                    onClick={() => toggleBedroom(n)}
-                  >
-                    {bedroomLabel(n)}
-                  </FilterChip>
-                ))}
-              </FilterGroup>
-            )}
-            {bathroomOptions.length > 0 && (
-              <FilterGroup label="Санузлы">
-                {bathroomOptions.map((value) => (
-                  <FilterChip
-                    key={value}
-                    selected={bathrooms.includes(value)}
-                    onClick={() => toggleBathroom(value)}
-                  >
-                    {value}
-                  </FilterChip>
-                ))}
-              </FilterGroup>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-end gap-x-6 gap-y-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="technology">Технология</Label>
+                <select
+                  id="technology"
+                  value={technology}
+                  onChange={(e) => setTechnology(e.target.value)}
+                  className={selectClass}
+                >
+                  <option value="">Все технологии</option>
+                  <option value="modular">Модульные</option>
+                  <option value="panel">Панельно-каркасные</option>
+                </select>
+              </div>
+              <div className="min-w-[200px] flex-1 space-y-1.5">
+                <Label htmlFor="search">Поиск</Label>
+                <Input
+                  id="search"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="По названию"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="area-min">Площадь от, м²</Label>
+                <Input
+                  id="area-min"
+                  type="number"
+                  min={0}
+                  step={0.1}
+                  value={areaMin}
+                  onChange={(e) => setAreaMin(e.target.value)}
+                  placeholder="мин"
+                  className="w-28"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="area-max">до, м²</Label>
+                <Input
+                  id="area-max"
+                  type="number"
+                  min={0}
+                  step={0.1}
+                  value={areaMax}
+                  onChange={(e) => setAreaMax(e.target.value)}
+                  placeholder="макс"
+                  className="w-28"
+                />
+              </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+              {floorOptions.length > 0 && (
+                <FilterGroup label="Этажность">
+                  {floorOptions.map((n) => (
+                    <FilterChip
+                      key={n}
+                      selected={floors.includes(n)}
+                      onClick={() => toggleFloor(n)}
+                    >
+                      {floorFilterLabel(n)}
+                    </FilterChip>
+                  ))}
+                </FilterGroup>
+              )}
+              {bedroomOptions.length > 0 && (
+                <FilterGroup label="Спальни">
+                  {bedroomOptions.map((n) => (
+                    <FilterChip
+                      key={n}
+                      selected={bedrooms.includes(n)}
+                      onClick={() => toggleBedroom(n)}
+                    >
+                      {bedroomLabel(n)}
+                    </FilterChip>
+                  ))}
+                </FilterGroup>
+              )}
+              {bathroomOptions.length > 0 && (
+                <FilterGroup label="Санузлы">
+                  {bathroomOptions.map((value) => (
+                    <FilterChip
+                      key={value}
+                      selected={bathrooms.includes(value)}
+                      onClick={() => toggleBathroom(value)}
+                    >
+                      {value}
+                    </FilterChip>
+                  ))}
+                </FilterGroup>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </StickyChrome>
+
+      <div className="rounded-xl border border-border bg-card">
         <Table>
           <TableHeader>
-            <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-              <TableHead className="px-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Название
-              </TableHead>
-              <TableHead className="px-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Технология
-              </TableHead>
-              <TableHead className="px-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Площадь
-              </TableHead>
-              <TableHead className="px-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Этажи
-              </TableHead>
-              <TableHead className="px-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Спальни
-              </TableHead>
-              <TableHead className="px-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Санузлы
-              </TableHead>
-              <TableHead className="px-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Цена
-              </TableHead>
-              <TableHead className="px-4 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Ассеты
-              </TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead>Название</TableHead>
+              <TableHead>Технология</TableHead>
+              <TableHead>Площадь</TableHead>
+              <TableHead>Этажи</TableHead>
+              <TableHead>Спальни</TableHead>
+              <TableHead>Санузлы</TableHead>
+              <TableHead>Цена</TableHead>
+              <TableHead className="text-right">Ассеты</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -425,7 +412,7 @@ export default function ProjectsPage() {
             )}
             {!isError && data.map((p) => (
               <TableRow key={p.id}>
-                <TableCell className="px-4 py-3">
+                <TableCell>
                   <Link
                     href={`/projects/${p.id}`}
                     className="inline-flex items-center gap-1 font-medium outline-none hover:text-primary focus-visible:underline"
@@ -434,13 +421,13 @@ export default function ProjectsPage() {
                     <IconExternalLink className="size-3.5 opacity-40" stroke={1.75} />
                   </Link>
                 </TableCell>
-                <TableCell className="px-4 py-3">{p.category}</TableCell>
-                <TableCell className="px-4 py-3">{p.area != null ? `${p.area} м²` : "—"}</TableCell>
-                <TableCell className="px-4 py-3">{p.floors ?? "—"}</TableCell>
-                <TableCell className="px-4 py-3">{p.bedrooms ?? "—"}</TableCell>
-                <TableCell className="px-4 py-3">{p.bathrooms ?? "—"}</TableCell>
-                <TableCell className="px-4 py-3">{formatPrice(p.price)}</TableCell>
-                <TableCell className="px-4 py-3 text-right">
+                <TableCell>{p.category}</TableCell>
+                <TableCell>{p.area != null ? `${p.area} м²` : "—"}</TableCell>
+                <TableCell>{p.floors ?? "—"}</TableCell>
+                <TableCell>{p.bedrooms ?? "—"}</TableCell>
+                <TableCell>{p.bathrooms ?? "—"}</TableCell>
+                <TableCell>{formatPrice(p.price)}</TableCell>
+                <TableCell className="text-right">
                   <Badge
                     variant="outline"
                     className="inline-flex min-w-[2.25rem] justify-center rounded-full border-border bg-muted/40 px-2.5 py-0.5 tabular-nums font-semibold"

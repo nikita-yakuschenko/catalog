@@ -13,6 +13,7 @@ import {
 } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
+import { StickyChrome } from "@/components/sticky-chrome";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,23 +81,25 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        backHref="/projects"
-        backLabel="К списку проектов"
-        eyebrow={data.category}
-        title={data.short_name}
-        description={
-          <a
-            href={data.project_url}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 hover:text-primary"
-          >
-            Открыть на avgst.ru
-            <IconExternalLink className="size-3.5" stroke={1.75} />
-          </a>
-        }
-      />
+      <StickyChrome>
+        <PageHeader
+          backHref="/projects"
+          backLabel="К списку проектов"
+          eyebrow={data.category}
+          title={data.short_name}
+          description={
+            <a
+              href={data.project_url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-primary"
+            >
+              Открыть на avgst.ru
+              <IconExternalLink className="size-3.5" stroke={1.75} />
+            </a>
+          }
+        />
+      </StickyChrome>
 
       <Card>
         <CardHeader>

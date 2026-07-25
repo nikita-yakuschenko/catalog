@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { IconDownload, IconEye, IconPlayerPlay, IconShieldCheck } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
+import { StickyChrome } from "@/components/sticky-chrome";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Table,
@@ -82,43 +83,45 @@ export default function CatalogDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        backHref="/catalogs"
-        backLabel="К списку каталогов"
-        title={data.name}
-        description={
-          <>
-            {data.title} · статус {data.status}
-            {status?.build ? ` · сборка ${status.build.status} (${status.build.stage})` : ""}
-          </>
-        }
-        actions={
-          <>
-            <Button type="button" variant="outline" onClick={() => preflight.mutate()}>
-              <IconShieldCheck className="size-4" stroke={1.75} />
-              Preflight
-            </Button>
-            <Button type="button" onClick={() => build.mutate()} disabled={build.isPending}>
-              <IconPlayerPlay className="size-4" stroke={1.75} />
-              Собрать PDF
-            </Button>
-            <Link
-              href={`/catalogs/${id}/preview`}
-              className={cn(buttonVariants({ variant: "outline", size: "default" }))}
-            >
-              <IconEye className="size-4" stroke={1.75} />
-              Превью
-            </Link>
-            <a
-              href={api.downloadUrl(id)}
-              className={cn(buttonVariants({ variant: "outline", size: "default" }))}
-            >
-              <IconDownload className="size-4" stroke={1.75} />
-              Скачать PDF
-            </a>
-          </>
-        }
-      />
+      <StickyChrome>
+        <PageHeader
+          backHref="/catalogs"
+          backLabel="К списку каталогов"
+          title={data.name}
+          description={
+            <>
+              {data.title} · статус {data.status}
+              {status?.build ? ` · сборка ${status.build.status} (${status.build.stage})` : ""}
+            </>
+          }
+          actions={
+            <>
+              <Button type="button" variant="outline" onClick={() => preflight.mutate()}>
+                <IconShieldCheck className="size-4" stroke={1.75} />
+                Preflight
+              </Button>
+              <Button type="button" onClick={() => build.mutate()} disabled={build.isPending}>
+                <IconPlayerPlay className="size-4" stroke={1.75} />
+                Собрать PDF
+              </Button>
+              <Link
+                href={`/catalogs/${id}/preview`}
+                className={cn(buttonVariants({ variant: "outline", size: "default" }))}
+              >
+                <IconEye className="size-4" stroke={1.75} />
+                Превью
+              </Link>
+              <a
+                href={api.downloadUrl(id)}
+                className={cn(buttonVariants({ variant: "outline", size: "default" }))}
+              >
+                <IconDownload className="size-4" stroke={1.75} />
+                Скачать PDF
+              </a>
+            </>
+          }
+        />
+      </StickyChrome>
 
       {status?.build?.error_message && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
@@ -126,10 +129,10 @@ export default function CatalogDetailPage() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="rounded-xl border border-border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent">
               <TableHead className="w-12">#</TableHead>
               <TableHead>Проект</TableHead>
               <TableHead>Layout</TableHead>

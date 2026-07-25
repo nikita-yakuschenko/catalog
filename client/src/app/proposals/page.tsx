@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { IconDownload, IconRefresh } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
+import { StickyChrome } from "@/components/sticky-chrome";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -64,28 +65,30 @@ export default function ProposalsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Bitrix24"
-        title="Коммерческие предложения"
-        description="Собранные КП по сделкам. Если файл не попал обратно в смарт-процесс — скачайте здесь."
-        actions={
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => void query.refetch()}
-            disabled={query.isFetching}
-          >
-            <IconRefresh className="size-4" stroke={1.75} />
-            Обновить
-          </Button>
-        }
-      />
+      <StickyChrome>
+        <PageHeader
+          eyebrow="Bitrix24"
+          title="Коммерческие предложения"
+          description="Собранные КП по сделкам. Если файл не попал обратно в смарт-процесс — скачайте здесь."
+          actions={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void query.refetch()}
+              disabled={query.isFetching}
+            >
+              <IconRefresh className="size-4" stroke={1.75} />
+              Обновить
+            </Button>
+          }
+        />
+      </StickyChrome>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
+      <div className="rounded-xl border border-border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent">
               <TableHead>Дата</TableHead>
               <TableHead>КП / Bitrix</TableHead>
               <TableHead>Проект</TableHead>
@@ -99,14 +102,14 @@ export default function ProposalsPage() {
           <TableBody>
             {query.isLoading && (
               <TableRow>
-                <TableCell colSpan={8} className="text-muted-foreground">
+                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                   Загрузка…
                 </TableCell>
               </TableRow>
             )}
             {!query.isLoading && rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-muted-foreground">
+                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                   Пока нет коммерческих предложений. Создайте элемент в Bitrix — он появится здесь.
                 </TableCell>
               </TableRow>
@@ -115,16 +118,14 @@ export default function ProposalsPage() {
               const st = statusLabel(row);
               return (
                 <TableRow key={row.id}>
-                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                    {formatDate(row.created_at)}
-                  </TableCell>
+                  <TableCell className="text-muted-foreground">{formatDate(row.created_at)}</TableCell>
                   <TableCell className="font-medium">
                     {row.external_id ? `#${row.external_id}` : row.id.slice(0, 8)}
                   </TableCell>
                   <TableCell>{row.project_name || "—"}</TableCell>
                   <TableCell>{row.client_name || "—"}</TableCell>
                   <TableCell>{row.manager_name || "—"}</TableCell>
-                  <TableCell className="whitespace-nowrap">{formatPrice(row.grand_total)}</TableCell>
+                  <TableCell>{formatPrice(row.grand_total)}</TableCell>
                   <TableCell>
                     <Badge variant={st.variant}>{st.text}</Badge>
                   </TableCell>
@@ -138,7 +139,7 @@ export default function ProposalsPage() {
                         Скачать
                       </a>
                     ) : (
-                      <span className="text-sm text-muted-foreground">—</span>
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
                 </TableRow>
