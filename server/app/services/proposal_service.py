@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import logging
+import tempfile
 from pathlib import Path
 from typing import Any, Optional
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +16,8 @@ from app.domain.models import CommercialProposal, HouseProject, ProposalSource, 
 from app.domain.schemas import ProposalCreate
 from app.services.proposal_intake import pdf_to_markdown
 from app.services.proposal_parse import merge_documents, normalize_document, parse_markdown
+
+logger = logging.getLogger(__name__)
 
 
 async def match_project_id(session: AsyncSession, project_name: str) -> Optional[UUID]:
@@ -31,6 +35,23 @@ async def match_project_id(session: AsyncSession, project_name: str) -> Optional
     return None
 
 
+def cleanup_intake_storage() -> int:
+    """Remove leftover Bitrix/PDF intake files — only markdown/document stay in DB."""
+    intake = Path(settings.storage_dir) / "proposals" / "intake"
+    if not intake.is_dir():
+        return 0
+    removed = 0
+    for path in intake.iterdir():
+        if not path.is_file():
+            continue
+        try:
+            path.unlink()
+            removed += 1
+        except OSError as exc:
+            logger.warning("failed to delete intake file %s: %s", path, exc)
+    return removed
+
+
 async def create_proposal(
     session: AsyncSession,
     payload: ProposalCreate,
@@ -46,15 +67,18 @@ async def create_proposal(
     markdown = ""
 
     if pdf_bytes:
-        storage = Path(settings.storage_dir) / "proposals" / "intake"
-        storage.mkdir(parents=True, exist_ok=True)
-        pdf_path = storage / f"{uuid4()}_{pdf_filename}"
-        pdf_path.write_bytes(pdf_bytes)
-        markdown = pdf_to_markdown(pdf_path)
-        parsed_doc = parse_markdown(markdown)
-        source_pdf_path = str(pdf_path)
-    else:
-        source_pdf_path = ""
+        # Temp file only for MarkItDown — do not keep Bitrix originals on disk.
+        suffix = Path(pdf_filename).suffix or ".bin"
+        tmp_path: Optional[Path] = None
+        try:
+            with tempfile.NamedTemporaryFile(prefix="kp_intake_", suffix=suffix, delete=False) as tmp:
+                tmp.write(pdf_bytes)
+                tmp_path = Path(tmp.name)
+            markdown = pdf_to_markdown(tmp_path)
+            parsed_doc = parse_markdown(markdown)
+        finally:
+            if tmp_path is not None:
+                tmp_path.unlink(missing_ok=True)
 
     document = merge_documents(structured, parsed_doc)
     project_id = payload.project_id
@@ -68,12 +92,18 @@ async def create_proposal(
         project_id=project_id,
         request_payload=request_payload or structured,
         document=document,
-        source_pdf_path=source_pdf_path,
+        source_pdf_path="",
         intake_markdown=markdown,
     )
     session.add(proposal)
     await session.commit()
     await session.refresh(proposal)
+
+    # One-shot hygiene for previously accumulated intake junk.
+    removed = cleanup_intake_storage()
+    if removed:
+        logger.info("cleaned %s leftover intake file(s)", removed)
+
     return proposal
 
 

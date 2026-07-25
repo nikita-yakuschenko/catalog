@@ -14,7 +14,7 @@ from app.core.config import settings
 from app.core.db import SessionLocal, get_db
 from app.domain.models import BuildStatus, CommercialProposal, ProposalBuild, ProposalSource
 from app.domain.schemas import ProposalBitrixIn, ProposalBuildOut, ProposalCreate, ProposalOut
-from app.services.bitrix_enrich import enrich_bitrix_event
+from app.services.bitrix_enrich import enrich_bitrix_event, extract_entity_ref
 from app.services.proposal_build import run_proposal_build
 from app.services.proposal_service import create_proposal
 
@@ -91,14 +91,32 @@ async def create_proposal_api(
     return await create_proposal(db, payload, source=ProposalSource.api)
 
 
-@router.post("/proposals/bitrix", response_model=ProposalOut)
+@router.post("/proposals/bitrix")
 async def create_proposal_bitrix(
     request: Request,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     _: None = Depends(_verify_bitrix_secret),
-) -> CommercialProposal:
+):
     raw_data = await _read_bitrix_payload(request)
+    entity_type_id, item_id = extract_entity_ref(raw_data)
+    expected = int(settings.bitrix_kp_entity_type_id or 0)
+    if expected and entity_type_id != expected:
+        logger.info(
+            "bitrix webhook ignored: entityTypeId=%s item_id=%s (want KP=%s)",
+            entity_type_id,
+            item_id,
+            expected,
+        )
+        # 200 so Bitrix does not retry; no DB / MarkItDown / build
+        return {
+            "status": "ignored",
+            "reason": "unsupported_smart_process",
+            "entity_type_id": entity_type_id,
+            "item_id": item_id,
+            "expected_entity_type_id": expected,
+        }
+
     enrichment = await enrich_bitrix_event(raw_data)
     try:
         payload = ProposalBitrixIn.model_validate(enrichment.payload)

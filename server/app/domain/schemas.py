@@ -209,11 +209,13 @@ class BuildOut(ORMModel):
 
 
 class SyncResult(BaseModel):
-    modular_count: int
-    panel_count: int
-    created: int
-    updated: int
-    assets_downloaded: int
+    status: str = "ok"  # ok | started
+    message: str = ""
+    modular_count: int = 0
+    panel_count: int = 0
+    created: int = 0
+    updated: int = 0
+    assets_downloaded: int = 0
     errors: list[str] = Field(default_factory=list)
 
 

@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     bitrix_source_file_field: str = ""
     bitrix_result_file_field: str = ""
     bitrix_kp_folder_id: str = ""
+    # SPA «Коммерческое предложение» — обрабатываем только этот entityTypeId
+    bitrix_kp_entity_type_id: int = 1240
     # SPA "База проектов" linked via parentId{N} on commercial proposal item
     bitrix_project_entity_type_id: int = 1212
     # Stage STATUS_ID for «КП Готово» (crm.status.list ENTITY_ID=DYNAMIC_{type}_STAGE_{category})

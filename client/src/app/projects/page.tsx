@@ -131,7 +131,7 @@ export default function ProjectsPage() {
   const [floors, setFloors] = useState<number[]>([]);
   const qc = useQueryClient();
 
-  const { data: allProjects = [], isLoading } = useQuery({
+  const { data: allProjects = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["projects", technology],
     queryFn: () =>
       api.projects({
@@ -188,12 +188,23 @@ export default function ProjectsPage() {
   const sync = useMutation({
     mutationFn: api.sync,
     onSuccess: (res) => {
+      if ((res.status as string) === "started") {
+        toast.message(
+          (res.message as string) ||
+            "Синхронизация запущена в фоне. Обновите список через 1–3 минуты."
+        );
+        // Подтянуть список, когда бэкенд успеет записать проекты
+        window.setTimeout(() => qc.invalidateQueries({ queryKey: ["projects"] }), 15_000);
+        window.setTimeout(() => qc.invalidateQueries({ queryKey: ["projects"] }), 60_000);
+        window.setTimeout(() => qc.invalidateQueries({ queryKey: ["projects"] }), 180_000);
+        return;
+      }
       toast.success(
         `Синхронизация: +${res.created as number} / ~${res.updated as number}. Ошибок: ${(res.errors as string[])?.length || 0}`
       );
       qc.invalidateQueries({ queryKey: ["projects"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message || "Не удалось запустить синхронизацию"),
   });
 
   const counts = useMemo(() => {
@@ -391,7 +402,19 @@ export default function ProjectsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {!isLoading && data.length === 0 && (
+            {isError && !isLoading && (
+              <TableRow>
+                <TableCell colSpan={8} className="h-24 text-center">
+                  <p className="text-destructive">
+                    Не удалось загрузить проекты: {error instanceof Error ? error.message : "ошибка сети"}
+                  </p>
+                  <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>
+                    Повторить
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && !isError && data.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                   {allProjects.length === 0
@@ -400,7 +423,7 @@ export default function ProjectsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {data.map((p) => (
+            {!isError && data.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="px-4 py-3">
                   <Link

@@ -41,9 +41,10 @@ docker compose up -d postgres
 
 ```powershell
 cd server
-python -m venv .venv
+# Нужен Python 3.12 или 3.13 (не 3.14 — ломается pydantic_core)
+py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 playwright install chromium
 $env:PYTHONPATH = (Get-Location).Path
 alembic upgrade head

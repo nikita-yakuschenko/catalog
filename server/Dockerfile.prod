@@ -1,0 +1,23 @@
+# Production image for Dokploy / docker compose
+FROM mcr.microsoft.com/playwright/python:v1.49.1-jammy
+
+WORKDIR /app
+
+COPY server/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+COPY server /app/server
+COPY templates /app/templates
+
+WORKDIR /app/server
+ENV PYTHONPATH=/app/server
+ENV STORAGE_DIR=/app/storage
+ENV OUTPUT_DIR=/app/output
+ENV TEMPLATES_DIR=/app/templates
+ENV PYTHONUNBUFFERED=1
+
+RUN mkdir -p /app/storage /app/output
+
+EXPOSE 8000
+
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1"]

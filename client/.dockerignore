@@ -1,0 +1,6 @@
+# Build context for client/Dockerfile.prod (context = client/)
+node_modules
+.next
+.env*
+Dockerfile.prod
+*.md

@@ -1,0 +1,62 @@
+# Dokploy production stack WITHOUT Postgres.
+# Create Postgres as a separate Dokploy database service, then set DATABASE_URL.
+#
+# Domain → client:3000 (UI + /api proxy).
+# Bitrix webhook: https://YOUR_DOMAIN/api/proposals/bitrix
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile.prod
+    restart: unless-stopped
+    env_file:
+      # Dokploy writes the Environment tab into .env next to the compose file
+      - path: .env
+        required: false
+    environment:
+      # Override in Dokploy UI, e.g.:
+      # postgresql+asyncpg://user:pass@HOST:5432/avgst_catalog
+      DATABASE_URL: ${DATABASE_URL}
+      STORAGE_DIR: /app/storage
+      OUTPUT_DIR: /app/output
+      TEMPLATES_DIR: /app/templates
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: "8000"
+    volumes:
+      - storage_data:/app/storage
+      - output_data:/app/output
+    expose:
+      - "8000"
+    networks:
+      - default
+      # Needed to reach Dokploy-managed Postgres by its internal host
+      - dokploy-network
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.prod
+      args:
+        BACKEND_URL: http://server:8000
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: http://server:8000
+      NEXT_PUBLIC_API_URL: ""
+    depends_on:
+      - server
+    expose:
+      - "3000"
+    networks:
+      - default
+      # Needed so Dokploy/Traefik can route the domain to this service
+      - dokploy-network
+
+volumes:
+  storage_data:
+  output_data:
+
+networks:
+  dokploy-network:
+    external: true
