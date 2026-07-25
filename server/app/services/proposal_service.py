@@ -14,22 +14,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.domain.models import CommercialProposal, HouseProject, ProposalSource, ProposalStatus
 from app.domain.schemas import ProposalCreate
-from app.services.proposal_intake import INTAKE_EXTS, file_to_markdown
+from app.services.proposal_intake import pdf_to_markdown
 from app.services.proposal_parse import merge_documents, normalize_document, parse_markdown
 
 logger = logging.getLogger(__name__)
-
-
-def _guess_intake_suffix(content: bytes) -> str:
-    if content.startswith(b"%PDF"):
-        return ".pdf"
-    if content.startswith(b"\x89PNG"):
-        return ".png"
-    if content[:3] == b"\xff\xd8\xff":
-        return ".jpg"
-    if content[:4] == b"RIFF" and b"WEBP" in content[:16]:
-        return ".webp"
-    return ""
 
 
 async def match_project_id(session: AsyncSession, project_name: str) -> Optional[UUID]:
@@ -79,22 +67,14 @@ async def create_proposal(
     markdown = ""
 
     if pdf_bytes:
-        # Temp file only for intake — do not keep Bitrix originals on disk.
-        suffix = Path(pdf_filename).suffix.lower() or ".bin"
+        # Temp file only for MarkItDown — do not keep Bitrix originals on disk.
+        suffix = Path(pdf_filename).suffix or ".bin"
         tmp_path: Optional[Path] = None
         try:
             with tempfile.NamedTemporaryFile(prefix="kp_intake_", suffix=suffix, delete=False) as tmp:
                 tmp.write(pdf_bytes)
                 tmp_path = Path(tmp.name)
-            # Ensure known suffix for sniff when upload was .bin
-            if suffix not in INTAKE_EXTS:
-                # rewrite temp with guessed ext from magic
-                guessed = _guess_intake_suffix(pdf_bytes)
-                if guessed:
-                    renamed = tmp_path.with_suffix(guessed)
-                    tmp_path.rename(renamed)
-                    tmp_path = renamed
-            markdown = file_to_markdown(tmp_path)
+            markdown = pdf_to_markdown(tmp_path)
             parsed_doc = parse_markdown(markdown)
         finally:
             if tmp_path is not None:
