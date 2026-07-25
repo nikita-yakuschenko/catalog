@@ -27,6 +27,37 @@ def test_collect_file_candidates_prefers_docs():
     assert refs[0]["id"] == 2
 
 
+def test_collect_file_candidates_ignores_region_enum_as_disk_id():
+    """Регион=4499 не должен скачиваться как disk.file #4499 (баг КП #91)."""
+    item = {
+        "UF_CRM_129_1784903637": 4499,  # регион НН
+        "UF_CRM_129_1784636008062": {
+            "id": 464631,
+            "name": "example2.pdf",
+            "urlMachine": "https://bitrix/rest/getFile/example2",
+        },
+    }
+    refs = collect_file_candidates(item, preferred_field="UF_CRM_129_1784636008062")
+    assert refs
+    assert refs[0]["name"] == "example2.pdf"
+    assert refs[0]["id"] == 464631
+    assert all(r.get("id") != 4499 for r in refs)
+
+
+def test_collect_file_candidates_skips_bare_int_uf_without_preferred():
+    item = {
+        "UF_CRM_129_1784903637": 4499,
+        "UF_CRM_129_1784636008062": {
+            "id": 10,
+            "name": "smeta.pdf",
+            "urlMachine": "https://x/smeta",
+        },
+    }
+    refs = collect_file_candidates(item)
+    assert len(refs) == 1
+    assert refs[0]["name"] == "smeta.pdf"
+
+
 def test_item_to_payload_maps_title_and_opportunity():
     payload = item_to_payload(
         event={"event": "ONCRMDYNAMICITEMADD"},

@@ -207,13 +207,31 @@ def _looks_like_doc_name(name: str) -> bool:
     return Path(name).suffix.lower() in DOC_EXTS
 
 
-def _file_refs_from_value(value: Any) -> list[dict[str, Any]]:
-    """Normalize Bitrix UF file values into {id?, url?, name?} dicts."""
+def _non_file_uf_fields() -> set[str]:
+    """UF that must never be treated as source documents."""
+    return {
+        f.strip()
+        for f in (
+            settings.bitrix_region_field,
+            settings.bitrix_delivery_price_field,
+            settings.bitrix_result_file_field,
+        )
+        if f and f.strip()
+    }
+
+
+def _file_refs_from_value(value: Any, *, allow_bare_id: bool = False) -> list[dict[str, Any]]:
+    """Normalize Bitrix UF file values into {id?, url?, name?} dicts.
+
+    Bare integers (enumeration IDs like region=4499) are NOT file refs unless
+    allow_bare_id=True for an explicitly configured source-file field.
+    """
     out: list[dict[str, Any]] = []
     if value in (None, "", [], {}):
         return out
     if isinstance(value, (int, float)) or (isinstance(value, str) and value.strip().isdigit()):
-        out.append({"id": int(value)})
+        if allow_bare_id:
+            out.append({"id": int(value)})
         return out
     if isinstance(value, str) and value.startswith("http"):
         out.append({"url": value, "name": value.rsplit("/", 1)[-1]})
@@ -229,39 +247,51 @@ def _file_refs_from_value(value: Any) -> list[dict[str, Any]]:
             or value.get("showUrl")
         )
         name = _as_str(value.get("name") or value.get("NAME") or value.get("fileName"))
-        if fid or url:
+        # Real CRM file objects always expose urlMachine/url; bare {id: N} is not enough
+        if url or (fid and name):
             out.append({"id": fid, "url": url, "name": name})
         return out
     if isinstance(value, list):
         for item in value:
-            out.extend(_file_refs_from_value(item))
+            out.extend(_file_refs_from_value(item, allow_bare_id=allow_bare_id))
     return out
 
 
 def collect_file_candidates(item: dict[str, Any], preferred_field: str = "") -> list[dict[str, Any]]:
     preferred = preferred_field.strip()
+    skip_fields = _non_file_uf_fields()
     candidates: list[dict[str, Any]] = []
 
-    def add_from(field: str, value: Any, *, priority: int) -> None:
-        for ref in _file_refs_from_value(value):
+    def add_from(field: str, value: Any, *, priority: int, allow_bare_id: bool = False) -> None:
+        for ref in _file_refs_from_value(value, allow_bare_id=allow_bare_id):
             name = _as_str(ref.get("name"))
-            if name and not _looks_like_doc_name(name):
-                # keep images out unless only option; mark low priority
-                ref["priority"] = priority + 50
-            else:
-                ref["priority"] = priority
+            url = _as_str(ref.get("url"))
+            # Prefer real CRM download URLs over Disk id guesses
+            score = priority
+            if url:
+                score -= 5
+            if name and _looks_like_doc_name(name):
+                score -= 2
+            elif name and not _looks_like_doc_name(name):
+                score += 50
+            elif not name and not url:
+                # bare id only — last resort
+                score += 80
+            ref["priority"] = score
             ref["field"] = field
             candidates.append(ref)
 
     if preferred and preferred in item:
-        add_from(preferred, item.get(preferred), priority=0)
+        add_from(preferred, item.get(preferred), priority=0, allow_bare_id=True)
 
     for key, value in item.items():
         key_l = key.lower()
         if preferred and key == preferred:
             continue
+        if key in skip_fields:
+            continue
         if key_l.startswith("uf") or "file" in key_l or key_l in {"files", "documents"}:
-            add_from(key, value, priority=10)
+            add_from(key, value, priority=10, allow_bare_id=False)
 
     candidates.sort(key=lambda r: int(r.get("priority") or 99))
     return candidates

@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     # Incoming Bitrix REST webhook base, e.g. https://xxx.bitrix24.ru/rest/1/xxxxx/
     bitrix_rest_webhook_url: str = ""
     # Optional: UF field codes for source PDF / result KP; Disk folder for uploads
-    bitrix_source_file_field: str = ""
+    bitrix_source_file_field: str = "UF_CRM_129_1784636008062"
     bitrix_result_file_field: str = ""
     bitrix_kp_folder_id: str = ""
     # SPA «Коммерческое предложение» — обрабатываем только этот entityTypeId
