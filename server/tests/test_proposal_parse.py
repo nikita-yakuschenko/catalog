@@ -139,7 +139,7 @@ def test_delivery_included_nizhny_footnote():
     )
     assert doc["delivery_included"] is True
     assert doc["delivery_price"] is None
-    assert "50 км" in doc["delivery_footnote"]
+    assert doc["delivery_footnote"] == "В стоимость включена доставка до 50 км"
     assert doc["totals"]["grand"] == 4_250_000
 
 

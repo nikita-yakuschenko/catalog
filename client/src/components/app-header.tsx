@@ -39,7 +39,7 @@ export function AppHeader() {
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80"
+      className="sticky top-0 z-50 border-b border-border bg-card"
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
         {!onLogin ? (

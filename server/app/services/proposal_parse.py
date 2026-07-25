@@ -62,7 +62,7 @@ def delivery_footnote_for_region(region: Optional[str]) -> str:
     """Сноска, когда отдельная цена доставки не задана."""
     name = (region or "").strip()
     if name == _REGION_NN:
-        return "Доставка на расстояние до 50 км включена в стоимость."
+        return "В стоимость включена доставка до 50 км"
     if name == _REGION_MO:
         return "Доставка включена в стоимость из расчёта до г. Ногинск Московской области."
     return "Доставка включена в стоимость."
