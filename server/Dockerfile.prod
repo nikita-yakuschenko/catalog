@@ -3,8 +3,13 @@ FROM mcr.microsoft.com/playwright/python:v1.49.1-jammy
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY server/requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt \
+    && python -c "from paddleocr import PaddleOCR; PaddleOCR(use_angle_cls=True, lang='ru', use_gpu=False, show_log=False)"
 
 COPY server /app/server
 COPY templates /app/templates
@@ -15,6 +20,8 @@ ENV STORAGE_DIR=/app/storage
 ENV OUTPUT_DIR=/app/output
 ENV TEMPLATES_DIR=/app/templates
 ENV PYTHONUNBUFFERED=1
+ENV OCR_ENABLED=true
+ENV OCR_LANG=ru
 
 RUN mkdir -p /app/storage /app/output
 

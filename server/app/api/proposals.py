@@ -217,7 +217,10 @@ async def create_proposal_from_pdf(
     payload_json: str = Form(default="{}"),
     db: AsyncSession = Depends(get_db),
 ) -> CommercialProposal:
+    """Принимает PDF или изображение (PNG/JPG/JPEG/WEBP) для intake КП."""
     import json
+
+    from app.services.proposal_intake import INTAKE_EXTS
 
     try:
         raw = json.loads(payload_json) if payload_json.strip() else {}
@@ -226,14 +229,44 @@ async def create_proposal_from_pdf(
     payload = ProposalCreate.model_validate(raw)
     content = await file.read()
     if not content:
-        raise HTTPException(400, "Пустой PDF")
-    return await create_proposal(
-        db,
-        payload,
-        source=ProposalSource.pdf,
-        pdf_bytes=content,
-        pdf_filename=file.filename or "source.pdf",
-    )
+        raise HTTPException(400, "Пустой файл")
+    filename = file.filename or "source.pdf"
+    suffix = Path(filename).suffix.lower()
+    # Magic fallback when filename has no/odd extension
+    if suffix not in INTAKE_EXTS:
+        if content.startswith(b"%PDF"):
+            filename = (Path(filename).stem or "source") + ".pdf"
+            suffix = ".pdf"
+        elif content.startswith(b"\x89PNG"):
+            filename = (Path(filename).stem or "source") + ".png"
+            suffix = ".png"
+        elif content[:3] == b"\xff\xd8\xff":
+            filename = (Path(filename).stem or "source") + ".jpg"
+            suffix = ".jpg"
+        elif content[:4] == b"RIFF" and b"WEBP" in content[:16]:
+            filename = (Path(filename).stem or "source") + ".webp"
+            suffix = ".webp"
+    if suffix not in INTAKE_EXTS:
+        raise HTTPException(
+            400,
+            f"Неподдерживаемый тип файла ({suffix or 'без расширения'}). "
+            "Допустимы: PDF, PNG, JPG, JPEG, WEBP.",
+        )
+    try:
+        return await create_proposal(
+            db,
+            payload,
+            source=ProposalSource.pdf,
+            pdf_bytes=content,
+            pdf_filename=filename,
+        )
+    except Exception as exc:
+        from app.services.paddle_ocr import OcrError
+        from app.services.proposal_intake import IntakeError
+
+        if isinstance(exc, (IntakeError, OcrError)):
+            raise HTTPException(400, str(exc)) from exc
+        raise
 
 
 @router.get("/proposals/{proposal_id}", response_model=ProposalOut, dependencies=[Depends(require_user)])

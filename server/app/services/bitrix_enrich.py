@@ -12,7 +12,49 @@ from app.services.bitrix_rest import BitrixRestClient, BitrixRestError
 
 logger = logging.getLogger(__name__)
 
-DOC_EXTS = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt", ".md", ".rtf", ".odt"}
+DOC_EXTS = {
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".txt",
+    ".md",
+    ".rtf",
+    ".odt",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp",
+}
+# Офисные/текстовые — выше приоритет, чем фото в галерее UF
+_PREFERRED_DOC_EXTS = {
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".txt",
+    ".md",
+    ".rtf",
+    ".odt",
+}
+_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
+
+
+def _looks_like_doc_name(name: str) -> bool:
+    return Path(name).suffix.lower() in DOC_EXTS
+
+
+def _preferred_doc_score_delta(name: str) -> int:
+    suf = Path(name).suffix.lower()
+    if suf in _PREFERRED_DOC_EXTS:
+        return -2
+    if suf in _IMAGE_EXTS:
+        return 20
+    if name:
+        return 50
+    return 0
 
 
 @dataclass
@@ -293,10 +335,6 @@ def _manager_party(user: dict[str, Any]) -> dict[str, str]:
     }
 
 
-def _looks_like_doc_name(name: str) -> bool:
-    return Path(name).suffix.lower() in DOC_EXTS
-
-
 def _non_file_uf_fields() -> set[str]:
     """UF that must never be treated as source documents (region/money/result + aliases)."""
     names: set[str] = set()
@@ -360,10 +398,7 @@ def collect_file_candidates(item: dict[str, Any], preferred_field: str = "") -> 
             score = priority
             if url:
                 score -= 5
-            if name and _looks_like_doc_name(name):
-                score -= 2
-            elif name and not _looks_like_doc_name(name):
-                score += 50
+            score += _preferred_doc_score_delta(name)
             ref["priority"] = score
             ref["field"] = field
             candidates.append(ref)
@@ -391,10 +426,17 @@ def collect_file_candidates(item: dict[str, Any], preferred_field: str = "") -> 
 def _guess_filename(name: str, content: bytes) -> str:
     if name and _looks_like_doc_name(name):
         return name
+    stem = Path(name).stem if name else "source"
     if content[:4] == b"%PDF":
-        return (Path(name).stem if name else "source") + ".pdf"
+        return f"{stem}.pdf"
     if content[:2] == b"PK":
-        return (Path(name).stem if name else "source") + ".docx"
+        return f"{stem}.docx"
+    if content[:8].startswith(b"\x89PNG"):
+        return f"{stem}.png"
+    if content[:3] == b"\xff\xd8\xff":
+        return f"{stem}.jpg"
+    if content[:4] == b"RIFF" and b"WEBP" in content[:16]:
+        return f"{stem}.webp"
     return name or "source.bin"
 
 

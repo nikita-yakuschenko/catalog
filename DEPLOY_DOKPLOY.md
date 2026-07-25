@@ -156,6 +156,8 @@ start https://catalog.avgst.ru
 
 Данные при редеплое сохраняются: `storage_data` и `output_data` — именованные Docker-volumes, база — отдельный сервис.
 
+Intake КП: текстовые PDF → MarkItDown; сканы и PNG/JPG/WEBP → локальный PaddleOCR (`OCR_ENABLED`, `OCR_LANG=ru`). Образ server стал тяжелее (модели качаются на build).
+
 ## Типовые проблемы
 
 | Симптом | Причина | Решение |

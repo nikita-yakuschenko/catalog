@@ -67,6 +67,13 @@ class Settings(BaseSettings):
     # Срок жизни сессии UI, секунды (7 дней)
     auth_session_ttl_sec: int = 60 * 60 * 24 * 7
 
+    # Локальный OCR (PaddleOCR) для сканов и изображений в intake КП
+    ocr_enabled: bool = True
+    ocr_lang: str = "ru"
+    ocr_pdf_dpi: int = 200
+    # PDF с суммарным текстом короче порога считаем сканом → OCR
+    ocr_min_text_chars: int = 80
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
