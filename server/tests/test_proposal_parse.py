@@ -97,15 +97,30 @@ def test_merge_prefers_base_project_title():
     assert merged["client"]["name"] == "Иван"
 
 
-def test_normalize_totals():
-    doc = normalize_document(
-        {
-            "house_price": 1_000_000,
-            "options": [{"title": "A", "price": 50_000}, {"title": "B", "price": 30_000}],
-        }
-    )
-    assert doc["totals"]["options"] == 80_000
-    assert doc["totals"]["grand"] == 1_080_000
+def test_parse_ocr_table_rows():
+    text = """
+Название проекта  Барнхаус 96 Премиум
+Стоимость дома  4 250 000
+Дополнительные услуги
+Забивные сваи 150х150х3000мм  357 000
+Перегородки на деревянном каркасе с производства, с шумоизоляцией  113 000
+Вентиляция  100 000
+Отопление радиаторами  -
+Электрика  471 000
+""".strip()
+    doc = parse_markdown(text)
+    assert doc["project_name"] == "Барнхаус 96 Премиум"
+    assert doc["house_price"] == 4_250_000
+    titles = [o["title"] for o in doc["options"]]
+    assert "Дополнительные услуги" not in titles
+    assert any("Забивные сваи" in t for t in titles)
+    assert any("Перегородки" in t for t in titles)
+    by_title = {o["title"]: o["price"] for o in doc["options"]}
+    assert any(p == 357_000 for p in by_title.values())
+    assert any(p == 113_000 for p in by_title.values())
+    assert any(p == 471_000 for p in by_title.values())
+    # dash price → option dropped or None; не ломает соседние суммы
+    assert doc["totals"]["grand"] == 4_250_000 + 357_000 + 113_000 + 100_000 + 471_000
 
 
 def test_skip_project_name_header_and_dash_prices():
