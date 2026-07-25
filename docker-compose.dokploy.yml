@@ -1,7 +1,7 @@
 # Dokploy production stack WITHOUT Postgres.
 # Create Postgres as a separate Dokploy database service, then set DATABASE_URL.
 #
-# Domain → client:3000 (UI + /api proxy).
+# Domain → client:3012 (UI + /api proxy).
 # Bitrix webhook: https://YOUR_DOMAIN/api/proposals/bitrix
 
 services:
@@ -44,10 +44,11 @@ services:
     environment:
       BACKEND_URL: http://server:8000
       NEXT_PUBLIC_API_URL: ""
+      PORT: "3012"
     depends_on:
       - server
     expose:
-      - "3000"
+      - "3012"
     networks:
       - default
       # Needed so Dokploy/Traefik can route the domain to this service

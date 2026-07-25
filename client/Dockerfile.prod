@@ -21,6 +21,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV BACKEND_URL=http://server:8000
 # Must stay empty so browser uses /api on the public domain (Bitrix + UI)
 ENV NEXT_PUBLIC_API_URL=
+# 3000 is taken on the host — run on 3012 to rule out any conflicts
+ENV PORT=3012
 
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
@@ -28,5 +30,5 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.ts ./next.config.ts
 
-EXPOSE 3000
+EXPOSE 3012
 CMD ["npm", "run", "start"]

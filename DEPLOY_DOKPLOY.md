@@ -13,7 +13,7 @@ Postgres создаётся отдельным сервисом Dokploy, при�
 ## Архитектура на сервере
 
 ```
-Интернет → Traefik (Dokploy, 443) → client:3000 (Next.js)
+Интернет → Traefik (Dokploy, 443) → client:3012 (Next.js)
                                         │  rewrites /api, /storage, /output, /health
                                         ▼
                                     server:8000 (FastAPI + Chromium)
@@ -35,7 +35,7 @@ Dokploy собирает образы из репозитория, поэтом�
 cd d:\catalog
 git add -A
 git commit -m "Dokploy deploy: prod dockerfiles, compose, KP entity filter"
-git push origin master
+git push origin main
 ```
 
 Проверьте, что в репозитории есть: `docker-compose.dokploy.yml`, `server/Dockerfile.prod`, `client/Dockerfile.prod`, `.dockerignore`, `client/.dockerignore`.
@@ -50,7 +50,7 @@ git push origin master
 ## Шаг 2. Создать Compose-сервис приложения
 
 1. **Create Service → Compose**, тип **Docker Compose**.
-2. Provider: **GitHub** (или Git с URL `https://github.com/nikita-yakuschenko/catalog.git`), ветка `master`.
+2. Provider: **GitHub** (или Git с URL `https://github.com/nikita-yakuschenko/catalog.git`), ветка `main`.
 3. **Compose Path**: `./docker-compose.dokploy.yml`.
 
 ## Шаг 3. Заполнить Environment
@@ -95,7 +95,7 @@ Tilda-параметры (`TILDA_*`) задавать не нужно — раб
 2. В compose-сервисе: вкладка **Domains → Add Domain**:
    - Host: `catalog.example.ru`
    - Service Name: `client`
-   - Container Port: `3000`
+   - Container Port: `3012`
    - HTTPS: включить, сертификат **Let's Encrypt**
 3. Подождите выпуск сертификата (~1 минута).
 
@@ -134,7 +134,7 @@ start https://catalog.example.ru
 | Симптом | Причина | Решение |
 |---|---|---|
 | Сервер падает на старте: `could not translate host name` | Неверный `DATABASE_URL` / хост БД | Скопировать Internal Host из вкладки базы; проверить, что в compose есть `dokploy-network` (уже добавлена) |
-| Домен отдаёт 404/502 | Traefik не видит сервис | В Domains указан Service `client`, порт `3000`; сервисы в `dokploy-network` |
+| Домен отдаёт 404/502 | Traefik не видит сервис | В Domains указан Service `client`, порт `3012`; сервисы в `dokploy-network` |
 | Bitrix-вебхук не доходит | HTTP вместо HTTPS, либо URL без `/api` | URL строго `https://ДОМЕН/api/proposals/bitrix` |
 | В ответ на вебхук `{"status":"ignored"}` | Событие от другого смарт-процесса | Это норма; если игнорируется нужный СП — сверить `BITRIX_KP_ENTITY_TYPE_ID` с реальным entityTypeId в портале |
 | КП создаётся без файла | Не найден файл на Диске/в UF | Проверить `BITRIX_SOURCE_FILE_FIELD` и warnings в meta предложения |
