@@ -145,7 +145,9 @@ start https://catalog.avgst.ru
 3. **Deploy** в Dokploy.
 4. Откройте `https://catalog.avgst.ru` → редирект на `/login` → «Войти через Bitrix24».
 
-Пока `BITRIX_OAUTH_CLIENT_ID` пуст — защита UI выключена (удобно для отладки). Вебхук КП при этом работает независимо.
+Пока `BITRIX_OAUTH_CLIENT_ID` пуст — защита API/UI на бэкенде выключена (удобно для отладки). Вебхук КП при этом работает независимо.
+
+На клиенте в prod по умолчанию `AUTH_REQUIRED=true`: без cookie `avgst_session` Next сразу отдаёт редирект на `/login` (страница `/projects` не мелькает). Локально оставьте `AUTH_REQUIRED=false`.
 
 ## Обновления
 

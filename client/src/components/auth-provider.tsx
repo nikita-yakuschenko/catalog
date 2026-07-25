@@ -20,13 +20,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<AuthStatus | null>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const onLogin = pathname === "/login";
 
   const refresh = useCallback(async () => {
     try {
       const next = await api.authStatus();
       setStatus(next);
     } catch {
-      setStatus({ auth_enabled: false, authenticated: true, user: null });
+      // Fail closed: без ответа статуса не открываем приложение
+      setStatus({ auth_enabled: true, authenticated: false, user: null });
     } finally {
       setLoading(false);
     }
@@ -47,14 +49,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (loading || !status) return;
-    const onLogin = pathname === "/login";
     if (status.auth_enabled && !status.authenticated && !onLogin) {
       router.replace("/login");
     }
-    if (status.authenticated && onLogin) {
+    if (status.auth_enabled && status.authenticated && onLogin) {
       router.replace("/");
     }
-  }, [loading, status, pathname, router]);
+  }, [loading, status, onLogin, router]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -66,6 +67,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }),
     [loading, status, refresh, logout]
   );
+
+  const ready = !loading && status != null;
+  const allowed =
+    ready && (!status.auth_enabled || status.authenticated || onLogin);
+
+  if (!ready || !allowed) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        {onLogin ? "Загрузка…" : "Проверка доступа…"}
+      </div>
+    );
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

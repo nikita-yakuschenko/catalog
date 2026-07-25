@@ -44,6 +44,8 @@ services:
     environment:
       BACKEND_URL: http://server:8000
       NEXT_PUBLIC_API_URL: ""
+      # Без cookie avgst_session — сразу /login (до отрисовки UI)
+      AUTH_REQUIRED: ${AUTH_REQUIRED:-true}
       PORT: "3012"
     depends_on:
       - server
