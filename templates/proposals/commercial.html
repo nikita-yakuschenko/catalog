@@ -216,7 +216,7 @@
             <tr class="is-emphasis">
               <td>Доставка</td>
               <td class="{% if doc.delivery_included %}is-muted{% endif %}">
-                {% if doc.delivery_price %}{{ doc.delivery_price | price }}{% else %}включена в стоимость{% endif %}
+                {% if doc.delivery_price %}{{ doc.delivery_price | price }}{% elif doc.delivery_footnote %}включена в стоимость*{% else %}включена в стоимость{% endif %}
               </td>
             </tr>
             <tr class="is-emphasis">
@@ -239,10 +239,10 @@
             {% endif %}
           </tbody>
         </table>
-        {% if pkg.show_summary and doc.delivery_footnote %}
-        <p class="kp-table-note">{{ doc.delivery_footnote }}</p>
-        {% endif %}
       </div>
+      {% if pkg.show_summary and doc.delivery_footnote %}
+      <p class="kp-footnote">* {{ doc.delivery_footnote }}</p>
+      {% endif %}
       {% if pkg.show_summary %}
       <div class="kp-package-bar">
         <div class="kp-package-bar-col">
