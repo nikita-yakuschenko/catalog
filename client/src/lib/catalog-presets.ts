@@ -1,5 +1,8 @@
 import type { Project } from "@/lib/api";
 
+/** Допуск площади для быстрых отборов (м² вверх и вниз). */
+export const AREA_TOLERANCE_M2 = 5;
+
 export type CatalogPreset = {
   id: string;
   /** Короткий ярлык в UI */
@@ -13,6 +16,15 @@ export type CatalogPreset = {
 
 function hasArea(p: Project): p is Project & { area: number } {
   return typeof p.area === "number" && Number.isFinite(p.area);
+}
+
+function inAreaRange(p: Project, min: number | null, max: number | null): boolean {
+  if (!hasArea(p)) return false;
+  const lo = min == null ? null : min - AREA_TOLERANCE_M2;
+  const hi = max == null ? null : max + AREA_TOLERANCE_M2;
+  if (lo != null && p.area < lo) return false;
+  if (hi != null && p.area > hi) return false;
+  return true;
 }
 
 function isBarnhouse(p: Project): boolean {
@@ -67,7 +79,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     name: "Подборка домов до 80 м²",
     title: "Дома до 80 м²",
     subtitle: "Компактные проекты",
-    match: (p) => hasArea(p) && p.area < 80,
+    match: (p) => inAreaRange(p, null, 80),
   },
   {
     id: "area-80-100",
@@ -75,7 +87,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     name: "Подборка домов 80 м² – 100 м²",
     title: "Дома 80–100 м²",
     subtitle: "Проекты площадью от 80 до 100 м²",
-    match: (p) => hasArea(p) && p.area >= 80 && p.area < 100,
+    match: (p) => inAreaRange(p, 80, 100),
   },
   {
     id: "area-100-120",
@@ -83,7 +95,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     name: "Подборка домов 100 м² – 120 м²",
     title: "Дома 100–120 м²",
     subtitle: "Проекты площадью от 100 до 120 м²",
-    match: (p) => hasArea(p) && p.area >= 100 && p.area < 120,
+    match: (p) => inAreaRange(p, 100, 120),
   },
   {
     id: "area-120-150",
@@ -91,7 +103,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     name: "Подборка домов 120 м² – 150 м²",
     title: "Дома 120–150 м²",
     subtitle: "Проекты площадью от 120 до 150 м²",
-    match: (p) => hasArea(p) && p.area >= 120 && p.area < 150,
+    match: (p) => inAreaRange(p, 120, 150),
   },
   {
     id: "area-150-200",
@@ -99,7 +111,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     name: "Подборка домов 150 м² – 200 м²",
     title: "Дома 150–200 м²",
     subtitle: "Проекты площадью от 150 до 200 м²",
-    match: (p) => hasArea(p) && p.area >= 150 && p.area < 200,
+    match: (p) => inAreaRange(p, 150, 200),
   },
   {
     id: "area-gt-200",
@@ -107,7 +119,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     name: "Подборка домов более 200 м²",
     title: "Дома более 200 м²",
     subtitle: "Проекты площадью от 200 м²",
-    match: (p) => hasArea(p) && p.area >= 200,
+    match: (p) => inAreaRange(p, 200, null),
   },
 ];
 
