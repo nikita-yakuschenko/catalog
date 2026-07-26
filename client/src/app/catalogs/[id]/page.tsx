@@ -72,8 +72,26 @@ export default function CatalogDetailPage() {
   const preflight = useMutation({
     mutationFn: () => api.preflight(id),
     onSuccess: (report) => {
-      const st = String(report.status ?? "ok");
-      toast.message(`Проверка: ${st === "ok" ? "всё в порядке" : st}`);
+      const st = String(report.status ?? "");
+      const errors = Array.isArray(report.errors) ? report.errors.length : 0;
+      const warnings = Array.isArray(report.warnings) ? report.warnings.length : 0;
+      if (st === "passed" || st === "ok") {
+        toast.success("Проверка пройдена — всё в порядке");
+      } else if (st === "warning") {
+        toast.message(
+          warnings > 0
+            ? `Есть замечания (${warnings}) — PDF собрать можно`
+            : "Есть замечания — PDF собрать можно"
+        );
+      } else if (st === "failed") {
+        toast.error(
+          errors > 0
+            ? `Проверка не пройдена (${errors} проблем) — исправьте перед сборкой`
+            : "Проверка не пройдена — исправьте перед сборкой"
+        );
+      } else {
+        toast.message("Проверка завершена");
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
