@@ -1,15 +1,23 @@
-{% if false %}
-<link rel="stylesheet" href="../styles/tokens.css" />
-<link rel="stylesheet" href="../styles/pages.css" />
-{% endif %}
-<section class="page cover">
-  <div class="cover-top">
-    <div class="cover-brand">Авангард Строй</div>
-    <h1 class="cover-title">{{ catalog.title }}</h1>
-    <p class="cover-sub">{{ catalog.subtitle }}</p>
-  </div>
-  <div class="cover-bottom">
-    <span>Проектирование · Производство · Строительство</span>
-    <span>avgst.ru / {{ year }}</span>
+{% from 'partials/catalog_chrome.html' import cat_foot with context %}
+<section class="page cat-page cat-cover">
+  <div class="cat-cover-stack">
+    <div class="cat-cover-hero">
+      <div class="cat-cover-hero-inner">
+        <div class="cat-logo cat-logo--hero" aria-hidden="true">{{ logo_svg }}</div>
+        <p class="cat-cover-kicker">Каталог проектов · {{ year }}</p>
+        <h1 class="cat-cover-title">{{ catalog.title }}</h1>
+        {% if catalog.subtitle %}
+        <p class="cat-cover-sub">{{ catalog.subtitle }}</p>
+        {% endif %}
+        <div class="cat-cover-rule" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="cat-cover-panel">
+      <span class="cat-foot-brand">
+        <span class="cat-logo cat-logo--foot" aria-hidden="true">{{ logo_mark_svg }}</span>
+        <span>проектирование · производство · строительство</span>
+      </span>
+      <span>avgst.ru · {{ year }}</span>
+    </div>
   </div>
 </section>

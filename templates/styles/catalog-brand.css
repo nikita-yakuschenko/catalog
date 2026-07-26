@@ -1,0 +1,460 @@
+/* Catalog PDF — AVGST brand language (aligned with KP) */
+
+.cat-page,
+.cat-page * {
+  border-radius: 0 !important;
+}
+
+.cat-page {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+}
+
+.cat-sheet {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 10mm var(--page-margin) 10mm;
+  background: var(--color-paper);
+}
+
+/* —— Logos —— */
+.cat-logo {
+  display: block;
+  line-height: 0;
+}
+
+.cat-logo svg {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
+.cat-logo--hero svg {
+  width: 72mm;
+  height: auto;
+}
+
+.cat-logo--row svg {
+  width: 7mm;
+  height: 7mm;
+}
+
+.cat-logo--foot svg {
+  width: 6.5mm;
+  height: 6.5mm;
+}
+
+.cat-logo--foot-full svg {
+  width: 32mm;
+  height: auto;
+}
+
+/* —— Branded cover (no project photo) —— */
+.cat-cover {
+  padding: 0;
+  background: var(--color-bg);
+}
+
+.cat-cover-stack {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.cat-cover-hero {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16mm var(--page-margin);
+  background:
+    linear-gradient(165deg, var(--color-paper) 0%, var(--color-mist) 55%, #e8f3eb 100%);
+}
+
+.cat-cover-hero-inner {
+  max-width: 210mm;
+  text-align: left;
+}
+
+.cat-cover-hero-inner .cat-logo--hero {
+  margin-bottom: 10mm;
+}
+
+.cat-cover-kicker {
+  margin: 0 0 3mm;
+  font-size: 9pt;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.cat-cover-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 36pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--color-ink);
+}
+
+.cat-cover-sub {
+  margin: 4mm 0 0;
+  max-width: 160mm;
+  font-size: 12pt;
+  font-weight: 300;
+  line-height: 1.4;
+  color: var(--color-muted);
+}
+
+.cat-cover-rule {
+  width: 18mm;
+  height: 1px;
+  margin: 8mm 0 0;
+  background: var(--color-brand);
+}
+
+.cat-cover-panel {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 18mm;
+  padding: 5mm var(--page-margin);
+  background: var(--color-paper);
+  border-top: 1px solid var(--color-brand);
+}
+
+/* —— Head / page num / foot —— */
+.cat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8mm;
+  margin-bottom: 5mm;
+  padding-bottom: 3mm;
+  border-bottom: 1px solid var(--color-brand);
+}
+
+.cat-head-title {
+  display: flex;
+  align-items: baseline;
+  gap: 3.5mm;
+  min-width: 0;
+}
+
+.cat-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24pt;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+  color: var(--color-ink);
+}
+
+.cat-title-note {
+  font-size: 9pt;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.cat-page-num {
+  font-size: 8.5pt;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  flex-shrink: 0;
+}
+
+.cat-page-num i {
+  display: inline-block;
+  width: 8mm;
+  height: 1px;
+  background: var(--color-brand);
+  margin-right: 2.5mm;
+  vertical-align: middle;
+}
+
+.cat-brand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4mm;
+}
+
+.cat-brand-row-left {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  min-width: 0;
+}
+
+.cat-brand-row-label {
+  font-size: 8.5pt;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.cat-foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 3mm;
+  border-top: 1px solid var(--color-line);
+  font-size: 7.5pt;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.cat-foot-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.5mm;
+}
+
+.cat-foot--closing {
+  border-top-color: var(--color-brand);
+}
+
+/* —— Intro / TOC body —— */
+.cat-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.cat-intro-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 14mm;
+  margin-top: 6mm;
+}
+
+.cat-intro-text {
+  font-size: 11.5pt;
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--color-ink);
+}
+
+.cat-intro-text p {
+  margin: 0 0 4mm;
+}
+
+.cat-stats {
+  display: grid;
+  gap: 7mm;
+  align-content: start;
+}
+
+.cat-stat-value {
+  font-family: var(--font-display);
+  font-size: 22pt;
+  font-weight: 800;
+  color: var(--color-brand);
+  line-height: 1;
+}
+
+.cat-stat-label {
+  margin-top: 1.5mm;
+  font-size: 8pt;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.cat-toc-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16mm;
+  margin-top: 4mm;
+}
+
+.cat-toc-group-title {
+  font-size: 9pt;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-brand);
+  margin-bottom: 3mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid var(--color-brand);
+}
+
+.cat-toc-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 4mm;
+  padding: 2.4mm 0;
+  border-bottom: 1px solid var(--color-soft);
+  font-size: 10.5pt;
+  font-weight: 300;
+}
+
+.cat-toc-page {
+  font-weight: 800;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* —— Section divider —— */
+.cat-divider {
+  padding: 0;
+  background: var(--color-paper);
+}
+
+.cat-divider .cat-sheet {
+  justify-content: center;
+}
+
+.cat-divider-index {
+  font-family: var(--font-display);
+  font-size: 48pt;
+  font-weight: 800;
+  color: var(--color-brand);
+  line-height: 1;
+}
+
+.cat-divider-title {
+  margin: 5mm 0 3mm;
+  font-family: var(--font-display);
+  font-size: 28pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+.cat-divider-sub {
+  margin: 0;
+  max-width: 180mm;
+  font-size: 12pt;
+  font-weight: 300;
+  color: var(--color-muted);
+}
+
+.cat-divider-rule {
+  width: 18mm;
+  height: 1px;
+  margin-top: 8mm;
+  background: var(--color-brand);
+}
+
+/* —— Contacts —— */
+.cat-contacts-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 14mm;
+  margin-top: 6mm;
+}
+
+.cat-contacts-site {
+  margin: 2mm 0 0;
+  font-family: var(--font-display);
+  font-size: 20pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.cat-contacts-copy {
+  margin-top: 3mm;
+  font-size: 11pt;
+  font-weight: 300;
+  line-height: 1.55;
+  max-width: 110mm;
+}
+
+.cat-meta-label {
+  font-size: 7.5pt;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.cat-meta-value {
+  margin-top: 1.5mm;
+  font-size: 10pt;
+  font-weight: 300;
+  line-height: 1.4;
+}
+
+.cat-legal {
+  margin-top: auto;
+  padding-top: 4mm;
+  border-top: 1px solid var(--color-line);
+}
+
+.cat-disclaimer {
+  font-size: 7.5pt;
+  line-height: 1.5;
+  color: var(--color-muted);
+  max-width: 250mm;
+}
+
+.cat-disclaimer p {
+  margin: 0;
+}
+
+.cat-disclaimer strong {
+  color: var(--color-ink);
+  font-weight: 800;
+}
+
+.cat-legal-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3mm;
+  font-size: 7pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* —— Project spreads: KP chrome, no seal —— */
+.spread-hero .hero-head {
+  padding: 8mm var(--page-margin) 3mm;
+}
+
+.spread-hero .hero-seal {
+  display: none !important;
+}
+
+.spread-hero .hero-brand-row,
+.dossier-brand {
+  display: none; /* replaced by cat-brand-row in markup */
+}
+
+.project-page .cat-brand-row {
+  margin-bottom: 3mm;
+}
+
+.dossier-sheet {
+  padding: 8mm var(--page-margin) 8mm;
+}
+
+.dossier-sheet > .cat-brand-row {
+  margin-bottom: 2mm;
+}
+
+.dossier-sheet > .cat-foot {
+  margin-top: 4mm;
+  flex: 0 0 auto;
+}
+
+/* Hero page: зелёная линия номера как в КП */
+.spread-hero .cat-page-num i {
+  background: var(--color-brand);
+}

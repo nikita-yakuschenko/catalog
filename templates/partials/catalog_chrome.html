@@ -1,0 +1,35 @@
+{# Shared catalog chrome — same brand language as KP #}
+
+{% macro cat_head(title, page_num, note=None) -%}
+<div class="cat-head">
+  <div class="cat-head-title">
+    <h1 class="cat-title">{{ title }}</h1>
+    {% if note %}<span class="cat-title-note">{{ note }}</span>{% endif %}
+  </div>
+  <span class="cat-page-num"><i></i>{{ '%02d'|format(page_num) }}</span>
+</div>
+{%- endmacro %}
+
+{% macro cat_brand_row(label, page_num) -%}
+<div class="cat-brand-row">
+  <div class="cat-brand-row-left">
+    <span class="cat-logo cat-logo--row" aria-hidden="true">{{ logo_mark_svg }}</span>
+    <span class="cat-brand-row-label">{{ label }}</span>
+  </div>
+  <span class="cat-page-num"><i></i>{{ '%02d'|format(page_num) }}</span>
+</div>
+{%- endmacro %}
+
+{% macro cat_foot(full=false) -%}
+<div class="cat-foot{% if full %} cat-foot--closing{% endif %}">
+  <span class="cat-foot-brand">
+    {% if full %}
+    <span class="cat-logo cat-logo--foot-full" aria-hidden="true">{{ logo_svg }}</span>
+    {% else %}
+    <span class="cat-logo cat-logo--foot" aria-hidden="true">{{ logo_mark_svg }}</span>
+    {% endif %}
+    <span>проектирование · производство · строительство</span>
+  </span>
+  <span>{{ year }}</span>
+</div>
+{%- endmacro %}

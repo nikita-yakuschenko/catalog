@@ -1,47 +1,42 @@
-{% if false %}
-<link rel="stylesheet" href="../styles/tokens.css" />
-<link rel="stylesheet" href="../styles/pages.css" />
-{% endif %}
-<section class="page intro">
-  <div class="header-bar">
-    <span><span class="brand">AVGST</span> · О каталоге</span>
-    <span>02</span>
-  </div>
-  <h1 class="h1" style="margin-top: 10mm;">Дома для жизни</h1>
-  <div class="intro-grid">
-    <div class="intro-text">
-      <p>
-        В каталоге собраны {{ project_count }} конкретных проектов из действующей
-        линейки «Авангард Строй»: {{ modular_count }} модульных и {{ panel_count }}
-        панельно-каркасных домов.
-      </p>
-      <p>
-        Для каждого проекта сохранены исходные архитектурные решения,
-        планировка, площадь, габариты и количество помещений,
-        опубликованные на avgst.ru.
-      </p>
-      <p>
-        Планировку, площадь, цвет фасада и кровли можно адаптировать
-        под участок и сценарий жизни семьи.
-      </p>
-    </div>
-    <div class="stats">
-      <div>
-        <div class="stat-value">10+</div>
-        <div class="stat-label">лет опыта</div>
-      </div>
-      <div>
-        <div class="stat-value">3 500+</div>
-        <div class="stat-label">построенных домов</div>
-      </div>
-      <div>
-        <div class="stat-value">8 800 м²</div>
-        <div class="stat-label">производство и склад</div>
+{% from 'partials/catalog_chrome.html' import cat_head, cat_foot with context %}
+<section class="page cat-page">
+  <div class="cat-sheet">
+    {{ cat_head("О каталоге", intro_page_num) }}
+    <div class="cat-body">
+      <h2 class="cat-title" style="font-size: 20pt; border: 0; margin-bottom: 0;">Дома для жизни</h2>
+      <div class="cat-intro-grid">
+        <div class="cat-intro-text">
+          <p>
+            В каталоге собраны {{ project_count }} конкретных проектов из действующей
+            линейки «Авангард Строй»: {{ modular_count }} модульных и {{ panel_count }}
+            панельно-каркасных домов.
+          </p>
+          <p>
+            Для каждого проекта сохранены исходные архитектурные решения,
+            планировка, площадь, габариты и количество помещений,
+            опубликованные на avgst.ru.
+          </p>
+          <p>
+            Планировку, площадь, цвет фасада и кровли можно адаптировать
+            под участок и сценарий жизни семьи.
+          </p>
+        </div>
+        <div class="cat-stats">
+          <div>
+            <div class="cat-stat-value">10+</div>
+            <div class="cat-stat-label">лет опыта</div>
+          </div>
+          <div>
+            <div class="cat-stat-value">3 500+</div>
+            <div class="cat-stat-label">построенных домов</div>
+          </div>
+          <div>
+            <div class="cat-stat-value">8 800 м²</div>
+            <div class="cat-stat-label">производство и склад</div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="footer">
-    <span>Авангард Строй · avgst.ru</span>
-    <span>Каталог проектов · {{ year }}</span>
+    {{ cat_foot() }}
   </div>
 </section>

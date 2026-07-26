@@ -1,9 +1,10 @@
-{% if false %}
-<link rel="stylesheet" href="../styles/tokens.css" />
-<link rel="stylesheet" href="../styles/pages.css" />
-{% endif %}
-<section class="page divider">
-  <div class="divider-index">{{ block.index }}</div>
-  <h1 class="divider-title">{{ block.title }}</h1>
-  <p class="divider-sub">{{ block.subtitle }}</p>
+{% from 'partials/catalog_chrome.html' import cat_foot with context %}
+<section class="page cat-page cat-divider">
+  <div class="cat-sheet">
+    <div class="cat-divider-index">{{ block.index }}</div>
+    <h1 class="cat-divider-title">{{ block.title }}</h1>
+    <p class="cat-divider-sub">{{ block.subtitle }}</p>
+    <div class="cat-divider-rule" aria-hidden="true"></div>
+    {{ cat_foot() }}
+  </div>
 </section>

@@ -9,12 +9,28 @@ from typing import Any, Optional
 from uuid import UUID
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from markupsafe import Markup
 
 from app.core.config import settings
 from app.domain.models import AssetType, Catalog, CatalogProject, HouseProject, Technology
 from app.services.icons import ICONS
 from app.services.layout_selector import LayoutSelector, layout_page_count
 from app.services.qrcode_util import qr_data_uri
+
+ROOT = Path(__file__).resolve().parents[3]
+
+
+def _load_brand_svg(name: str, templates_dir: Path) -> Markup:
+    """Inline SVG for Chromium PDF — prefers templates/brand, falls back to repo root."""
+    candidates = [
+        templates_dir / "brand" / name,
+        ROOT / name,
+        ROOT / "logo.svg" if name.startswith("logo") else None,
+    ]
+    for path in candidates:
+        if path and path.exists():
+            return Markup(path.read_text(encoding="utf-8"))
+    return Markup("")
 
 
 @dataclass
@@ -320,12 +336,16 @@ class CatalogAssembler:
         panel_count = len(panel)
 
         fonts_dir = self.templates_dir / "fonts"
+        intro_page_num = next((p.page_number for p in pages if p.kind == "introduction"), 2)
+        contents_page_num = next((p.page_number for p in pages if p.kind == "contents"), 3)
         context = {
             "catalog": catalog,
             "pages": pages,
             "toc_entries": toc_entries,
             "project_blocks": project_blocks,
             "total_pages": total_pages,
+            "intro_page_num": intro_page_num,
+            "contents_page_num": contents_page_num,
             "modular_count": modular_count,
             "panel_count": panel_count,
             "project_count": modular_count + panel_count,
@@ -342,6 +362,8 @@ class CatalogAssembler:
             "show_prices": catalog.show_prices,
             "show_project_links": catalog.show_project_links,
             "icons": ICONS,
+            "logo_svg": _load_brand_svg("logo.svg", self.templates_dir),
+            "logo_mark_svg": _load_brand_svg("logo-mark.svg", self.templates_dir),
             "font_gilroy_light": _font_data_uri(fonts_dir / "Gilroy-Light.otf"),
             "font_gilroy_extrabold": _font_data_uri(fonts_dir / "Gilroy-ExtraBold.otf"),
         }
