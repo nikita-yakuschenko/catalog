@@ -186,7 +186,8 @@ export default function CatalogDetailPage() {
           <div className="space-y-0.5">
             <p className="text-sm font-semibold tracking-tight">Собирается PDF…</p>
             <p className="text-sm text-amber-900/80 dark:text-amber-100/80">
-              Обычно занимает около минуты. Статус обновится сам — ждать на этой странице.
+              Обычно около минуты. Можно уйти — сборка идёт на сервере. Если останетесь, статус
+              обновится сам.
             </p>
           </div>
         </div>
