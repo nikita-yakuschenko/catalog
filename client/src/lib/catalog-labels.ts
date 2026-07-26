@@ -46,3 +46,12 @@ export function catalogStatusDescription(
   }
   return catalogStatusLabel(catalogStatus);
 }
+
+/** Идёт сборка PDF (очередь или рендер). */
+export function isCatalogBuilding(
+  catalogStatus: string,
+  build?: { status: string } | null
+): boolean {
+  if (build?.status === "pending" || build?.status === "running") return true;
+  return catalogStatus === "rendering";
+}

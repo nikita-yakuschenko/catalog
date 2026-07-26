@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { IconEye, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconEye, IconLoader2, IconPlus, IconTrash } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
 import { StickyChrome } from "@/components/sticky-chrome";
@@ -98,7 +98,19 @@ export default function CatalogsPage() {
                   <TableCell>{catalogManagerName(c)}</TableCell>
                   <TableCell>{formatCatalogDate(c.created_at)}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{catalogStatusLabel(c.status, isAdmin)}</Badge>
+                    <Badge
+                      variant={c.status === "failed" ? "destructive" : "secondary"}
+                      className={cn(
+                        "gap-1.5",
+                        c.status === "rendering" &&
+                          "border-amber-500/40 bg-amber-500/15 text-amber-950 dark:text-amber-100"
+                      )}
+                    >
+                      {c.status === "rendering" && (
+                        <IconLoader2 className="size-3.5 animate-spin" stroke={2} />
+                      )}
+                      {catalogStatusLabel(c.status, isAdmin)}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap justify-end gap-2">

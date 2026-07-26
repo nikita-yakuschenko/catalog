@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { IconDownload, IconEye, IconPlayerPlay, IconShieldCheck } from "@tabler/icons-react";
+import { IconDownload, IconEye, IconLoader2, IconPlayerPlay, IconShieldCheck } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
 import { StickyChrome } from "@/components/sticky-chrome";
 import { useAuth } from "@/components/auth-provider";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Table,
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import {
   catalogStatusDescription,
+  isCatalogBuilding,
   LAYOUT_OPTIONS,
   layoutLabel,
 } from "@/lib/catalog-labels";
@@ -107,6 +109,11 @@ export default function CatalogDetailPage() {
 
   if (!data) return <p className="text-muted-foreground">Загрузка…</p>;
 
+  const building = isCatalogBuilding(data.status, status?.build);
+  const statusText = catalogStatusDescription(data.status, status?.build, isAdmin);
+  const statusFailed = data.status === "failed" || status?.build?.status === "failed";
+  const statusReady = !building && !statusFailed && (data.status === "ready" || status?.build?.status === "ready");
+
   return (
     <div className="space-y-6">
       <StickyChrome>
@@ -115,9 +122,20 @@ export default function CatalogDetailPage() {
           backLabel="К списку каталогов"
           title={data.name}
           description={
-            <>
-              {data.title} · {catalogStatusDescription(data.status, status?.build, isAdmin)}
-            </>
+            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              <span>{data.title}</span>
+              <Badge
+                variant={statusFailed ? "destructive" : statusReady ? "default" : "secondary"}
+                className={cn(
+                  "gap-1.5 text-xs",
+                  building &&
+                    "border-amber-500/40 bg-amber-500/15 text-amber-950 dark:text-amber-100"
+                )}
+              >
+                {building && <IconLoader2 className="size-3.5 animate-spin" stroke={2} />}
+                {statusText}
+              </Badge>
+            </div>
           }
           actions={
             <>
@@ -127,9 +145,17 @@ export default function CatalogDetailPage() {
                   Проверка
                 </Button>
               )}
-              <Button type="button" onClick={() => build.mutate()} disabled={build.isPending}>
-                <IconPlayerPlay className="size-4" stroke={1.75} />
-                Собрать PDF
+              <Button
+                type="button"
+                onClick={() => build.mutate()}
+                disabled={build.isPending || building}
+              >
+                {building ? (
+                  <IconLoader2 className="size-4 animate-spin" stroke={1.75} />
+                ) : (
+                  <IconPlayerPlay className="size-4" stroke={1.75} />
+                )}
+                {building ? "Собирается…" : "Собрать PDF"}
               </Button>
               <Link
                 href={`/catalogs/${id}/preview`}
@@ -149,6 +175,22 @@ export default function CatalogDetailPage() {
           }
         />
       </StickyChrome>
+
+      {building && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex items-start gap-3 rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-amber-950 dark:text-amber-50"
+        >
+          <IconLoader2 className="mt-0.5 size-5 shrink-0 animate-spin" stroke={2} />
+          <div className="space-y-0.5">
+            <p className="text-sm font-semibold tracking-tight">Собирается PDF…</p>
+            <p className="text-sm text-amber-900/80 dark:text-amber-100/80">
+              Обычно занимает около минуты. Статус обновится сам — ждать на этой странице.
+            </p>
+          </div>
+        </div>
+      )}
 
       {status?.build?.error_message && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
