@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { StickyChrome } from "@/components/sticky-chrome";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,13 +19,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  applyCatalogPreset,
-  CATALOG_PRESET_GROUPS,
-  CATALOG_PRESETS,
-} from "@/lib/catalog-presets";
+import { applyCatalogPreset, CATALOG_PRESETS } from "@/lib/catalog-presets";
 import { api, type Project } from "@/lib/api";
 import { cn } from "@/lib/utils";
+
+/** TableHead по умолчанию sticky к шапке приложения — в локальном скролле нужен top: 0. */
+const headSticky = { top: 0 } as const;
 
 function techLabel(tech: Project["technology"]) {
   return tech === "modular" ? "Модульный" : "Панельно-каркасный";
@@ -50,11 +48,6 @@ export default function NewCatalogPage() {
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
   const sorted = useMemo(() => sortProjects(projects), [projects]);
-
-  const presetById = useMemo(() => {
-    const map = new Map(CATALOG_PRESETS.map((p) => [p.id, p]));
-    return map;
-  }, []);
 
   const presetCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -109,7 +102,7 @@ export default function NewCatalogPage() {
   }
 
   function applyPreset(presetId: string) {
-    const preset = presetById.get(presetId);
+    const preset = CATALOG_PRESETS.find((p) => p.id === presetId);
     if (!preset) return;
     const ids = applyCatalogPreset(projects, preset);
     setActivePreset(preset.id);
@@ -123,100 +116,119 @@ export default function NewCatalogPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <StickyChrome>
         <PageHeader backHref="/catalogs" backLabel="К списку каталогов" title="Новый каталог" />
       </StickyChrome>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         <p className="text-sm font-medium">Быстрые отборы</p>
-        {CATALOG_PRESET_GROUPS.map((group) => (
-          <div key={group.id} className="space-y-1.5">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {group.label}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {group.presetIds.map((id) => {
-                const preset = presetById.get(id);
-                if (!preset) return null;
-                const count = presetCounts[preset.id] ?? 0;
-                return (
-                  <Button
-                    key={preset.id}
-                    type="button"
-                    variant={activePreset === preset.id ? "default" : "outline"}
-                    size="sm"
-                    title={preset.name}
-                    onClick={() => applyPreset(preset.id)}
-                  >
-                    {preset.label}
-                    <span
-                      className={cn(
-                        activePreset === preset.id ? "text-primary-foreground/80" : "text-muted-foreground"
-                      )}
-                    >
-                      · {count}
-                    </span>
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+        <div className="flex flex-wrap gap-2">
+          {CATALOG_PRESETS.map((preset) => {
+            const count = presetCounts[preset.id] ?? 0;
+            return (
+              <Button
+                key={preset.id}
+                type="button"
+                variant={activePreset === preset.id ? "default" : "outline"}
+                size="sm"
+                title={preset.name}
+                onClick={() => applyPreset(preset.id)}
+              >
+                {preset.label}
+                <span
+                  className={cn(
+                    activePreset === preset.id ? "text-primary-foreground/80" : "text-muted-foreground"
+                  )}
+                >
+                  · {count}
+                </span>
+              </Button>
+            );
+          })}
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Параметры каталога</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="name">Название в списке</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="title">Заголовок на обложке</Label>
-            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-          <div className="space-y-1.5 md:col-span-2">
-            <Label htmlFor="subtitle">Подзаголовок на обложке</Label>
-            <Input id="subtitle" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
-          </div>
-          <label className="flex cursor-pointer items-center gap-2 text-sm md:col-span-2">
-            <Checkbox checked={showPrices} onCheckedChange={(v) => setShowPrices(v === true)} />
-            Показывать цены
-          </label>
-        </CardContent>
-      </Card>
+      <div className="grid gap-3 rounded-xl border border-border bg-card p-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-1">
+          <Label htmlFor="name" className="text-xs">
+            Название в списке
+          </Label>
+          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="h-8" />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="title" className="text-xs">
+            Заголовок на обложке
+          </Label>
+          <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} className="h-8" />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="subtitle" className="text-xs">
+            Подзаголовок на обложке
+          </Label>
+          <Input
+            id="subtitle"
+            value={subtitle}
+            onChange={(e) => setSubtitle(e.target.value)}
+            className="h-8"
+          />
+        </div>
+        <label className="flex cursor-pointer items-end gap-2 pb-1.5 text-sm">
+          <Checkbox checked={showPrices} onCheckedChange={(v) => setShowPrices(v === true)} />
+          Показывать цены
+        </label>
+      </div>
 
       <div className="rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-          <div>
-            <h2 className="text-sm font-semibold tracking-tight">Проекты</h2>
-            <p className="text-xs text-muted-foreground">
-              Выбрано {selected.length} из {sorted.length}
-            </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2">
+          <p className="text-sm">
+            <span className="font-semibold">Проекты</span>
+            <span className="text-muted-foreground">
+              {" "}
+              · выбрано {selected.length} из {sorted.length}
+            </span>
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={toggleAll}
+              disabled={sorted.length === 0}
+            >
+              {allSelected ? "Снять все" : "Выбрать все"}
+            </Button>
+            <Button
+              disabled={create.isPending || selected.length === 0}
+              size="sm"
+              onClick={() => create.mutate()}
+            >
+              Создать каталог ({selected.length})
+            </Button>
           </div>
-          <Button type="button" variant="outline" size="sm" onClick={toggleAll} disabled={sorted.length === 0}>
-            {allSelected ? "Снять все" : "Выбрать все"}
-          </Button>
         </div>
-        <div className="max-h-[520px] overflow-auto">
+        <div className="max-h-[min(70vh,640px)] overflow-auto">
           <Table>
-            <TableHeader className="sticky top-0 z-10 bg-card">
+            <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-12">
+                <TableHead className="w-12" style={headSticky}>
                   <Checkbox
                     checked={allSelected}
                     onCheckedChange={() => toggleAll()}
                     aria-label="Выбрать все проекты"
                   />
                 </TableHead>
-                <TableHead>Проект</TableHead>
-                <TableHead>Технология</TableHead>
-                <TableHead className="text-right">Площадь</TableHead>
-                <TableHead className="text-right">Этажи</TableHead>
-                <TableHead className="text-right">Спальни</TableHead>
+                <TableHead style={headSticky}>Проект</TableHead>
+                <TableHead style={headSticky}>Технология</TableHead>
+                <TableHead className="text-right" style={headSticky}>
+                  Площадь
+                </TableHead>
+                <TableHead className="text-right" style={headSticky}>
+                  Этажи
+                </TableHead>
+                <TableHead className="text-right" style={headSticky}>
+                  Спальни
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -235,7 +247,7 @@ export default function NewCatalogPage() {
                     className={cn("cursor-pointer", checked && "bg-muted/40")}
                     onClick={() => toggle(p.id)}
                   >
-                    <TableCell onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="w-12" onClick={(e) => e.stopPropagation()}>
                       <Checkbox checked={checked} onCheckedChange={() => toggle(p.id)} />
                     </TableCell>
                     <TableCell className="font-medium">{p.short_name || p.name}</TableCell>
@@ -252,10 +264,6 @@ export default function NewCatalogPage() {
           </Table>
         </div>
       </div>
-
-      <Button disabled={create.isPending || selected.length === 0} onClick={() => create.mutate()}>
-        Создать каталог ({selected.length})
-      </Button>
     </div>
   );
 }

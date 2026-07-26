@@ -172,37 +172,6 @@ export function applyCatalogPreset(projects: Project[], preset: CatalogPreset): 
   return projects.filter(preset.match).map((p) => p.id);
 }
 
-/** Группы быстрых отборов для UI. */
-export const CATALOG_PRESET_GROUPS: { id: string; label: string; presetIds: string[] }[] = [
-  {
-    id: "tech",
-    label: "Технология",
-    presetIds: ["modular", "panel", "barnhouse"],
-  },
-  {
-    id: "floors",
-    label: "Этажность",
-    presetIds: ["floors-1", "floors-2"],
-  },
-  {
-    id: "bedrooms",
-    label: "Спальни",
-    presetIds: ["bedrooms-1", "bedrooms-2", "bedrooms-3", "bedrooms-4", "bedrooms-5plus"],
-  },
-  {
-    id: "area",
-    label: "Площадь",
-    presetIds: [
-      "area-lt-80",
-      "area-80-100",
-      "area-100-120",
-      "area-120-150",
-      "area-150-200",
-      "area-gt-200",
-    ],
-  },
-];
-
 export function catalogManagerName(catalog: {
   contacts?: { manager?: { name?: string } } | null;
 }): string {
