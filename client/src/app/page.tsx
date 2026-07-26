@@ -16,7 +16,7 @@ import { StickyChrome } from "@/components/sticky-chrome";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { catalogStatusLabel, isCatalogBuilding } from "@/lib/catalog-labels";
-import { formatCatalogDate } from "@/lib/catalog-presets";
+import { catalogManagerName, formatCatalogDate } from "@/lib/catalog-presets";
 import { api, type Catalog, type ProposalListItem } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -148,6 +148,7 @@ export default function HomePage() {
         >
           {recentProposals.map((row) => {
             const st = proposalStatus(row);
+            const manager = row.manager_name?.trim() || "";
             return (
               <li key={row.id} className="flex items-center gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
@@ -156,6 +157,11 @@ export default function HomePage() {
                     {row.client_name || "Без клиента"} · {formatDateTime(row.created_at)}
                   </p>
                 </div>
+                {manager ? (
+                  <Badge variant="outline" className="max-w-[9rem] shrink-0 truncate font-normal">
+                    {manager}
+                  </Badge>
+                ) : null}
                 <Badge
                   variant={st.failed ? "destructive" : st.ready ? "success" : "secondary"}
                   className={cn(
@@ -194,6 +200,7 @@ export default function HomePage() {
             const building = isCatalogBuilding(c.status);
             const failed = c.status === "failed";
             const ready = c.status === "ready";
+            const manager = catalogManagerName(c);
             return (
               <li key={c.id} className="flex items-center gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
@@ -204,6 +211,11 @@ export default function HomePage() {
                     {c.title} · {formatCatalogDate(c.created_at)}
                   </p>
                 </div>
+                {manager !== "—" ? (
+                  <Badge variant="outline" className="max-w-[9rem] shrink-0 truncate font-normal">
+                    {manager}
+                  </Badge>
+                ) : null}
                 <Badge
                   variant={failed ? "destructive" : ready ? "success" : "secondary"}
                   className={cn(
