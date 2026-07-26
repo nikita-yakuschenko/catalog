@@ -15,13 +15,14 @@ DEFAULT_OFFICE = {
 
 
 def manager_from_session(user: Optional[dict[str, Any]]) -> dict[str, str]:
-    """Имя / телефон / email / фото текущего пользователя UI."""
+    """Имя / телефон / email / фото / id текущего пользователя UI."""
     if not user:
-        return {"name": "", "phone": "", "email": "", "photo": ""}
+        return {"id": "", "name": "", "phone": "", "email": "", "photo": ""}
     name = " ".join(
         p for p in [str(user.get("name") or "").strip(), str(user.get("last_name") or "").strip()] if p
     ).strip()
     return {
+        "id": str(user.get("uid") or "").strip(),
         "name": name,
         "phone": str(user.get("phone") or "").strip(),
         "email": str(user.get("email") or "").strip(),
@@ -44,15 +45,16 @@ def merge_catalog_contacts(
 
     incoming = manager_from_session(user)
     previous = base.get("manager") if isinstance(base.get("manager"), dict) else {}
-    if any(incoming.values()) or any(str(previous.get(k) or "") for k in ("name", "phone", "email", "photo")):
+    if any(incoming.values()) or any(str(previous.get(k) or "") for k in ("id", "name", "phone", "email", "photo")):
         # Новые непустые поля из сессии, иначе оставляем ранее сохранённые
         base["manager"] = {
+            "id": incoming.get("id") or previous.get("id") or "",
             "name": incoming.get("name") or previous.get("name") or "",
             "phone": incoming.get("phone") or previous.get("phone") or "",
             "email": incoming.get("email") or previous.get("email") or "",
             "photo": incoming.get("photo") or previous.get("photo") or "",
         }
     else:
-        base["manager"] = {"name": "", "phone": "", "email": "", "photo": ""}
+        base["manager"] = {"id": "", "name": "", "phone": "", "email": "", "photo": ""}
 
     return base

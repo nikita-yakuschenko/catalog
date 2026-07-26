@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.access import can_access_catalog
 from app.core.auth import require_user
 from app.core.db import SessionLocal, get_db
 from app.domain.models import (
@@ -14,7 +15,6 @@ from app.domain.models import (
     CatalogProject,
     CatalogStatus,
     HouseProject,
-    OutputProfile,
 )
 from app.domain.schemas import (
     BuildOut,
@@ -37,10 +37,29 @@ def _catalog_query():
     )
 
 
+async def _catalog_for_user(
+    db: AsyncSession,
+    catalog_id: UUID,
+    user: dict,
+    *,
+    with_projects: bool = True,
+) -> Catalog:
+    q = _catalog_query() if with_projects else select(Catalog)
+    result = await db.execute(q.where(Catalog.id == catalog_id))
+    catalog = result.scalar_one_or_none()
+    if not catalog or not can_access_catalog(catalog, user):
+        raise HTTPException(404, "Каталог не найден")
+    return catalog
+
+
 @router.get("/catalogs", response_model=list[CatalogOut])
-async def list_catalogs(db: AsyncSession = Depends(get_db)) -> list[Catalog]:
+async def list_catalogs(
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> list[Catalog]:
     result = await db.execute(_catalog_query().order_by(Catalog.created_at.desc()))
-    return list(result.scalars().all())
+    catalogs = list(result.scalars().all())
+    return [c for c in catalogs if can_access_catalog(c, user)]
 
 
 @router.post("/catalogs", response_model=CatalogOut)
@@ -79,46 +98,48 @@ async def create_catalog(
 
 
 @router.get("/catalogs/{catalog_id}", response_model=CatalogOut)
-async def get_catalog(catalog_id: UUID, db: AsyncSession = Depends(get_db)) -> Catalog:
-    result = await db.execute(_catalog_query().where(Catalog.id == catalog_id))
-    catalog = result.scalar_one_or_none()
-    if not catalog:
-        raise HTTPException(404, "Каталог не найден")
-    return catalog
+async def get_catalog(
+    catalog_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> Catalog:
+    return await _catalog_for_user(db, catalog_id, user)
 
 
 @router.patch("/catalogs/{catalog_id}", response_model=CatalogOut)
 async def update_catalog(
-    catalog_id: UUID, payload: CatalogUpdate, db: AsyncSession = Depends(get_db)
+    catalog_id: UUID,
+    payload: CatalogUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
 ) -> Catalog:
-    result = await db.execute(_catalog_query().where(Catalog.id == catalog_id))
-    catalog = result.scalar_one_or_none()
-    if not catalog:
-        raise HTTPException(404, "Каталог не найден")
+    catalog = await _catalog_for_user(db, catalog_id, user)
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(catalog, key, value)
     await db.commit()
-    result = await db.execute(_catalog_query().where(Catalog.id == catalog_id))
+    result = await db.execute(_catalog_query().where(Catalog.id == catalog.id))
     return result.scalar_one()
 
 
 @router.delete("/catalogs/{catalog_id}")
-async def delete_catalog(catalog_id: UUID, db: AsyncSession = Depends(get_db)) -> dict:
-    result = await db.execute(select(Catalog).where(Catalog.id == catalog_id))
-    catalog = result.scalar_one_or_none()
-    if not catalog:
-        raise HTTPException(404, "Каталог не найден")
+async def delete_catalog(
+    catalog_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> dict:
+    catalog = await _catalog_for_user(db, catalog_id, user, with_projects=False)
     await db.delete(catalog)
     await db.commit()
     return {"ok": True}
 
 
 @router.post("/catalogs/{catalog_id}/duplicate", response_model=CatalogOut)
-async def duplicate_catalog(catalog_id: UUID, db: AsyncSession = Depends(get_db)) -> Catalog:
-    result = await db.execute(_catalog_query().where(Catalog.id == catalog_id))
-    src = result.scalar_one_or_none()
-    if not src:
-        raise HTTPException(404, "Каталог не найден")
+async def duplicate_catalog(
+    catalog_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> Catalog:
+    src = await _catalog_for_user(db, catalog_id, user)
     clone = Catalog(
         name=f"{src.name} (копия)",
         status=CatalogStatus.draft,
@@ -137,7 +158,7 @@ async def duplicate_catalog(catalog_id: UUID, db: AsyncSession = Depends(get_db)
         cover_variant=src.cover_variant,
         theme=src.theme,
         layout_strategy=src.layout_strategy,
-        contacts=src.contacts,
+        contacts=merge_catalog_contacts({}, user=user),
         settings=src.settings,
     )
     db.add(clone)
@@ -159,12 +180,12 @@ async def duplicate_catalog(catalog_id: UUID, db: AsyncSession = Depends(get_db)
 
 @router.post("/catalogs/{catalog_id}/projects")
 async def add_projects(
-    catalog_id: UUID, project_ids: list[UUID], db: AsyncSession = Depends(get_db)
+    catalog_id: UUID,
+    project_ids: list[UUID],
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
 ) -> CatalogOut:
-    result = await db.execute(_catalog_query().where(Catalog.id == catalog_id))
-    catalog = result.scalar_one_or_none()
-    if not catalog:
-        raise HTTPException(404, "Каталог не найден")
+    catalog = await _catalog_for_user(db, catalog_id, user)
     existing = {cp.project_id for cp in catalog.projects}
     order = max([cp.order for cp in catalog.projects], default=-1) + 1
     for pid in project_ids:
@@ -173,24 +194,24 @@ async def add_projects(
         db.add(CatalogProject(catalog_id=catalog.id, project_id=pid, order=order))
         order += 1
     await db.commit()
-    result = await db.execute(_catalog_query().where(Catalog.id == catalog_id))
+    result = await db.execute(_catalog_query().where(Catalog.id == catalog.id))
     return result.scalar_one()
 
 
 @router.patch("/catalogs/{catalog_id}/projects/reorder")
 async def reorder_projects(
-    catalog_id: UUID, items: list[ReorderItem], db: AsyncSession = Depends(get_db)
+    catalog_id: UUID,
+    items: list[ReorderItem],
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
 ) -> CatalogOut:
-    result = await db.execute(_catalog_query().where(Catalog.id == catalog_id))
-    catalog = result.scalar_one_or_none()
-    if not catalog:
-        raise HTTPException(404, "Каталог не найден")
+    catalog = await _catalog_for_user(db, catalog_id, user)
     by_pid = {cp.project_id: cp for cp in catalog.projects}
     for item in items:
         if item.project_id in by_pid:
             by_pid[item.project_id].order = item.order
     await db.commit()
-    result = await db.execute(_catalog_query().where(Catalog.id == catalog_id))
+    result = await db.execute(_catalog_query().where(Catalog.id == catalog.id))
     return result.scalar_one()
 
 
@@ -200,7 +221,9 @@ async def update_catalog_project(
     project_id: UUID,
     payload: CatalogProjectUpdate,
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
 ) -> CatalogOut:
+    await _catalog_for_user(db, catalog_id, user, with_projects=False)
     result = await db.execute(
         select(CatalogProject).where(
             CatalogProject.catalog_id == catalog_id, CatalogProject.project_id == project_id
@@ -221,8 +244,12 @@ async def update_catalog_project(
 
 @router.delete("/catalogs/{catalog_id}/projects/{project_id}")
 async def remove_catalog_project(
-    catalog_id: UUID, project_id: UUID, db: AsyncSession = Depends(get_db)
+    catalog_id: UUID,
+    project_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
 ) -> dict:
+    await _catalog_for_user(db, catalog_id, user, with_projects=False)
     result = await db.execute(
         select(CatalogProject).where(
             CatalogProject.catalog_id == catalog_id, CatalogProject.project_id == project_id
@@ -237,11 +264,12 @@ async def remove_catalog_project(
 
 
 @router.post("/catalogs/{catalog_id}/preflight")
-async def preflight_catalog(catalog_id: UUID, db: AsyncSession = Depends(get_db)) -> dict:
-    result = await db.execute(_catalog_query().where(Catalog.id == catalog_id))
-    catalog = result.scalar_one_or_none()
-    if not catalog:
-        raise HTTPException(404, "Каталог не найден")
+async def preflight_catalog(
+    catalog_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> dict:
+    catalog = await _catalog_for_user(db, catalog_id, user)
     projects = [cp.project for cp in catalog.projects if cp.project]
     return PreflightService().run(catalog, projects).to_dict()
 
@@ -259,11 +287,7 @@ async def build_catalog(
     db: AsyncSession = Depends(get_db),
     user: dict = Depends(require_user),
 ) -> Build:
-    result = await db.execute(select(Catalog).where(Catalog.id == catalog_id))
-    catalog = result.scalar_one_or_none()
-    if not catalog:
-        raise HTTPException(404, "Каталог не найден")
-    # На сборке фиксируем актуального менеджера из сессии
+    catalog = await _catalog_for_user(db, catalog_id, user, with_projects=False)
     catalog.contacts = merge_catalog_contacts(catalog.contacts, user=user)
     build = Build(
         catalog_id=catalog.id,
@@ -279,15 +303,16 @@ async def build_catalog(
 
 
 @router.get("/catalogs/{catalog_id}/status")
-async def catalog_status(catalog_id: UUID, db: AsyncSession = Depends(get_db)) -> dict:
+async def catalog_status(
+    catalog_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> dict:
+    catalog = await _catalog_for_user(db, catalog_id, user, with_projects=False)
     result = await db.execute(
         select(Build).where(Build.catalog_id == catalog_id).order_by(Build.created_at.desc())
     )
     build = result.scalars().first()
-    cat = await db.execute(select(Catalog).where(Catalog.id == catalog_id))
-    catalog = cat.scalar_one_or_none()
-    if not catalog:
-        raise HTTPException(404, "Каталог не найден")
     return {
         "catalog_status": catalog.status,
         "build": BuildOut.model_validate(build) if build else None,
@@ -295,7 +320,12 @@ async def catalog_status(catalog_id: UUID, db: AsyncSession = Depends(get_db)) -
 
 
 @router.get("/catalogs/{catalog_id}/preflight-report")
-async def catalog_preflight_report(catalog_id: UUID, db: AsyncSession = Depends(get_db)) -> dict:
+async def catalog_preflight_report(
+    catalog_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> dict:
+    await _catalog_for_user(db, catalog_id, user, with_projects=False)
     result = await db.execute(
         select(Build).where(Build.catalog_id == catalog_id).order_by(Build.created_at.desc())
     )

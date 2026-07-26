@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.access import can_access_proposal
 from app.core.auth import require_user
 from app.core.config import settings
 from app.core.db import SessionLocal, get_db
@@ -37,6 +38,14 @@ def _verify_bitrix_secret(x_bitrix_webhook_secret: str | None = Header(default=N
         raise HTTPException(401, "Неверный секрет вебхука Bitrix")
 
 
+async def _proposal_for_user(db: AsyncSession, proposal_id: UUID, user: dict) -> CommercialProposal:
+    result = await db.execute(select(CommercialProposal).where(CommercialProposal.id == proposal_id))
+    proposal = result.scalar_one_or_none()
+    if not proposal or not can_access_proposal(proposal, user):
+        raise HTTPException(404, "КП не найдено")
+    return proposal
+
+
 def _proposal_list_item(proposal: CommercialProposal, build: ProposalBuild | None) -> ProposalListItem:
     doc = proposal.document if isinstance(proposal.document, dict) else {}
     client = doc.get("client") if isinstance(doc.get("client"), dict) else {}
@@ -61,9 +70,12 @@ def _proposal_list_item(proposal: CommercialProposal, build: ProposalBuild | Non
 
 
 @router.get("/proposals", response_model=list[ProposalListItem], dependencies=[Depends(require_user)])
-async def list_proposals(db: AsyncSession = Depends(get_db)) -> list[ProposalListItem]:
+async def list_proposals(
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> list[ProposalListItem]:
     result = await db.execute(select(CommercialProposal).order_by(CommercialProposal.created_at.desc()))
-    proposals = list(result.scalars().all())
+    proposals = [p for p in result.scalars().all() if can_access_proposal(p, user)]
     if not proposals:
         return []
 
@@ -237,12 +249,12 @@ async def create_proposal_from_pdf(
 
 
 @router.get("/proposals/{proposal_id}", response_model=ProposalOut, dependencies=[Depends(require_user)])
-async def get_proposal(proposal_id: UUID, db: AsyncSession = Depends(get_db)) -> CommercialProposal:
-    result = await db.execute(select(CommercialProposal).where(CommercialProposal.id == proposal_id))
-    proposal = result.scalar_one_or_none()
-    if not proposal:
-        raise HTTPException(404, "КП не найдено")
-    return proposal
+async def get_proposal(
+    proposal_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> CommercialProposal:
+    return await _proposal_for_user(db, proposal_id, user)
 
 
 @router.post("/proposals/{proposal_id}/build", response_model=ProposalBuildOut, dependencies=[Depends(require_user)])
@@ -250,11 +262,9 @@ async def build_proposal(
     proposal_id: UUID,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
 ) -> ProposalBuild:
-    result = await db.execute(select(CommercialProposal).where(CommercialProposal.id == proposal_id))
-    proposal = result.scalar_one_or_none()
-    if not proposal:
-        raise HTTPException(404, "КП не найдено")
+    proposal = await _proposal_for_user(db, proposal_id, user)
     build = ProposalBuild(proposal_id=proposal.id, status=BuildStatus.pending, stage="queued")
     db.add(build)
     await db.commit()
@@ -264,11 +274,12 @@ async def build_proposal(
 
 
 @router.get("/proposals/{proposal_id}/status", dependencies=[Depends(require_user)])
-async def proposal_status(proposal_id: UUID, db: AsyncSession = Depends(get_db)) -> dict:
-    prop = await db.execute(select(CommercialProposal).where(CommercialProposal.id == proposal_id))
-    proposal = prop.scalar_one_or_none()
-    if not proposal:
-        raise HTTPException(404, "КП не найдено")
+async def proposal_status(
+    proposal_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> dict:
+    proposal = await _proposal_for_user(db, proposal_id, user)
     build_result = await db.execute(
         select(ProposalBuild)
         .where(ProposalBuild.proposal_id == proposal_id)
@@ -282,7 +293,12 @@ async def proposal_status(proposal_id: UUID, db: AsyncSession = Depends(get_db))
 
 
 @router.get("/proposals/{proposal_id}/download", dependencies=[Depends(require_user)])
-async def download_proposal(proposal_id: UUID, db: AsyncSession = Depends(get_db)) -> FileResponse:
+async def download_proposal(
+    proposal_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> FileResponse:
+    await _proposal_for_user(db, proposal_id, user)
     build_result = await db.execute(
         select(ProposalBuild)
         .where(ProposalBuild.proposal_id == proposal_id, ProposalBuild.status == BuildStatus.ready)

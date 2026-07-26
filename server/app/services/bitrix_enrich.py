@@ -286,6 +286,7 @@ def _manager_party(user: dict[str, Any]) -> dict[str, str]:
         if p
     ).strip() or _as_str(user.get("EMAIL") or user.get("email"))
     return {
+        "id": _as_str(user.get("ID") or user.get("id")),
         "name": name,
         "company": "",
         "phone": _as_str(user.get("WORK_PHONE") or user.get("workPhone") or user.get("PERSONAL_MOBILE")),
