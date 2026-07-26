@@ -170,9 +170,10 @@ class ProposalAssembler:
             def urls(items: list, role: str) -> list[str]:
                 return [u for u in (_asset_file_url(a.local_path, role=role) for a in items) if u]
 
-            picked["gallery_exterior_urls"] = urls(secondary_ext[:6], "gallery")
-            picked["gallery_interior_urls"] = urls(interiors[:6], "gallery")
-            picked["gallery_detail_urls"] = urls(details[:4], "gallery")
+            # Все неисключённые ассеты: без искусственного [:6]
+            picked["gallery_exterior_urls"] = urls(secondary_ext, "gallery")
+            picked["gallery_interior_urls"] = urls(interiors, "gallery")
+            picked["gallery_detail_urls"] = urls(details, "gallery")
             if not picked.get("exterior_url") and fallback_hero:
                 picked["exterior_url"] = fallback_hero
             # КП: одна планировка на странице (дубли уже отсечены в _pick_assets)
@@ -221,7 +222,7 @@ class ProposalAssembler:
         ]
 
         if not exterior_shots and detail_shots:
-            exterior_shots = detail_shots[:6]
+            exterior_shots = detail_shots
 
         # Фасады и интерьеры — плотная галерея (cover)
         exterior_spreads = self._spread_chunks(
