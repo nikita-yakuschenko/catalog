@@ -1,4 +1,4 @@
-"""Pagination of KP option rows: 16 without summary, 12 with summary."""
+"""Pagination of KP option rows: 15 without summary, 12 with summary."""
 
 from app.services.proposal_assembler import (
     ROWS_WITH_SUMMARY,
@@ -18,9 +18,9 @@ def test_split_sizes_key_cases():
     assert split_option_page_sizes(14) == [13, 1]
     assert split_option_page_sizes(15) == [14, 1]
     assert split_option_page_sizes(16) == [15, 1]
-    assert split_option_page_sizes(17) == [16, 1]
-    assert split_option_page_sizes(28) == [16, 12]
-    assert split_option_page_sizes(29) == [16, 12, 1]
+    assert split_option_page_sizes(17) == [15, 2]
+    assert split_option_page_sizes(27) == [15, 12]
+    assert split_option_page_sizes(28) == [15, 12, 1]
 
 
 def test_split_sizes_invariants_up_to_80():

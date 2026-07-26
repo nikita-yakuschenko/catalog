@@ -18,9 +18,9 @@ from app.services.qrcode_util import qr_data_uri
 ROOT = Path(__file__).resolve().parents[3]
 
 # Страница с резюме (клиент/менеджер/QR) + итого: до 12 опций.
-# Страница без резюме: до 16 опций. Последнюю страницу не оставляем без строк опций.
+# Страница без резюме: до 15 опций (16-я обрезается в PDF). Последнюю не оставляем без строк.
 ROWS_WITH_SUMMARY = 12
-ROWS_WITHOUT_SUMMARY = 16
+ROWS_WITHOUT_SUMMARY = 15
 
 
 def _chunk(items: list[Any], size: int) -> list[list[Any]]:
@@ -28,7 +28,7 @@ def _chunk(items: list[Any], size: int) -> list[list[Any]]:
 
 
 def split_option_page_sizes(n: int) -> list[int]:
-    """Размеры страниц опций: без orphan-резюме, 16 на промежуточных, ≤12 на последней."""
+    """Размеры страниц опций: без orphan-резюме, 15 на промежуточных, ≤12 на последней."""
     if n <= 0:
         return [0]
     if n <= ROWS_WITH_SUMMARY:
@@ -38,7 +38,7 @@ def split_option_page_sizes(n: int) -> list[int]:
     remaining = n
     # Пока хвост не влезает на страницу с резюме — снимаем полные листы без резюме.
     while remaining > ROWS_WITH_SUMMARY:
-        # Не больше 16 и оставляем ≥1 строку под последнюю страницу.
+        # Не больше 15 и оставляем ≥1 строку под последнюю страницу.
         take = min(ROWS_WITHOUT_SUMMARY, remaining - 1)
         sizes.append(take)
         remaining -= take
