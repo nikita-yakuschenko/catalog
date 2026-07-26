@@ -81,7 +81,7 @@ export default function CatalogsPage() {
                 <TableHead className="w-[11rem]">Менеджер</TableHead>
                 <TableHead className="w-[7rem]">Создан</TableHead>
                 <TableHead className="w-[9.5rem]">Статус</TableHead>
-                <TableHead className="w-[12rem] text-right">Действия</TableHead>
+                <TableHead className="w-[15rem] text-right">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -101,7 +101,7 @@ export default function CatalogsPage() {
                     <Badge
                       variant={c.status === "failed" ? "destructive" : "secondary"}
                       className={cn(
-                        "inline-flex min-w-[8.25rem] justify-center gap-1.5",
+                        "gap-1.5",
                         c.status === "rendering" &&
                           "border-amber-500/40 bg-amber-500/15 text-amber-950 dark:text-amber-100"
                       )}
@@ -112,11 +112,11 @@ export default function CatalogsPage() {
                       {catalogStatusLabel(c.status, isAdmin)}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap justify-end gap-2">
+                  <TableCell className="w-[15rem]">
+                    <div className="flex flex-nowrap justify-end gap-2">
                       <Link
                         href={`/catalogs/${c.id}/preview`}
-                        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                        className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
                       >
                         <IconEye className="size-4" stroke={1.75} />
                         Превью
@@ -124,6 +124,7 @@ export default function CatalogsPage() {
                       <Button
                         variant="destructive"
                         size="sm"
+                        className="shrink-0"
                         onClick={() => setPendingDelete({ id: c.id, name: c.name })}
                         disabled={remove.isPending}
                       >
