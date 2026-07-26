@@ -20,7 +20,7 @@ import { formatCatalogDate } from "@/lib/catalog-presets";
 import { api, type Catalog, type ProposalListItem } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-const RECENT_LIMIT = 5;
+const RECENT_LIMIT = 6;
 
 function formatDateTime(value: string) {
   try {
