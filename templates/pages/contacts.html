@@ -2,48 +2,48 @@
 <section class="page cat-page">
   <div class="cat-sheet">
     {{ cat_head("Контакты", total_pages) }}
-    <div class="cat-body cat-contacts-body">
-      <div class="cat-contacts-board">
-        <div class="cat-contacts-col cat-contacts-col--manager">
-          <div class="cat-meta-label">Менеджер</div>
-          <div class="cat-manager">
-            {% if manager.photo %}
-            <img class="cat-manager-photo" src="{{ manager.photo }}" alt="{{ manager.name or 'Менеджер' }}" />
-            {% else %}
-            <div class="cat-manager-photo cat-manager-photo--empty" aria-hidden="true">{{ manager.initials or 'A' }}</div>
+
+    <div class="cat-contacts-board">
+      <div class="cat-contacts-col cat-contacts-col--manager">
+        <div class="cat-meta-label">Менеджер</div>
+        <div class="cat-manager">
+          {% if manager.photo %}
+          <img class="cat-manager-photo" src="{{ manager.photo }}" alt="{{ manager.name or 'Менеджер' }}" />
+          {% else %}
+          <div class="cat-manager-photo cat-manager-photo--empty" aria-hidden="true">{{ manager.initials or 'A' }}</div>
+          {% endif %}
+          <div class="cat-manager-info">
+            <div class="cat-manager-name">{{ manager.name or 'AVGST' }}</div>
+            {% if manager.phone %}
+            <div class="cat-manager-line">{{ manager.phone }}</div>
             {% endif %}
-            <div class="cat-manager-info">
-              <div class="cat-manager-name">{{ manager.name or 'AVGST' }}</div>
-              {% if manager.phone %}
-              <div class="cat-manager-line">{{ manager.phone }}</div>
-              {% endif %}
-              {% if manager.email %}
-              <div class="cat-manager-line">{{ manager.email }}</div>
-              {% endif %}
-            </div>
+            {% if manager.email %}
+            <div class="cat-manager-line">{{ manager.email }}</div>
+            {% endif %}
           </div>
-        </div>
-
-        <div class="cat-contacts-col cat-contacts-col--office">
-          <div class="cat-meta-label">Офис</div>
-          <div class="cat-office">
-            <div class="cat-office-city">{{ office.city }}</div>
-            <div class="cat-office-line">{{ office.street }}</div>
-            <div class="cat-office-line">{{ office.building }}</div>
-            <div class="cat-office-line">{{ office.floor }}</div>
-          </div>
-        </div>
-
-        <div class="cat-contacts-col cat-contacts-col--company">
-          <div class="cat-meta-label">Авангард Строй</div>
-          <p class="cat-contacts-site">{{ site }}</p>
-          <p class="cat-contacts-copy">
-            Проектирование, производство и строительство модульных
-            и панельно-каркасных домов.
-          </p>
         </div>
       </div>
+
+      <div class="cat-contacts-col cat-contacts-col--office">
+        <div class="cat-meta-label">Офис</div>
+        <div class="cat-office">
+          <div class="cat-office-city">{{ office.city }}</div>
+          <div class="cat-office-line">{{ office.street }}</div>
+          <div class="cat-office-line">{{ office.building }}</div>
+          <div class="cat-office-line">{{ office.floor }}</div>
+        </div>
+      </div>
+
+      <div class="cat-contacts-col cat-contacts-col--company">
+        <div class="cat-meta-label">Авангард Строй</div>
+        <p class="cat-contacts-site">{{ site }}</p>
+        <p class="cat-contacts-copy">
+          Проектирование, производство и строительство модульных
+          и панельно-каркасных домов.
+        </p>
+      </div>
     </div>
+
     <div class="cat-legal">
       <p class="cat-disclaimer">
         Материалы каталога носят справочный характер и не являются публичной офертой
