@@ -79,6 +79,46 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     match: isBarnhouse,
   },
   {
+    id: "bedrooms-1",
+    label: "1 спальня",
+    name: "Подборка домов с 1 спальней",
+    title: "Дома с 1 спальней",
+    subtitle: "Подборка домов с одной спальней для жизни и отдыха",
+    match: (p) => p.bedrooms === 1,
+  },
+  {
+    id: "bedrooms-2",
+    label: "2 спальни",
+    name: "Подборка домов с 2 спальнями",
+    title: "Дома с 2 спальнями",
+    subtitle: "Подборка домов с двумя спальнями для жизни и отдыха",
+    match: (p) => p.bedrooms === 2,
+  },
+  {
+    id: "bedrooms-3",
+    label: "3 спальни",
+    name: "Подборка домов с 3 спальнями",
+    title: "Дома с 3 спальнями",
+    subtitle: "Подборка домов с тремя спальнями для жизни и отдыха",
+    match: (p) => p.bedrooms === 3,
+  },
+  {
+    id: "bedrooms-4",
+    label: "4 спальни",
+    name: "Подборка домов с 4 спальнями",
+    title: "Дома с 4 спальнями",
+    subtitle: "Подборка домов с четырьмя спальнями для жизни и отдыха",
+    match: (p) => p.bedrooms === 4,
+  },
+  {
+    id: "bedrooms-5plus",
+    label: "5+ спален",
+    name: "Подборка домов с 5 и более спальнями",
+    title: "Дома с 5+ спальнями",
+    subtitle: "Подборка домов с пятью и более спальнями",
+    match: (p) => typeof p.bedrooms === "number" && p.bedrooms >= 5,
+  },
+  {
     id: "area-lt-80",
     label: "до 80 м²",
     name: "Подборка домов до 80 м²",
@@ -131,6 +171,37 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
 export function applyCatalogPreset(projects: Project[], preset: CatalogPreset): string[] {
   return projects.filter(preset.match).map((p) => p.id);
 }
+
+/** Группы быстрых отборов для UI. */
+export const CATALOG_PRESET_GROUPS: { id: string; label: string; presetIds: string[] }[] = [
+  {
+    id: "tech",
+    label: "Технология",
+    presetIds: ["modular", "panel", "barnhouse"],
+  },
+  {
+    id: "floors",
+    label: "Этажность",
+    presetIds: ["floors-1", "floors-2"],
+  },
+  {
+    id: "bedrooms",
+    label: "Спальни",
+    presetIds: ["bedrooms-1", "bedrooms-2", "bedrooms-3", "bedrooms-4", "bedrooms-5plus"],
+  },
+  {
+    id: "area",
+    label: "Площадь",
+    presetIds: [
+      "area-lt-80",
+      "area-80-100",
+      "area-100-120",
+      "area-120-150",
+      "area-150-200",
+      "area-gt-200",
+    ],
+  },
+];
 
 export function catalogManagerName(catalog: {
   contacts?: { manager?: { name?: string } } | null;

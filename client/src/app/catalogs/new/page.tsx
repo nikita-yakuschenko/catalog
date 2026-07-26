@@ -12,8 +12,32 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { applyCatalogPreset, CATALOG_PRESETS } from "@/lib/catalog-presets";
-import { api, Project } from "@/lib/api";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  applyCatalogPreset,
+  CATALOG_PRESET_GROUPS,
+  CATALOG_PRESETS,
+} from "@/lib/catalog-presets";
+import { api, type Project } from "@/lib/api";
+import { cn } from "@/lib/utils";
+
+function techLabel(tech: Project["technology"]) {
+  return tech === "modular" ? "Модульный" : "Панельно-каркасный";
+}
+
+function sortProjects(list: Project[]) {
+  return [...list].sort((a, b) => {
+    if (a.technology !== b.technology) return a.technology === "modular" ? -1 : 1;
+    return (a.short_name || a.name).localeCompare(b.short_name || b.name, "ru");
+  });
+}
 
 export default function NewCatalogPage() {
   const router = useRouter();
@@ -25,8 +49,12 @@ export default function NewCatalogPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
-  const modular = useMemo(() => projects.filter((p) => p.technology === "modular"), [projects]);
-  const panel = useMemo(() => projects.filter((p) => p.technology === "panel"), [projects]);
+  const sorted = useMemo(() => sortProjects(projects), [projects]);
+
+  const presetById = useMemo(() => {
+    const map = new Map(CATALOG_PRESETS.map((p) => [p.id, p]));
+    return map;
+  }, []);
 
   const presetCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -35,6 +63,11 @@ export default function NewCatalogPage() {
     }
     return counts;
   }, [projects]);
+
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
+  const allIds = useMemo(() => sorted.map((p) => p.id), [sorted]);
+  const allSelected = allIds.length > 0 && allIds.every((id) => selectedSet.has(id));
+  const someSelected = allIds.some((id) => selectedSet.has(id)) && !allSelected;
 
   const create = useMutation({
     mutationFn: async () => {
@@ -71,8 +104,13 @@ export default function NewCatalogPage() {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
+  function toggleAll() {
+    setActivePreset(null);
+    setSelected(allSelected ? [] : allIds);
+  }
+
   function applyPreset(presetId: string) {
-    const preset = CATALOG_PRESETS.find((p) => p.id === presetId);
+    const preset = presetById.get(presetId);
     if (!preset) return;
     const ids = applyCatalogPreset(projects, preset);
     setActivePreset(preset.id);
@@ -91,26 +129,41 @@ export default function NewCatalogPage() {
         <PageHeader backHref="/catalogs" backLabel="К списку каталогов" title="Новый каталог" />
       </StickyChrome>
 
-      <div className="space-y-2">
+      <div className="space-y-4">
         <p className="text-sm font-medium">Быстрые отборы</p>
-        <div className="flex flex-wrap gap-2">
-          {CATALOG_PRESETS.map((preset) => {
-            const count = presetCounts[preset.id] ?? 0;
-            return (
-              <Button
-                key={preset.id}
-                type="button"
-                variant={activePreset === preset.id ? "default" : "outline"}
-                size="sm"
-                title={preset.name}
-                onClick={() => applyPreset(preset.id)}
-              >
-                {preset.label}
-                <span className="text-muted-foreground">· {count}</span>
-              </Button>
-            );
-          })}
-        </div>
+        {CATALOG_PRESET_GROUPS.map((group) => (
+          <div key={group.id} className="space-y-1.5">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {group.label}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {group.presetIds.map((id) => {
+                const preset = presetById.get(id);
+                if (!preset) return null;
+                const count = presetCounts[preset.id] ?? 0;
+                return (
+                  <Button
+                    key={preset.id}
+                    type="button"
+                    variant={activePreset === preset.id ? "default" : "outline"}
+                    size="sm"
+                    title={preset.name}
+                    onClick={() => applyPreset(preset.id)}
+                  >
+                    {preset.label}
+                    <span
+                      className={cn(
+                        activePreset === preset.id ? "text-primary-foreground/80" : "text-muted-foreground"
+                      )}
+                    >
+                      · {count}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       <Card>
@@ -137,29 +190,68 @@ export default function NewCatalogPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {[
-          ["Модульные", modular],
-          ["Панельно-каркасные", panel],
-        ].map(([label, list]) => (
-          <Card key={label as string}>
-            <CardHeader>
-              <CardTitle>{label as string}</CardTitle>
-            </CardHeader>
-            <CardContent className="max-h-[420px] space-y-2 overflow-auto">
-              {(list as Project[]).map((p) => (
-                <label key={p.id} className="flex cursor-pointer items-center gap-2 text-sm">
-                  <Checkbox checked={selected.includes(p.id)} onCheckedChange={() => toggle(p.id)} />
-                  <span>
-                    {p.short_name}
-                    {p.area ? ` · ${p.area} м²` : ""}
-                    {p.floors ? ` · ${p.floors} эт.` : ""}
-                  </span>
-                </label>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
+      <div className="rounded-xl border border-border bg-card">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+          <div>
+            <h2 className="text-sm font-semibold tracking-tight">Проекты</h2>
+            <p className="text-xs text-muted-foreground">
+              Выбрано {selected.length} из {sorted.length}
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={toggleAll} disabled={sorted.length === 0}>
+            {allSelected ? "Снять все" : "Выбрать все"}
+          </Button>
+        </div>
+        <div className="max-h-[520px] overflow-auto">
+          <Table>
+            <TableHeader className="sticky top-0 z-10 bg-card">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={() => toggleAll()}
+                    aria-label="Выбрать все проекты"
+                  />
+                </TableHead>
+                <TableHead>Проект</TableHead>
+                <TableHead>Технология</TableHead>
+                <TableHead className="text-right">Площадь</TableHead>
+                <TableHead className="text-right">Этажи</TableHead>
+                <TableHead className="text-right">Спальни</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sorted.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                    Нет проектов — сначала синхронизируйте с avgst.ru
+                  </TableCell>
+                </TableRow>
+              )}
+              {sorted.map((p) => {
+                const checked = selectedSet.has(p.id);
+                return (
+                  <TableRow
+                    key={p.id}
+                    className={cn("cursor-pointer", checked && "bg-muted/40")}
+                    onClick={() => toggle(p.id)}
+                  >
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox checked={checked} onCheckedChange={() => toggle(p.id)} />
+                    </TableCell>
+                    <TableCell className="font-medium">{p.short_name || p.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{techLabel(p.technology)}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {p.area != null ? `${p.area} м²` : "—"}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{p.floors ?? "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums">{p.bedrooms ?? "—"}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <Button disabled={create.isPending || selected.length === 0} onClick={() => create.mutate()}>
