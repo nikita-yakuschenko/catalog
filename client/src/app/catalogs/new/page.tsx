@@ -115,6 +115,23 @@ export default function NewCatalogPage() {
     }
   }
 
+  function resetSettings() {
+    setActivePreset(null);
+    setSelected([]);
+    setName("");
+    setTitle("");
+    setSubtitle("");
+    setShowPrices(true);
+  }
+
+  const canReset =
+    activePreset != null ||
+    selected.length > 0 ||
+    name !== "" ||
+    title !== "" ||
+    subtitle !== "" ||
+    !showPrices;
+
   return (
     <div className="space-y-4">
       <StickyChrome>
@@ -122,7 +139,18 @@ export default function NewCatalogPage() {
       </StickyChrome>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium">Быстрые отборы</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-medium">Быстрые отборы</p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={resetSettings}
+            disabled={!canReset}
+          >
+            Сбросить настройки
+          </Button>
+        </div>
         <div className="flex flex-wrap gap-2">
           {CATALOG_PRESETS.map((preset) => {
             const count = presetCounts[preset.id] ?? 0;
