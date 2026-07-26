@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLayoutEffect, useRef } from "react";
-import { IconBooks, IconFileText, IconFolder, IconLogout, IconPlus } from "@tabler/icons-react";
+import { IconBooks, IconFileText, IconFolder, IconHome, IconLogout, IconPlus } from "@tabler/icons-react";
 
 import { useAuth } from "@/components/auth-provider";
 import { buttonVariants } from "@/components/ui/button";
@@ -48,13 +48,14 @@ export function AppHeader() {
               href="/"
               title="Главная"
               className={cn(
-                "mr-1 inline-flex shrink-0 items-center rounded-lg px-3 py-2 text-sm font-semibold tracking-tight transition-colors",
+                "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors",
                 pathname === "/"
-                  ? "bg-muted text-foreground"
-                  : "text-foreground hover:bg-muted/60"
+                  ? "bg-muted font-medium text-foreground"
+                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
               )}
             >
-              AVGST
+              <IconHome className="size-4 shrink-0" stroke={1.75} />
+              <span>Главная</span>
             </Link>
             {nav.map(({ href, label, icon: Icon }) => {
               const active =
