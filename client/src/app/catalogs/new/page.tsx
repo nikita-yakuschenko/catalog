@@ -139,18 +139,7 @@ export default function NewCatalogPage() {
       </StickyChrome>
 
       <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-medium">Быстрые отборы</p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={resetSettings}
-            disabled={!canReset}
-          >
-            Сбросить настройки
-          </Button>
-        </div>
+        <p className="text-sm font-medium">Быстрые отборы</p>
         <div className="flex flex-wrap gap-2">
           {CATALOG_PRESETS.map((preset) => {
             const count = presetCounts[preset.id] ?? 0;
@@ -174,6 +163,20 @@ export default function NewCatalogPage() {
               </Button>
             );
           })}
+          <Button
+            type="button"
+            size="sm"
+            disabled={!canReset}
+            onClick={resetSettings}
+            className={cn(
+              "border-transparent",
+              canReset
+                ? "bg-amber-500 text-white hover:bg-amber-600"
+                : "bg-muted text-muted-foreground opacity-60"
+            )}
+          >
+            Сбросить настройки
+          </Button>
         </div>
       </div>
 
