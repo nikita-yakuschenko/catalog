@@ -99,7 +99,13 @@ export default function CatalogsPage() {
                   <TableCell className="w-[7rem] whitespace-nowrap">{formatCatalogDate(c.created_at)}</TableCell>
                   <TableCell className="w-[9.5rem]">
                     <Badge
-                      variant={c.status === "failed" ? "destructive" : "secondary"}
+                      variant={
+                        c.status === "failed"
+                          ? "destructive"
+                          : c.status === "ready"
+                            ? "success"
+                            : "secondary"
+                      }
                       className={cn(
                         "gap-1.5",
                         c.status === "rendering" &&

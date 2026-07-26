@@ -43,12 +43,13 @@ function proposalTitle(row: ProposalListItem) {
 }
 
 function proposalStatus(row: ProposalListItem) {
-  if (row.status === "ready" && row.has_pdf) return { text: "Готово", building: false, failed: false };
+  if (row.status === "ready" && row.has_pdf)
+    return { text: "Готово", building: false, failed: false, ready: true };
   if (row.status === "failed" || row.build_status === "failed")
-    return { text: "Ошибка", building: false, failed: true };
+    return { text: "Ошибка", building: false, failed: true, ready: false };
   if (row.status === "building" || row.build_status === "running" || row.build_status === "pending")
-    return { text: "Собирается", building: true, failed: false };
-  return { text: catalogStatusLabel(row.status), building: false, failed: false };
+    return { text: "Собирается", building: true, failed: false, ready: false };
+  return { text: catalogStatusLabel(row.status), building: false, failed: false, ready: false };
 }
 
 function RecentSection({
@@ -156,7 +157,7 @@ export default function HomePage() {
                   </p>
                 </div>
                 <Badge
-                  variant={st.failed ? "destructive" : "secondary"}
+                  variant={st.failed ? "destructive" : st.ready ? "success" : "secondary"}
                   className={cn(
                     "shrink-0 gap-1",
                     st.building &&
@@ -204,7 +205,7 @@ export default function HomePage() {
                   </p>
                 </div>
                 <Badge
-                  variant={failed ? "destructive" : "secondary"}
+                  variant={failed ? "destructive" : ready ? "success" : "secondary"}
                   className={cn(
                     "shrink-0 gap-1",
                     building &&

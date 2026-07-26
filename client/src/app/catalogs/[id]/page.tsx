@@ -125,7 +125,7 @@ export default function CatalogDetailPage() {
             <div className="flex flex-wrap items-center gap-2 pt-0.5">
               <span>{data.title}</span>
               <Badge
-                variant={statusFailed ? "destructive" : statusReady ? "default" : "secondary"}
+                variant={statusFailed ? "destructive" : statusReady ? "success" : "secondary"}
                 className={cn(
                   "gap-1.5 text-xs",
                   building &&

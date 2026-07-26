@@ -39,7 +39,7 @@ function formatDate(value: string) {
 }
 
 function statusLabel(row: ProposalListItem) {
-  if (row.status === "ready" && row.has_pdf) return { text: "Готово", variant: "default" as const };
+  if (row.status === "ready" && row.has_pdf) return { text: "Готово", variant: "success" as const };
   if (row.status === "failed" || row.build_status === "failed")
     return { text: "Ошибка", variant: "destructive" as const };
   if (row.status === "building" || row.build_status === "running" || row.build_status === "pending")
