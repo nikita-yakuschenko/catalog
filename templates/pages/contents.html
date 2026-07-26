@@ -1,21 +1,34 @@
 {% from 'partials/catalog_chrome.html' import cat_head, cat_foot with context %}
+{% set modular_rows = toc_entries | selectattr('technology', 'equalto', 'modular') | list %}
+{% set panel_rows = toc_entries | selectattr('technology', 'equalto', 'panel') | list %}
+{% set toc_cols = (1 if modular_rows else 0) + (1 if panel_rows else 0) %}
 <section class="page cat-page">
   <div class="cat-sheet">
     {{ cat_head("Содержание", contents_page_num) }}
     <div class="cat-body">
-      <div class="cat-toc-columns">
-        {% set groups = {'modular': 'Модульные дома', 'panel': 'Панельно-каркасные'} %}
-        {% for tech, label in groups.items() %}
-          <div>
-            <div class="cat-toc-group-title">{{ label }}</div>
-            {% for entry in toc_entries if entry.technology == tech %}
-              <div class="cat-toc-row">
-                <span>{{ entry.title }}</span>
-                <span class="cat-toc-page">{{ '%02d'|format(entry.page) }}</span>
-              </div>
-            {% endfor %}
-          </div>
-        {% endfor %}
+      <div class="cat-toc-columns{% if toc_cols == 1 %} cat-toc-columns--single{% endif %}">
+        {% if modular_rows %}
+        <div>
+          <div class="cat-toc-group-title">Модульные дома</div>
+          {% for entry in modular_rows %}
+            <div class="cat-toc-row">
+              <span>{{ entry.title }}</span>
+              <span class="cat-toc-page">{{ '%02d'|format(entry.page) }}</span>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% if panel_rows %}
+        <div>
+          <div class="cat-toc-group-title">Панельно-каркасные</div>
+          {% for entry in panel_rows %}
+            <div class="cat-toc-row">
+              <span>{{ entry.title }}</span>
+              <span class="cat-toc-page">{{ '%02d'|format(entry.page) }}</span>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
     </div>
     {{ cat_foot() }}

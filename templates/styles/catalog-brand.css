@@ -273,6 +273,11 @@
   margin-top: 4mm;
 }
 
+.cat-toc-columns--single {
+  grid-template-columns: 1fr;
+  max-width: 140mm;
+}
+
 .cat-toc-group-title {
   font-size: 9pt;
   font-weight: 800;
