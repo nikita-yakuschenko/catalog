@@ -210,6 +210,22 @@ def format_area(value: Optional[float]) -> str:
     return f"{text} м²"
 
 
+def should_include_contents(*, show_flag: bool, project_count: int) -> bool:
+    """Оглавление — только если проектов больше одного."""
+    return bool(show_flag) and project_count > 1
+
+
+def should_include_dividers(
+    *,
+    show_flag: bool,
+    project_count: int,
+    modular_count: int,
+    panel_count: int,
+) -> bool:
+    """Разделители технологий — если >1 проекта и есть обе технологии."""
+    return bool(show_flag) and project_count > 1 and modular_count > 0 and panel_count > 0
+
+
 class CatalogAssembler:
     def __init__(self, templates_dir: Optional[str] = None):
         self.templates_dir = Path(templates_dir or settings.templates_dir)
@@ -240,10 +256,6 @@ class CatalogAssembler:
             pages.append(PageEntry("introduction", "О каталоге", page_num))
             page_num += 1
 
-        if catalog.show_contents:
-            pages.append(PageEntry("contents", "Содержание", page_num))
-            page_num += 1
-
         modular = [
             cp for cp in catalog_projects if projects_by_id[cp.project_id].technology == Technology.modular
         ]
@@ -252,6 +264,21 @@ class CatalogAssembler:
         ]
         modular.sort(key=lambda x: x.order)
         panel.sort(key=lambda x: x.order)
+
+        project_count = len(catalog_projects)
+        include_contents = should_include_contents(
+            show_flag=catalog.show_contents, project_count=project_count
+        )
+        include_dividers = should_include_dividers(
+            show_flag=catalog.show_dividers,
+            project_count=project_count,
+            modular_count=len(modular),
+            panel_count=len(panel),
+        )
+
+        if include_contents:
+            pages.append(PageEntry("contents", "Содержание", page_num))
+            page_num += 1
 
         toc_entries: list[dict[str, Any]] = []
         project_blocks: list[dict[str, Any]] = []
@@ -262,7 +289,7 @@ class CatalogAssembler:
             nonlocal page_num, project_counter
             if not cps:
                 return
-            if catalog.show_dividers:
+            if include_dividers:
                 pages.append(PageEntry("divider", tech_label, page_num, technology=tech_key))
                 project_blocks.append(
                     {
@@ -392,6 +419,7 @@ class CatalogAssembler:
             "site": contacts.get("site") or DEFAULT_SITE,
             "show_prices": catalog.show_prices,
             "show_project_links": catalog.show_project_links,
+            "include_contents": include_contents,
             "icons": ICONS,
             "logo_svg": _load_brand_svg("logo.svg", self.templates_dir),
             "logo_mark_svg": _load_brand_svg("logo-mark.svg", self.templates_dir),
