@@ -241,8 +241,8 @@ def ru_project_word(n: int) -> str:
 def section_subtitle(n: int, *, kind: str) -> str:
     word = ru_project_word(n)
     if kind == "modular":
-        return f"{n} {word} заводской готовности"
-    return f"{n} {word} для постоянного проживания"
+        return f"{n} {word} по модульной технологии"
+    return f"{n} {word} по панельно-каркасной технологии"
 
 
 class CatalogAssembler:

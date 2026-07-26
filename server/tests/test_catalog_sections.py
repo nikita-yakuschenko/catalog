@@ -40,5 +40,5 @@ def test_russian_project_word():
     assert ru_project_word(5) == "проектов"
     assert ru_project_word(11) == "проектов"
     assert ru_project_word(21) == "проект"
-    assert section_subtitle(1, kind="modular") == "1 проект заводской готовности"
-    assert section_subtitle(2, kind="panel") == "2 проекта для постоянного проживания"
+    assert section_subtitle(1, kind="modular") == "1 проект по модульной технологии"
+    assert section_subtitle(2, kind="panel") == "2 проекта по панельно-каркасной технологии"

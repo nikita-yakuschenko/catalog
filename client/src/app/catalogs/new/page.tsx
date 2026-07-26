@@ -18,9 +18,9 @@ import { api, Project } from "@/lib/api";
 export default function NewCatalogPage() {
   const router = useRouter();
   const { data: projects = [] } = useQuery({ queryKey: ["projects"], queryFn: () => api.projects() });
-  const [name, setName] = useState("AVGST — подборка проектов");
-  const [title, setTitle] = useState("Подборка проектов");
-  const [subtitle, setSubtitle] = useState("Модульные и панельно-каркасные дома");
+  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
   const [showPrices, setShowPrices] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
   const [activePreset, setActivePreset] = useState<string | null>(null);
@@ -107,15 +107,15 @@ export default function NewCatalogPage() {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Название</Label>
+            <Label htmlFor="name">Название в списке</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="title">Заголовок</Label>
+            <Label htmlFor="title">Заголовок на обложке</Label>
             <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div className="space-y-1.5 md:col-span-2">
-            <Label htmlFor="subtitle">Подзаголовок</Label>
+            <Label htmlFor="subtitle">Подзаголовок на обложке</Label>
             <Input id="subtitle" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
           </div>
           <label className="flex cursor-pointer items-center gap-2 text-sm md:col-span-2">

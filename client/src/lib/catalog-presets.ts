@@ -40,7 +40,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     label: "Модульные",
     name: "Подборка модульных домов",
     title: "Модульные дома",
-    subtitle: "Заводская готовность",
+    subtitle: "Подборка домов, произведённых по модульной технологии",
     match: (p) => p.technology === "modular",
   },
   {
@@ -48,7 +48,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     label: "Панельно-каркасные",
     name: "Подборка панельно-каркасных домов",
     title: "Панельно-каркасные дома",
-    subtitle: "Для постоянного проживания",
+    subtitle: "Подборка домов, произведённых по панельно-каркасной технологии",
     match: (p) => p.technology === "panel",
   },
   {
@@ -56,7 +56,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     label: "Одноэтажные",
     name: "Подборка одноэтажных домов",
     title: "Одноэтажные дома",
-    subtitle: "Без лестниц, всё на одном уровне",
+    subtitle: "Подборка комфортных одноэтажных домов для жизни и отдыха",
     match: (p) => p.floors === 1,
   },
   {
@@ -64,7 +64,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     label: "Двухэтажные",
     name: "Подборка двухэтажных домов",
     title: "Двухэтажные дома",
-    subtitle: "Больше жилой площади на участке",
+    subtitle: "Подборка комфортных двухэтажных домов для жизни и отдыха",
     match: (p) => p.floors === 2,
   },
   {
@@ -72,7 +72,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     label: "Барнхаус",
     name: "Подборка домов в стиле Барнхаус",
     title: "Барнхаус",
-    subtitle: "Открытая планировка и характерный силуэт",
+    subtitle: "Подборка домов в стиле Барнхаус для жизни и отдыха",
     match: isBarnhouse,
   },
   {
@@ -80,7 +80,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     label: "до 80 м²",
     name: "Подборка домов до 80 м²",
     title: "Дома до 80 м²",
-    subtitle: "Компактные решения",
+    subtitle: "Подборка компактных домов площадью до 80 м²",
     match: (p) => inAreaRange(p, null, 80),
   },
   {
@@ -88,7 +88,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     label: "80–100 м²",
     name: "Подборка домов 80–100 м²",
     title: "Дома 80–100 м²",
-    subtitle: "Удобный формат для небольшой семьи",
+    subtitle: "Подборка домов площадью 80–100 м² для жизни и отдыха",
     match: (p) => inAreaRange(p, 80, 100),
   },
   {
@@ -96,7 +96,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     label: "100–120 м²",
     name: "Подборка домов 100–120 м²",
     title: "Дома 100–120 м²",
-    subtitle: "Оптимальный размер для семьи",
+    subtitle: "Подборка домов площадью 100–120 м² для жизни и отдыха",
     match: (p) => inAreaRange(p, 100, 120),
   },
   {
@@ -104,7 +104,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     label: "120–150 м²",
     name: "Подборка домов 120–150 м²",
     title: "Дома 120–150 м²",
-    subtitle: "Просторные планировки",
+    subtitle: "Подборка просторных домов площадью 120–150 м²",
     match: (p) => inAreaRange(p, 120, 150),
   },
   {
@@ -112,7 +112,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     label: "150–200 м²",
     name: "Подборка домов 150–200 м²",
     title: "Дома 150–200 м²",
-    subtitle: "Для большой семьи",
+    subtitle: "Подборка просторных домов площадью 150–200 м²",
     match: (p) => inAreaRange(p, 150, 200),
   },
   {
@@ -120,7 +120,7 @@ export const CATALOG_PRESETS: CatalogPreset[] = [
     label: "более 200 м²",
     name: "Подборка домов более 200 м²",
     title: "Дома более 200 м²",
-    subtitle: "Максимум пространства",
+    subtitle: "Подборка домов площадью более 200 м²",
     match: (p) => inAreaRange(p, 200, null),
   },
 ];
