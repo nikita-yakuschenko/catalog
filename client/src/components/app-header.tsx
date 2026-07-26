@@ -44,6 +44,18 @@ export function AppHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
         {!onLogin ? (
           <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+            <Link
+              href="/"
+              title="Главная"
+              className={cn(
+                "mr-1 inline-flex shrink-0 items-center rounded-lg px-3 py-2 text-sm font-semibold tracking-tight transition-colors",
+                pathname === "/"
+                  ? "bg-muted text-foreground"
+                  : "text-foreground hover:bg-muted/60"
+              )}
+            >
+              AVGST
+            </Link>
             {nav.map(({ href, label, icon: Icon }) => {
               const active =
                 href === "/catalogs"
