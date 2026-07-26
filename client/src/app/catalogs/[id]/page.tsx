@@ -9,6 +9,7 @@ import { IconDownload, IconEye, IconPlayerPlay, IconShieldCheck } from "@tabler/
 
 import { PageHeader } from "@/components/page-header";
 import { StickyChrome } from "@/components/sticky-chrome";
+import { useAuth } from "@/components/auth-provider";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Table,
@@ -18,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { catalogStatusDescription } from "@/lib/catalog-labels";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +29,7 @@ const selectClass =
   "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 export default function CatalogDetailPage() {
+  const { isAdmin } = useAuth();
   const params = useParams<{ id: string }>();
   const id = params.id;
   const qc = useQueryClient();
@@ -90,16 +93,17 @@ export default function CatalogDetailPage() {
           title={data.name}
           description={
             <>
-              {data.title} · статус {data.status}
-              {status?.build ? ` · сборка ${status.build.status} (${status.build.stage})` : ""}
+              {data.title} · {catalogStatusDescription(data.status, status?.build, isAdmin)}
             </>
           }
           actions={
             <>
-              <Button type="button" variant="outline" onClick={() => preflight.mutate()}>
-                <IconShieldCheck className="size-4" stroke={1.75} />
-                Preflight
-              </Button>
+              {isAdmin && (
+                <Button type="button" variant="outline" onClick={() => preflight.mutate()}>
+                  <IconShieldCheck className="size-4" stroke={1.75} />
+                  Preflight
+                </Button>
+              )}
               <Button type="button" onClick={() => build.mutate()} disabled={build.isPending}>
                 <IconPlayerPlay className="size-4" stroke={1.75} />
                 Собрать PDF
@@ -135,8 +139,12 @@ export default function CatalogDetailPage() {
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-12">#</TableHead>
               <TableHead>Проект</TableHead>
-              <TableHead>Layout</TableHead>
-              <TableHead>Override</TableHead>
+              {isAdmin && (
+                <>
+                  <TableHead>Layout</TableHead>
+                  <TableHead>Override</TableHead>
+                </>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -144,23 +152,27 @@ export default function CatalogDetailPage() {
               <TableRow key={cp.id}>
                 <TableCell>{idx + 1}</TableCell>
                 <TableCell>{cp.project?.short_name || cp.project_id}</TableCell>
-                <TableCell>{cp.layout_variant || "—"}</TableCell>
-                <TableCell>
-                  <select
-                    value={cp.layout_variant_override || ""}
-                    onChange={(e) =>
-                      updateLayout.mutate({ projectId: cp.project_id, layout: e.target.value })
-                    }
-                    className={selectClass}
-                  >
-                    <option value="">Авто</option>
-                    {LAYOUTS.map((l) => (
-                      <option key={l} value={l}>
-                        {l}
-                      </option>
-                    ))}
-                  </select>
-                </TableCell>
+                {isAdmin && (
+                  <>
+                    <TableCell>{cp.layout_variant || "—"}</TableCell>
+                    <TableCell>
+                      <select
+                        value={cp.layout_variant_override || ""}
+                        onChange={(e) =>
+                          updateLayout.mutate({ projectId: cp.project_id, layout: e.target.value })
+                        }
+                        className={selectClass}
+                      >
+                        <option value="">Авто</option>
+                        {LAYOUTS.map((l) => (
+                          <option key={l} value={l}>
+                            {l}
+                          </option>
+                        ))}
+                      </select>
+                    </TableCell>
+                  </>
+                )}
               </TableRow>
             ))}
           </TableBody>

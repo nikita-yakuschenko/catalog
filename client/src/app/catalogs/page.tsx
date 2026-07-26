@@ -7,13 +7,16 @@ import { IconEye, IconPlus, IconTrash } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
 import { StickyChrome } from "@/components/sticky-chrome";
+import { useAuth } from "@/components/auth-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { catalogStatusLabel } from "@/lib/catalog-labels";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 
 export default function CatalogsPage() {
+  const { isAdmin } = useAuth();
   const qc = useQueryClient();
   const { data = [], isLoading } = useQuery({
     queryKey: ["catalogs"],
@@ -58,7 +61,7 @@ export default function CatalogsPage() {
                 <p className="text-sm text-muted-foreground">
                   {c.title} · {c.projects?.length || 0} проектов
                 </p>
-                <Badge variant="secondary">{c.status}</Badge>
+                <Badge variant="secondary">{catalogStatusLabel(c.status, isAdmin)}</Badge>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link

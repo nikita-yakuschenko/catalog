@@ -9,6 +9,7 @@ type AuthContextValue = {
   loading: boolean;
   status: AuthStatus | null;
   user: AuthUser | null;
+  isAdmin: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       status,
       user: status?.user ?? null,
+      isAdmin: Boolean(status?.user?.is_admin) || (status != null && !status.auth_enabled),
       refresh,
       logout,
     }),

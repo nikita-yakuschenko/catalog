@@ -24,7 +24,15 @@ def require_user(
 ) -> dict[str, Any]:
     """Требует сессию, если OAuth включён. Иначе пропускает (локальная разработка)."""
     if not settings.auth_enabled:
-        return {"uid": "local", "name": "Local", "last_name": "Dev", "email": "", "photo": "", "phone": ""}
+        return {
+            "uid": "local",
+            "name": "Local",
+            "last_name": "Dev",
+            "email": "",
+            "photo": "",
+            "phone": "",
+            "is_admin": True,
+        }
 
     user = unsign_payload(avgst_session or "", settings.session_secret) if avgst_session else None
     if not user:

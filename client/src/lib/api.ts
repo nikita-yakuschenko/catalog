@@ -36,6 +36,7 @@ export type AuthUser = {
   email: string;
   photo?: string;
   phone?: string;
+  is_admin?: boolean;
 };
 
 export type AuthStatus = {
