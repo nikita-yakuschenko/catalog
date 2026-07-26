@@ -137,6 +137,7 @@ export const api = {
   sync: () => request<Record<string, unknown>>("/api/sync/tilda", { method: "POST" }),
   proposals: () => request<ProposalListItem[]>("/api/proposals"),
   proposalDownloadUrl: (id: string) => `${API_URL}/api/proposals/${id}/download`,
+  deleteProposal: (id: string) => request(`/api/proposals/${id}`, { method: "DELETE" }),
   projects: (params?: { technology?: string; q?: string }) => {
     const qs = new URLSearchParams();
     if (params?.technology) qs.set("technology", params.technology);

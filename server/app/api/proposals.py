@@ -311,3 +311,33 @@ async def download_proposal(
     if not path.exists():
         raise HTTPException(404, "Файл не найден")
     return FileResponse(path, media_type="application/pdf", filename=f"proposal-{proposal_id}.pdf")
+
+
+def _unlink_quiet(path_str: str) -> None:
+    if not path_str:
+        return
+    try:
+        Path(path_str).unlink(missing_ok=True)
+    except OSError:
+        logger.warning("failed to delete file %s", path_str)
+
+
+@router.delete("/proposals/{proposal_id}", dependencies=[Depends(require_user)])
+async def delete_proposal(
+    proposal_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> dict:
+    proposal = await _proposal_for_user(db, proposal_id, user)
+    builds_result = await db.execute(
+        select(ProposalBuild).where(ProposalBuild.proposal_id == proposal_id)
+    )
+    file_paths = [proposal.source_pdf_path]
+    for build in builds_result.scalars().all():
+        file_paths.append(build.pdf_path)
+        file_paths.append(build.html_path)
+    await db.delete(proposal)
+    await db.commit()
+    for path in file_paths:
+        _unlink_quiet(path)
+    return {"ok": True}
