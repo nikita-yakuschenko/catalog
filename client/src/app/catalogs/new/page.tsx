@@ -67,7 +67,6 @@ export default function NewCatalogPage() {
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const allIds = useMemo(() => sorted.map((p) => p.id), [sorted]);
   const allSelected = allIds.length > 0 && allIds.every((id) => selectedSet.has(id));
-  const someSelected = allIds.some((id) => selectedSet.has(id)) && !allSelected;
 
   const create = useMutation({
     mutationFn: async () => {
@@ -208,7 +207,7 @@ export default function NewCatalogPage() {
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-12">
                   <Checkbox
-                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    checked={allSelected}
                     onCheckedChange={() => toggleAll()}
                     aria-label="Выбрать все проекты"
                   />
