@@ -145,18 +145,31 @@ export default function CatalogDetailPage() {
                   Проверка
                 </Button>
               )}
-              <Button
-                type="button"
-                onClick={() => build.mutate()}
-                disabled={build.isPending || building}
-              >
-                {building ? (
-                  <IconLoader2 className="size-4 animate-spin" stroke={1.75} />
-                ) : (
+              {!statusReady && (
+                <Button
+                  type="button"
+                  onClick={() => build.mutate()}
+                  disabled={build.isPending || building}
+                >
+                  {building ? (
+                    <IconLoader2 className="size-4 animate-spin" stroke={1.75} />
+                  ) : (
+                    <IconPlayerPlay className="size-4" stroke={1.75} />
+                  )}
+                  {building ? "Собирается…" : "Собрать PDF"}
+                </Button>
+              )}
+              {statusReady && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => build.mutate()}
+                  disabled={build.isPending}
+                >
                   <IconPlayerPlay className="size-4" stroke={1.75} />
-                )}
-                {building ? "Собирается…" : "Собрать PDF"}
-              </Button>
+                  Пересобрать
+                </Button>
+              )}
               <Link
                 href={`/catalogs/${id}/preview`}
                 className={cn(buttonVariants({ variant: "outline", size: "default" }))}
@@ -166,7 +179,12 @@ export default function CatalogDetailPage() {
               </Link>
               <a
                 href={api.downloadUrl(id)}
-                className={cn(buttonVariants({ variant: "outline", size: "default" }))}
+                className={cn(
+                  buttonVariants({
+                    variant: statusReady ? "default" : "outline",
+                    size: "default",
+                  })
+                )}
               >
                 <IconDownload className="size-4" stroke={1.75} />
                 Скачать PDF
