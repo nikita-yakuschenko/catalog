@@ -236,13 +236,13 @@ class ProposalAssembler:
             exterior_shots,
             label="Фасады",
             heading="Фасады и окружение",
-            sub="Возможные варианты фасадных решений",
+            sub="возможный вариант",
         )
         interior_spreads = self._spread_chunks(
             interior_shots,
             label="Интерьер",
             heading="Интерьеры",
-            sub="Возможные варианты интерьерных решений",
+            sub="возможный вариант",
         )
         return exterior_spreads, interior_spreads
 

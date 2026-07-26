@@ -75,7 +75,10 @@
 <section class="page kp-page">
   <div class="kp-sheet">
     <div class="kp-head">
-      <h1 class="kp-title">Фасады и окружение</h1>
+      <div class="kp-head-title">
+        <h1 class="kp-title">{{ spread.heading }}</h1>
+        {% if spread.sub %}<span class="kp-title-note">{{ spread.sub }}</span>{% endif %}
+      </div>
       <span class="kp-page-num"><i></i>{{ '%02d'|format(spread.page_num) }}</span>
     </div>
     <div class="kp-gallery-full {{ spread.layout }}">
@@ -104,7 +107,10 @@
 <section class="page kp-page">
   <div class="kp-sheet">
     <div class="kp-head">
-      <h1 class="kp-title">Интерьеры</h1>
+      <div class="kp-head-title">
+        <h1 class="kp-title">{{ spread.heading }}</h1>
+        {% if spread.sub %}<span class="kp-title-note">{{ spread.sub }}</span>{% endif %}
+      </div>
       <span class="kp-page-num"><i></i>{{ '%02d'|format(spread.page_num) }}</span>
     </div>
     <div class="kp-gallery-full {{ spread.layout }}">
