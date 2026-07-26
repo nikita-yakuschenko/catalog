@@ -1,8 +1,3 @@
-{% if false %}
-<link rel="stylesheet" href="../styles/tokens.css" />
-<link rel="stylesheet" href="../styles/pages.css" />
-<link rel="stylesheet" href="../styles/layouts.css" />
-{% endif %}
 {% macro specs_row(project) %}
 <div class="spec-row">
   <div class="spec-row-item">
@@ -16,7 +11,7 @@
   <div class="spec-row-item">
     <div class="spec-row-icon">{{ icons.dimensions | safe }}</div>
     <div>
-      <div class="spec-row-label">Габариты</div>
+      <div class="spec-row-label">Размеры</div>
       <div class="spec-row-value">{{ project.dimensions_display or '—' }}</div>
     </div>
   </div>
@@ -51,7 +46,7 @@
   <div class="spec-chip">
     <div class="spec-chip-icon">{{ icons.dimensions | safe }}</div>
     <div class="spec-chip-body">
-      <div class="spec-chip-label">Габариты</div>
+      <div class="spec-chip-label">Размеры</div>
       <div class="spec-chip-value">{{ project.dimensions_display or '—' }}</div>
     </div>
   </div>
