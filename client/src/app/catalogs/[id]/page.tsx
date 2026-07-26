@@ -19,11 +19,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { catalogStatusDescription } from "@/lib/catalog-labels";
+import {
+  catalogStatusDescription,
+  LAYOUT_OPTIONS,
+  layoutLabel,
+} from "@/lib/catalog-labels";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-
-const LAYOUTS = ["project_spread", "hero_plan_right", "split_equal"];
 
 const selectClass =
   "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
@@ -33,7 +35,7 @@ export default function CatalogDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const qc = useQueryClient();
-  const [polling, setPolling] = useState(false);
+  const [polling, setPolling] = useState(true); // сразу следим за сборкой после создания
 
   const { data } = useQuery({
     queryKey: ["catalog", id],
@@ -53,6 +55,8 @@ export default function CatalogDetailPage() {
       setPolling(false);
       qc.invalidateQueries({ queryKey: ["catalog", id] });
     }
+    // нет активной сборки — останавливаем опрос
+    if (status && !status.build) setPolling(false);
   }, [status, id, qc]);
 
   const build = useMutation({
@@ -68,7 +72,8 @@ export default function CatalogDetailPage() {
   const preflight = useMutation({
     mutationFn: () => api.preflight(id),
     onSuccess: (report) => {
-      toast.message(`Preflight: ${report.status as string}`);
+      const st = String(report.status ?? "ok");
+      toast.message(`Проверка: ${st === "ok" ? "всё в порядке" : st}`);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -77,7 +82,7 @@ export default function CatalogDetailPage() {
     mutationFn: ({ projectId, layout }: { projectId: string; layout: string }) =>
       api.updateCatalogProject(id, projectId, { layout_variant_override: layout || null }),
     onSuccess: () => {
-      toast.success("Layout обновлён");
+      toast.success("Макет обновлён");
       qc.invalidateQueries({ queryKey: ["catalog", id] });
     },
   });
@@ -101,7 +106,7 @@ export default function CatalogDetailPage() {
               {isAdmin && (
                 <Button type="button" variant="outline" onClick={() => preflight.mutate()}>
                   <IconShieldCheck className="size-4" stroke={1.75} />
-                  Preflight
+                  Проверка
                 </Button>
               )}
               <Button type="button" onClick={() => build.mutate()} disabled={build.isPending}>
@@ -141,8 +146,8 @@ export default function CatalogDetailPage() {
               <TableHead>Проект</TableHead>
               {isAdmin && (
                 <>
-                  <TableHead>Layout</TableHead>
-                  <TableHead>Override</TableHead>
+                  <TableHead>Макет</TableHead>
+                  <TableHead>Вручную</TableHead>
                 </>
               )}
             </TableRow>
@@ -154,7 +159,7 @@ export default function CatalogDetailPage() {
                 <TableCell>{cp.project?.short_name || cp.project_id}</TableCell>
                 {isAdmin && (
                   <>
-                    <TableCell>{cp.layout_variant || "—"}</TableCell>
+                    <TableCell>{layoutLabel(cp.layout_variant)}</TableCell>
                     <TableCell>
                       <select
                         value={cp.layout_variant_override || ""}
@@ -164,9 +169,9 @@ export default function CatalogDetailPage() {
                         className={selectClass}
                       >
                         <option value="">Авто</option>
-                        {LAYOUTS.map((l) => (
+                        {LAYOUT_OPTIONS.map((l) => (
                           <option key={l} value={l}>
-                            {l}
+                            {layoutLabel(l)}
                           </option>
                         ))}
                       </select>

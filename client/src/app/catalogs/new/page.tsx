@@ -37,8 +37,8 @@ export default function NewCatalogPage() {
   }, [projects]);
 
   const create = useMutation({
-    mutationFn: () =>
-      api.createCatalog({
+    mutationFn: async () => {
+      const catalog = await api.createCatalog({
         name,
         title,
         subtitle,
@@ -46,9 +46,21 @@ export default function NewCatalogPage() {
         price_actual_at: new Date().toISOString().slice(0, 10),
         project_ids: selected,
         contacts: { site: "avgst.ru" },
-      }),
-    onSuccess: (catalog) => {
-      toast.success("Каталог создан");
+      });
+      let buildStarted = true;
+      try {
+        await api.build(catalog.id);
+      } catch {
+        buildStarted = false;
+      }
+      return { catalog, buildStarted };
+    },
+    onSuccess: ({ catalog, buildStarted }) => {
+      if (buildStarted) {
+        toast.success("Каталог создан, сборка PDF запущена");
+      } else {
+        toast.message("Каталог создан — запустите сборку PDF вручную");
+      }
       router.push(`/catalogs/${catalog.id}`);
     },
     onError: (e: Error) => toast.error(e.message),
