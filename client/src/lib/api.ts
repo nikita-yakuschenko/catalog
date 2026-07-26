@@ -85,6 +85,13 @@ export type Catalog = {
   show_prices: boolean;
   price_actual_at: string | null;
   output_profile: string;
+  contacts?: {
+    site?: string;
+    manager?: { name?: string; phone?: string; email?: string; photo?: string };
+    office?: Record<string, string>;
+  };
+  created_at?: string;
+  updated_at?: string;
   projects: CatalogProject[];
 };
 

@@ -11,8 +11,16 @@ import { StickyChrome } from "@/components/sticky-chrome";
 import { useAuth } from "@/components/auth-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { catalogStatusLabel } from "@/lib/catalog-labels";
+import { catalogManagerName, formatCatalogDate } from "@/lib/catalog-presets";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 
@@ -60,44 +68,63 @@ export default function CatalogsPage() {
         />
       </StickyChrome>
 
-      <div className="grid gap-4">
-        {isLoading && <p className="text-muted-foreground">Загрузка…</p>}
+      <div className="rounded-xl border border-border bg-card">
+        {isLoading && <p className="p-6 text-muted-foreground">Загрузка…</p>}
         {!isLoading && data.length === 0 && (
-          <p className="text-muted-foreground">Каталогов пока нет.</p>
+          <p className="p-6 text-muted-foreground">Каталогов пока нет.</p>
         )}
-        {data.map((c) => (
-          <Card key={c.id}>
-            <CardContent className="flex flex-wrap items-center justify-between gap-3 p-6">
-              <div className="space-y-1">
-                <Link href={`/catalogs/${c.id}`} className="text-lg font-semibold hover:text-primary">
-                  {c.name}
-                </Link>
-                <p className="text-sm text-muted-foreground">
-                  {c.title} · {c.projects?.length || 0} проектов
-                </p>
-                <Badge variant="secondary">{catalogStatusLabel(c.status, isAdmin)}</Badge>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href={`/catalogs/${c.id}/preview`}
-                  className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-                >
-                  <IconEye className="size-4" stroke={1.75} />
-                  Превью
-                </Link>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setPendingDelete({ id: c.id, name: c.name })}
-                  disabled={remove.isPending}
-                >
-                  <IconTrash className="size-4" stroke={1.75} />
-                  Удалить
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {!isLoading && data.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Каталог</TableHead>
+                <TableHead>Менеджер</TableHead>
+                <TableHead>Создан</TableHead>
+                <TableHead>Статус</TableHead>
+                <TableHead className="text-right">Действия</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell>
+                    <Link href={`/catalogs/${c.id}`} className="font-medium hover:text-primary">
+                      {c.name}
+                    </Link>
+                    <div className="text-sm text-muted-foreground">
+                      {c.title} · {c.projects?.length || 0} проектов
+                    </div>
+                  </TableCell>
+                  <TableCell>{catalogManagerName(c)}</TableCell>
+                  <TableCell>{formatCatalogDate(c.created_at)}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{catalogStatusLabel(c.status, isAdmin)}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Link
+                        href={`/catalogs/${c.id}/preview`}
+                        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                      >
+                        <IconEye className="size-4" stroke={1.75} />
+                        Превью
+                      </Link>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setPendingDelete({ id: c.id, name: c.name })}
+                        disabled={remove.isPending}
+                      >
+                        <IconTrash className="size-4" stroke={1.75} />
+                        Удалить
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
       {pendingDelete && (

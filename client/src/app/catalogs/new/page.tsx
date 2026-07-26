@@ -12,19 +12,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { applyCatalogPreset, CATALOG_PRESETS } from "@/lib/catalog-presets";
 import { api, Project } from "@/lib/api";
 
 export default function NewCatalogPage() {
   const router = useRouter();
   const { data: projects = [] } = useQuery({ queryKey: ["projects"], queryFn: () => api.projects() });
-  const [name, setName] = useState("AVGST — 20 проектов");
-  const [title, setTitle] = useState("20 проектов домов");
+  const [name, setName] = useState("AVGST — подборка проектов");
+  const [title, setTitle] = useState("Подборка проектов");
   const [subtitle, setSubtitle] = useState("Модульные и панельно-каркасные дома");
   const [showPrices, setShowPrices] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
 
   const modular = useMemo(() => projects.filter((p) => p.technology === "modular"), [projects]);
   const panel = useMemo(() => projects.filter((p) => p.technology === "panel"), [projects]);
+
+  const presetCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const preset of CATALOG_PRESETS) {
+      counts[preset.id] = projects.filter(preset.match).length;
+    }
+    return counts;
+  }, [projects]);
 
   const create = useMutation({
     mutationFn: () =>
@@ -45,12 +55,22 @@ export default function NewCatalogPage() {
   });
 
   function toggle(id: string) {
+    setActivePreset(null);
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
-  function pickFirst(list: Project[], n: number) {
-    const ids = list.slice(0, n).map((p) => p.id);
-    setSelected((prev) => Array.from(new Set([...prev.filter((id) => !list.some((p) => p.id === id)), ...ids])));
+  function applyPreset(presetId: string) {
+    const preset = CATALOG_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    const ids = applyCatalogPreset(projects, preset);
+    setActivePreset(preset.id);
+    setSelected(ids);
+    setName(preset.name);
+    setTitle(preset.title);
+    setSubtitle(preset.subtitle);
+    if (ids.length === 0) {
+      toast.message("По этому отбору пока нет проектов");
+    }
   }
 
   return (
@@ -83,23 +103,26 @@ export default function NewCatalogPage() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" onClick={() => pickFirst(modular, 10)}>
-          10 модульных
-        </Button>
-        <Button type="button" variant="outline" onClick={() => pickFirst(panel, 10)}>
-          10 панельно-каркасных
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            const ids = [...modular.slice(0, 10), ...panel.slice(0, 10)].map((p) => p.id);
-            setSelected(ids);
-          }}
-        >
-          Как в примере (10+10)
-        </Button>
+      <div className="space-y-2">
+        <p className="text-sm font-medium">Быстрое создание</p>
+        <div className="flex flex-wrap gap-2">
+          {CATALOG_PRESETS.map((preset) => {
+            const count = presetCounts[preset.id] ?? 0;
+            return (
+              <Button
+                key={preset.id}
+                type="button"
+                variant={activePreset === preset.id ? "default" : "outline"}
+                size="sm"
+                title={preset.name}
+                onClick={() => applyPreset(preset.id)}
+              >
+                {preset.label}
+                <span className="text-muted-foreground">· {count}</span>
+              </Button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -118,6 +141,7 @@ export default function NewCatalogPage() {
                   <span>
                     {p.short_name}
                     {p.area ? ` · ${p.area} м²` : ""}
+                    {p.floors ? ` · ${p.floors} эт.` : ""}
                   </span>
                 </label>
               ))}
