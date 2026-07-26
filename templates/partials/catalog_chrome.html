@@ -20,14 +20,10 @@
 </div>
 {%- endmacro %}
 
-{% macro cat_foot(full=false) -%}
-<div class="cat-foot{% if full %} cat-foot--closing{% endif %}">
+{% macro cat_foot() -%}
+<div class="cat-foot">
   <span class="cat-foot-brand">
-    {% if full %}
-    <span class="cat-logo cat-logo--foot-full" aria-hidden="true">{{ logo_svg }}</span>
-    {% else %}
     <span class="cat-logo cat-logo--foot" aria-hidden="true">{{ logo_mark_svg }}</span>
-    {% endif %}
     <span>проектирование · производство · строительство</span>
   </span>
   <span>{{ year }}</span>
