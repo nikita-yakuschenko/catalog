@@ -79,6 +79,28 @@ export default function NewCatalogPage() {
         <PageHeader backHref="/catalogs" backLabel="К списку каталогов" title="Новый каталог" />
       </StickyChrome>
 
+      <div className="space-y-2">
+        <p className="text-sm font-medium">Быстрые отборы</p>
+        <div className="flex flex-wrap gap-2">
+          {CATALOG_PRESETS.map((preset) => {
+            const count = presetCounts[preset.id] ?? 0;
+            return (
+              <Button
+                key={preset.id}
+                type="button"
+                variant={activePreset === preset.id ? "default" : "outline"}
+                size="sm"
+                title={preset.name}
+                onClick={() => applyPreset(preset.id)}
+              >
+                {preset.label}
+                <span className="text-muted-foreground">· {count}</span>
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Параметры каталога</CardTitle>
@@ -102,28 +124,6 @@ export default function NewCatalogPage() {
           </label>
         </CardContent>
       </Card>
-
-      <div className="space-y-2">
-        <p className="text-sm font-medium">Быстрое создание</p>
-        <div className="flex flex-wrap gap-2">
-          {CATALOG_PRESETS.map((preset) => {
-            const count = presetCounts[preset.id] ?? 0;
-            return (
-              <Button
-                key={preset.id}
-                type="button"
-                variant={activePreset === preset.id ? "default" : "outline"}
-                size="sm"
-                title={preset.name}
-                onClick={() => applyPreset(preset.id)}
-              >
-                {preset.label}
-                <span className="text-muted-foreground">· {count}</span>
-              </Button>
-            );
-          })}
-        </div>
-      </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         {[
