@@ -17,9 +17,33 @@ from app.services.qrcode_util import qr_data_uri
 
 ROOT = Path(__file__).resolve().parents[3]
 
+# Страница с резюме (клиент/менеджер/QR) + итого: до 12 опций.
+# Страница без резюме: до 16 опций. Последнюю страницу не оставляем без строк опций.
+ROWS_WITH_SUMMARY = 12
+ROWS_WITHOUT_SUMMARY = 16
+
 
 def _chunk(items: list[Any], size: int) -> list[list[Any]]:
     return [items[i : i + size] for i in range(0, len(items), size)]
+
+
+def split_option_page_sizes(n: int) -> list[int]:
+    """Размеры страниц опций: без orphan-резюме, 16 на промежуточных, ≤12 на последней."""
+    if n <= 0:
+        return [0]
+    if n <= ROWS_WITH_SUMMARY:
+        return [n]
+
+    sizes: list[int] = []
+    remaining = n
+    # Пока хвост не влезает на страницу с резюме — снимаем полные листы без резюме.
+    while remaining > ROWS_WITH_SUMMARY:
+        # Не больше 16 и оставляем ≥1 строку под последнюю страницу.
+        take = min(ROWS_WITHOUT_SUMMARY, remaining - 1)
+        sizes.append(take)
+        remaining -= take
+    sizes.append(remaining)
+    return sizes
 
 
 def _load_brand_svg(name: str, templates_dir: Path) -> Markup:
@@ -108,50 +132,24 @@ class ProposalAssembler:
             filtered.append(opt)
         options = filtered
 
-        # Жёсткий лимит: 12 строк таблицы на лист.
-        # 1-я страница: Домокомплект + Доставка + Сборка (+ опции).
-        rows_per_page = 12
-        fixed_first_rows = 3
-        first_option_slots = rows_per_page - fixed_first_rows  # 9
-
+        sizes = split_option_page_sizes(len(options))
         pages: list[dict[str, Any]] = []
-        if not options:
-            return [
-                {
-                    "options": [],
-                    "is_first": True,
-                    "is_last": True,
-                    "show_delivery": True,
-                    "show_summary": True,
-                }
-            ]
-
-        first = options[:first_option_slots]
-        rest = options[first_option_slots:]
-        pages.append(
-            {
-                "options": first,
-                "is_first": True,
-                "is_last": not rest,
-                "show_delivery": True,
-                "show_summary": not rest,
-            }
-        )
-        rest_chunks = _chunk(rest, rows_per_page)
-        for idx, chunk in enumerate(rest_chunks):
-            is_last = idx == len(rest_chunks) - 1
+        offset = 0
+        page_count = len(sizes)
+        for idx, size in enumerate(sizes):
+            chunk = options[offset : offset + size]
+            offset += size
+            is_first = idx == 0
+            is_last = idx == page_count - 1
             pages.append(
                 {
                     "options": chunk,
-                    "is_first": False,
+                    "is_first": is_first,
                     "is_last": is_last,
-                    "show_delivery": False,
+                    "show_delivery": is_first,
                     "show_summary": is_last,
                 }
             )
-        if pages:
-            pages[-1]["is_last"] = True
-            pages[-1]["show_summary"] = True
         return pages
 
     def _assets(self, project: Optional[HouseProject], *, fallback_hero: str) -> dict[str, Any]:
