@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { IconEye, IconLoader2, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconDownload, IconEye, IconLoader2, IconPlus, IconTrash } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
 import { StickyChrome } from "@/components/sticky-chrome";
@@ -81,7 +81,7 @@ export default function CatalogsPage() {
                 <TableHead className="w-[11rem]">Менеджер</TableHead>
                 <TableHead className="w-[7rem]">Создан</TableHead>
                 <TableHead className="w-[9.5rem]">Статус</TableHead>
-                <TableHead className="w-[15rem] text-right">Действия</TableHead>
+                <TableHead className="w-[20rem] text-right">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -112,8 +112,17 @@ export default function CatalogsPage() {
                       {catalogStatusLabel(c.status, isAdmin)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="w-[15rem]">
+                  <TableCell className="w-[20rem]">
                     <div className="flex flex-nowrap justify-end gap-2">
+                      {c.status === "ready" && (
+                        <a
+                          href={api.downloadUrl(c.id)}
+                          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
+                        >
+                          <IconDownload className="size-4" stroke={1.75} />
+                          Скачать
+                        </a>
+                      )}
                       <Link
                         href={`/catalogs/${c.id}/preview?from=list`}
                         className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
