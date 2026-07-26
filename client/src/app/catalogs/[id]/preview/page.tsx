@@ -1,7 +1,8 @@
 "use client";
 
+import { Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { IconDownload } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -11,9 +12,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-export default function CatalogPreviewPage() {
+function CatalogPreviewInner() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const id = params.id;
+  const fromList = searchParams.get("from") === "list";
 
   const { data, error, isLoading } = useQuery({
     queryKey: ["preview", id],
@@ -25,17 +28,14 @@ export default function CatalogPreviewPage() {
     <div className="space-y-6">
       <StickyChrome>
         <PageHeader
-          backHref={`/catalogs/${id}`}
-          backLabel="Настройки каталога"
+          backHref={fromList ? "/catalogs" : `/catalogs/${id}`}
+          backLabel={fromList ? "К списку каталогов" : "К каталогу"}
           title="Превью каталога"
           description={
             data ? `${data.page_count} страниц` : "После успешной сборки здесь появятся страницы"
           }
           actions={
-            <a
-              href={api.downloadUrl(id)}
-              className={cn(buttonVariants())}
-            >
+            <a href={api.downloadUrl(id)} className={cn(buttonVariants())}>
               <IconDownload className="size-4" stroke={1.75} />
               Скачать PDF
             </a>
@@ -46,7 +46,7 @@ export default function CatalogPreviewPage() {
       {isLoading && <p className="text-muted-foreground">Загрузка…</p>}
       {error && (
         <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-          Превью ещё нет. Соберите каталог на странице настроек.
+          Превью ещё нет. Соберите каталог — PDF появится после сборки.
         </p>
       )}
 
@@ -66,5 +66,13 @@ export default function CatalogPreviewPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function CatalogPreviewPage() {
+  return (
+    <Suspense fallback={<p className="text-muted-foreground">Загрузка…</p>}>
+      <CatalogPreviewInner />
+    </Suspense>
   );
 }

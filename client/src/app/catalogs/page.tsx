@@ -115,7 +115,7 @@ export default function CatalogsPage() {
                   <TableCell className="w-[15rem]">
                     <div className="flex flex-nowrap justify-end gap-2">
                       <Link
-                        href={`/catalogs/${c.id}/preview`}
+                        href={`/catalogs/${c.id}/preview?from=list`}
                         className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
                       >
                         <IconEye className="size-4" stroke={1.75} />
