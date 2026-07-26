@@ -481,9 +481,14 @@
 
 .cat-legal {
   margin-top: auto;
+  margin-bottom: 0;
   padding-top: 5mm;
-  margin-bottom: 5mm;
   border-top: 1px solid var(--color-line);
+}
+
+/* Дисклеймер и футер — один нижний блок, без щели между ними */
+.cat-legal + .cat-foot {
+  margin-top: 4mm;
 }
 
 .cat-disclaimer {
