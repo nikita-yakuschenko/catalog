@@ -78,10 +78,10 @@ export default function CatalogsPage() {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead>Каталог</TableHead>
-                <TableHead>Менеджер</TableHead>
-                <TableHead>Создан</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead className="text-right">Действия</TableHead>
+                <TableHead className="w-[11rem]">Менеджер</TableHead>
+                <TableHead className="w-[7rem]">Создан</TableHead>
+                <TableHead className="w-[9.5rem]">Статус</TableHead>
+                <TableHead className="w-[12rem] text-right">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -95,13 +95,13 @@ export default function CatalogsPage() {
                       {c.title} · {c.projects?.length || 0} проектов
                     </div>
                   </TableCell>
-                  <TableCell>{catalogManagerName(c)}</TableCell>
-                  <TableCell>{formatCatalogDate(c.created_at)}</TableCell>
-                  <TableCell>
+                  <TableCell className="w-[11rem] whitespace-nowrap">{catalogManagerName(c)}</TableCell>
+                  <TableCell className="w-[7rem] whitespace-nowrap">{formatCatalogDate(c.created_at)}</TableCell>
+                  <TableCell className="w-[9.5rem]">
                     <Badge
                       variant={c.status === "failed" ? "destructive" : "secondary"}
                       className={cn(
-                        "gap-1.5",
+                        "inline-flex min-w-[8.25rem] justify-center gap-1.5",
                         c.status === "rendering" &&
                           "border-amber-500/40 bg-amber-500/15 text-amber-950 dark:text-amber-100"
                       )}
