@@ -25,6 +25,7 @@ from app.domain.schemas import (
     ReorderItem,
 )
 from app.services.build import run_build
+from app.services.catalog_contacts import merge_catalog_contacts
 from app.services.preflight import PreflightService
 
 router = APIRouter(dependencies=[Depends(require_user)])
@@ -43,7 +44,11 @@ async def list_catalogs(db: AsyncSession = Depends(get_db)) -> list[Catalog]:
 
 
 @router.post("/catalogs", response_model=CatalogOut)
-async def create_catalog(payload: CatalogCreate, db: AsyncSession = Depends(get_db)) -> Catalog:
+async def create_catalog(
+    payload: CatalogCreate,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
+) -> Catalog:
     catalog = Catalog(
         name=payload.name,
         title=payload.title,
@@ -61,7 +66,7 @@ async def create_catalog(payload: CatalogCreate, db: AsyncSession = Depends(get_
         cover_variant=payload.cover_variant,
         theme=payload.theme,
         layout_strategy=payload.layout_strategy,
-        contacts=payload.contacts,
+        contacts=merge_catalog_contacts(payload.contacts, user=user),
         settings=payload.settings,
     )
     db.add(catalog)
@@ -252,11 +257,14 @@ async def build_catalog(
     catalog_id: UUID,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(require_user),
 ) -> Build:
     result = await db.execute(select(Catalog).where(Catalog.id == catalog_id))
     catalog = result.scalar_one_or_none()
     if not catalog:
         raise HTTPException(404, "Каталог не найден")
+    # На сборке фиксируем актуального менеджера из сессии
+    catalog.contacts = merge_catalog_contacts(catalog.contacts, user=user)
     build = Build(
         catalog_id=catalog.id,
         status=BuildStatus.pending,

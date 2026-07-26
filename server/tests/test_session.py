@@ -8,6 +8,7 @@ def test_session_roundtrip():
         last_name="Иванов",
         email="ivan@example.com",
         photo="https://cdn.example/photo.jpg",
+        phone="+7 900 000-00-00",
         secret="test-secret",
         ttl_sec=3600,
     )
@@ -17,6 +18,7 @@ def test_session_roundtrip():
     assert data["name"] == "Иван"
     assert data["email"] == "ivan@example.com"
     assert data["photo"] == "https://cdn.example/photo.jpg"
+    assert data["phone"] == "+7 900 000-00-00"
 
 
 def test_session_rejects_bad_secret():

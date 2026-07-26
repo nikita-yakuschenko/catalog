@@ -40,6 +40,21 @@ def _photo_from_profile(profile: dict[str, Any]) -> str:
     return ""
 
 
+def _phone_from_profile(profile: dict[str, Any]) -> str:
+    for key in (
+        "WORK_PHONE",
+        "workPhone",
+        "PERSONAL_MOBILE",
+        "personalMobile",
+        "PERSONAL_PHONE",
+        "personalPhone",
+    ):
+        raw = profile.get(key)
+        if isinstance(raw, str) and raw.strip():
+            return raw.strip()
+    return ""
+
+
 def _user_payload(user: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": user.get("uid"),
@@ -47,6 +62,7 @@ def _user_payload(user: dict[str, Any]) -> dict[str, Any]:
         "last_name": user.get("last_name"),
         "email": user.get("email"),
         "photo": user.get("photo") or "",
+        "phone": user.get("phone") or "",
     }
 
 
@@ -59,7 +75,7 @@ async def get_auth_status(
     if avgst_session:
         user = unsign_payload(avgst_session, settings.session_secret)
     elif not enabled:
-        user = {"uid": "local", "name": "Local", "last_name": "Dev", "email": "", "photo": ""}
+        user = {"uid": "local", "name": "Local", "last_name": "Dev", "email": "", "photo": "", "phone": ""}
     return {
         "auth_enabled": enabled,
         "authenticated": bool(user),
@@ -70,7 +86,7 @@ async def get_auth_status(
 @router.get("/me")
 async def me(avgst_session: Optional[str] = Cookie(default=None, alias=SESSION_COOKIE)) -> dict[str, Any]:
     if not settings.auth_enabled:
-        return {"id": "local", "name": "Local", "last_name": "Dev", "email": "", "photo": ""}
+        return {"id": "local", "name": "Local", "last_name": "Dev", "email": "", "photo": "", "phone": ""}
     user = unsign_payload(avgst_session or "", settings.session_secret) if avgst_session else None
     if not user:
         raise HTTPException(401, "Не авторизован")
@@ -178,6 +194,7 @@ async def bitrix_callback(
         last_name=str(profile.get("LAST_NAME") or ""),
         email=str(profile.get("EMAIL") or ""),
         photo=_photo_from_profile(profile),
+        phone=_phone_from_profile(profile),
         secret=settings.session_secret,
         ttl_sec=settings.auth_session_ttl_sec,
     )

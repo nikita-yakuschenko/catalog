@@ -13,6 +13,7 @@ from markupsafe import Markup
 
 from app.core.config import settings
 from app.domain.models import AssetType, Catalog, CatalogProject, HouseProject, Technology
+from app.services.catalog_contacts import DEFAULT_OFFICE, DEFAULT_SITE, merge_catalog_contacts
 from app.services.icons import ICONS
 from app.services.layout_selector import LayoutSelector, layout_page_count
 from app.services.qrcode_util import qr_data_uri
@@ -31,6 +32,35 @@ def _load_brand_svg(name: str, templates_dir: Path) -> Markup:
         if path and path.exists():
             return Markup(path.read_text(encoding="utf-8"))
     return Markup("")
+
+
+def _embed_remote_image(url: str, *, max_edge: int = 480) -> str:
+    """Download manager photo for PDF embed; empty string on failure."""
+    if not url or not url.startswith(("http://", "https://")):
+        return ""
+    try:
+        import base64
+
+        import httpx
+
+        from app.services.pdf_optimize import optimize_image_bytes
+
+        with httpx.Client(timeout=12.0, follow_redirects=True) as client:
+            resp = client.get(url)
+            resp.raise_for_status()
+            data, mime = optimize_image_bytes(resp.content, max_edge=max_edge, quality=82)
+        return f"data:{mime};base64," + base64.b64encode(data).decode("ascii")
+    except Exception:
+        return ""
+
+
+def _manager_initials(name: str) -> str:
+    parts = [p for p in (name or "").split() if p]
+    if not parts:
+        return "A"
+    if len(parts) == 1:
+        return parts[0][:1].upper()
+    return (parts[0][:1] + parts[1][:1]).upper()
 
 
 @dataclass
@@ -335,6 +365,13 @@ class CatalogAssembler:
         fonts_dir = self.templates_dir / "fonts"
         intro_page_num = next((p.page_number for p in pages if p.kind == "introduction"), 2)
         contents_page_num = next((p.page_number for p in pages if p.kind == "contents"), 3)
+        contacts = merge_catalog_contacts(catalog.contacts)
+        manager = dict(contacts.get("manager") or {})
+        photo_url = str(manager.get("photo") or "")
+        photo_embed = _embed_remote_image(photo_url) if photo_url else ""
+        manager["photo"] = photo_embed or photo_url
+        manager["initials"] = _manager_initials(str(manager.get("name") or ""))
+        office = contacts.get("office") if isinstance(contacts.get("office"), dict) else dict(DEFAULT_OFFICE)
         context = {
             "catalog": catalog,
             "pages": pages,
@@ -349,13 +386,10 @@ class CatalogAssembler:
             "price_actual_at": price_date.strftime("%d.%m.%Y"),
             "generated_at": generated_at.strftime("%d.%m.%Y"),
             "year": catalog.year,
-            "contacts": catalog.contacts
-            or {
-                "site": "avgst.ru",
-                "phone": "",
-                "email": "",
-                "address": "",
-            },
+            "contacts": contacts,
+            "manager": manager,
+            "office": office,
+            "site": contacts.get("site") or DEFAULT_SITE,
             "show_prices": catalog.show_prices,
             "show_project_links": catalog.show_project_links,
             "icons": ICONS,

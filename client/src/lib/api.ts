@@ -35,6 +35,7 @@ export type AuthUser = {
   last_name: string;
   email: string;
   photo?: string;
+  phone?: string;
 };
 
 export type AuthStatus = {
