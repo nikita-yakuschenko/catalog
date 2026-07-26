@@ -22,8 +22,11 @@ function hasArea(p: Project): p is Project & { area: number } {
 
 function inAreaRange(p: Project, min: number | null, max: number | null): boolean {
   if (!hasArea(p)) return false;
-  const lo = min == null ? null : min - AREA_TOLERANCE_M2;
-  const hi = max == null ? null : max + AREA_TOLERANCE_M2;
+  // Открытые края («до N» / «более N») — жёсткий порог без допуска
+  const openLow = min == null;
+  const openHigh = max == null;
+  const lo = openLow ? null : openHigh ? min : min! - AREA_TOLERANCE_M2;
+  const hi = openHigh ? null : openLow ? max : max! + AREA_TOLERANCE_M2;
   if (lo != null && p.area < lo) return false;
   if (hi != null && p.area > hi) return false;
   return true;
