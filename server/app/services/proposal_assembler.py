@@ -18,9 +18,12 @@ from app.services.qrcode_util import qr_data_uri
 ROOT = Path(__file__).resolve().parents[3]
 
 # Страница с резюме (клиент/менеджер/QR) + итого: до 12 опций.
-# Страница без резюме: до 15 опций (16-я обрезается в PDF). Последнюю не оставляем без строк.
+# Страница без резюме: до 15 строк таблицы (16-я обрезается в PDF).
+# На 1-й странице ещё Домокомплект/Доставка/Сборка — из 15 остаётся 12 слотов под опции.
 ROWS_WITH_SUMMARY = 12
 ROWS_WITHOUT_SUMMARY = 15
+FIXED_FIRST_ROWS = 3
+FIRST_WITHOUT_SUMMARY = ROWS_WITHOUT_SUMMARY - FIXED_FIRST_ROWS  # 12
 
 
 def _chunk(items: list[Any], size: int) -> list[list[Any]]:
@@ -28,7 +31,7 @@ def _chunk(items: list[Any], size: int) -> list[list[Any]]:
 
 
 def split_option_page_sizes(n: int) -> list[int]:
-    """Размеры страниц опций: без orphan-резюме, 15 на промежуточных, ≤12 на последней."""
+    """Размеры страниц опций: 1-я без резюме ≤12, промежуточные ≤15, последняя ≤12."""
     if n <= 0:
         return [0]
     if n <= ROWS_WITH_SUMMARY:
@@ -36,9 +39,13 @@ def split_option_page_sizes(n: int) -> list[int]:
 
     sizes: list[int] = []
     remaining = n
-    # Пока хвост не влезает на страницу с резюме — снимаем полные листы без резюме.
+
+    # Первая страница без резюме: учитываем 3 фиксированные строки
+    take = min(FIRST_WITHOUT_SUMMARY, remaining - 1)
+    sizes.append(take)
+    remaining -= take
+
     while remaining > ROWS_WITH_SUMMARY:
-        # Не больше 15 и оставляем ≥1 строку под последнюю страницу.
         take = min(ROWS_WITHOUT_SUMMARY, remaining - 1)
         sizes.append(take)
         remaining -= take
