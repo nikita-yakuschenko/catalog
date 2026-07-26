@@ -307,7 +307,8 @@
 }
 
 .cat-divider .cat-sheet {
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: 18mm;
 }
 
 .cat-divider-index {
@@ -346,7 +347,8 @@
 .cat-contacts-body {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: 8mm;
 }
 
 .cat-contacts-board {

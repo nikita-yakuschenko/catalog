@@ -226,6 +226,25 @@ def should_include_dividers(
     return bool(show_flag) and project_count > 1 and modular_count > 0 and panel_count > 0
 
 
+def ru_project_word(n: int) -> str:
+    """1 проект, 2 проекта, 5 проектов."""
+    n_abs = abs(int(n))
+    mod10 = n_abs % 10
+    mod100 = n_abs % 100
+    if mod10 == 1 and mod100 != 11:
+        return "проект"
+    if 2 <= mod10 <= 4 and not (12 <= mod100 <= 14):
+        return "проекта"
+    return "проектов"
+
+
+def section_subtitle(n: int, *, kind: str) -> str:
+    word = ru_project_word(n)
+    if kind == "modular":
+        return f"{n} {word} заводской готовности"
+    return f"{n} {word} для постоянного проживания"
+
+
 class CatalogAssembler:
     def __init__(self, templates_dir: Optional[str] = None):
         self.templates_dir = Path(templates_dir or settings.templates_dir)
@@ -371,13 +390,13 @@ class CatalogAssembler:
             modular,
             "Модульные дома",
             "modular",
-            f"{len(modular)} проектов заводской готовности",
+            section_subtitle(len(modular), kind="modular"),
         )
         add_section(
             panel,
             "Панельно-каркасные дома",
             "panel",
-            f"{len(panel)} проектов для постоянного проживания",
+            section_subtitle(len(panel), kind="panel"),
         )
 
         if catalog.show_contacts:

@@ -19,12 +19,17 @@ def test_merge_contacts_adds_office_and_manager():
     assert contacts["manager"]["photo"] == "https://cdn.example/a.jpg"
 
 
-def test_merge_contacts_keeps_custom_office_fields():
+def test_merge_contacts_keeps_previous_phone_if_session_empty():
     contacts = merge_catalog_contacts(
-        {"office": {"city": "Москва", "street": "Тверская, 1"}},
-        user=None,
+        {"manager": {"name": "Никита", "phone": "+7 900 000-00-00", "email": "", "photo": ""}},
+        user={
+            "name": "Никита",
+            "last_name": "Якушенко",
+            "email": "n@avgst.ru",
+            "phone": "",
+            "photo": "",
+        },
     )
-    assert contacts["office"]["city"] == "Москва"
-    assert contacts["office"]["street"] == "Тверская, 1"
-    assert contacts["office"]["building"] == DEFAULT_OFFICE["building"]
-    assert contacts["office"]["floor"] == DEFAULT_OFFICE["floor"]
+    assert contacts["manager"]["phone"] == "+7 900 000-00-00"
+    assert contacts["manager"]["name"] == "Никита Якушенко"
+    assert contacts["office"]["floor"] == "11-й этаж"

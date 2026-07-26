@@ -40,6 +40,28 @@ def _photo_from_profile(profile: dict[str, Any]) -> str:
     return ""
 
 
+def _coerce_phone(raw: Any) -> str:
+    if raw is None:
+        return ""
+    if isinstance(raw, str):
+        return raw.strip()
+    if isinstance(raw, (int, float)):
+        return str(int(raw))
+    if isinstance(raw, list):
+        for item in raw:
+            phone = _coerce_phone(item)
+            if phone:
+                return phone
+        return ""
+    if isinstance(raw, dict):
+        for key in ("VALUE", "value", "PHONE", "phone", "PERSONAL_MOBILE", "WORK_PHONE"):
+            if key in raw:
+                phone = _coerce_phone(raw.get(key))
+                if phone:
+                    return phone
+    return ""
+
+
 def _phone_from_profile(profile: dict[str, Any]) -> str:
     for key in (
         "WORK_PHONE",
@@ -48,10 +70,21 @@ def _phone_from_profile(profile: dict[str, Any]) -> str:
         "personalMobile",
         "PERSONAL_PHONE",
         "personalPhone",
+        "PHONE",
+        "phone",
     ):
-        raw = profile.get(key)
-        if isinstance(raw, str) and raw.strip():
-            return raw.strip()
+        phone = _coerce_phone(profile.get(key))
+        if phone:
+            return phone
+    # Bitrix UF / кастомные поля с телефоном
+    for key, raw in profile.items():
+        if not isinstance(key, str):
+            continue
+        upper = key.upper()
+        if "PHONE" in upper or "MOBILE" in upper or "TEL" in upper:
+            phone = _coerce_phone(raw)
+            if phone:
+                return phone
     return ""
 
 
@@ -63,6 +96,7 @@ def _user_payload(user: dict[str, Any]) -> dict[str, Any]:
         "email": user.get("email"),
         "photo": user.get("photo") or "",
         "phone": user.get("phone") or "",
+        "is_admin": bool(user.get("is_admin")),
     }
 
 
@@ -75,7 +109,15 @@ async def get_auth_status(
     if avgst_session:
         user = unsign_payload(avgst_session, settings.session_secret)
     elif not enabled:
-        user = {"uid": "local", "name": "Local", "last_name": "Dev", "email": "", "photo": "", "phone": ""}
+        user = {
+            "uid": "local",
+            "name": "Local",
+            "last_name": "Dev",
+            "email": "",
+            "photo": "",
+            "phone": "",
+            "is_admin": True,
+        }
     return {
         "auth_enabled": enabled,
         "authenticated": bool(user),
@@ -86,7 +128,15 @@ async def get_auth_status(
 @router.get("/me")
 async def me(avgst_session: Optional[str] = Cookie(default=None, alias=SESSION_COOKIE)) -> dict[str, Any]:
     if not settings.auth_enabled:
-        return {"id": "local", "name": "Local", "last_name": "Dev", "email": "", "photo": "", "phone": ""}
+        return {
+            "id": "local",
+            "name": "Local",
+            "last_name": "Dev",
+            "email": "",
+            "photo": "",
+            "phone": "",
+            "is_admin": True,
+        }
     user = unsign_payload(avgst_session or "", settings.session_secret) if avgst_session else None
     if not user:
         raise HTTPException(401, "Не авторизован")
@@ -188,6 +238,18 @@ async def bitrix_callback(
 
         profile = user_payload.get("result") or {}
 
+        is_admin = False
+        try:
+            admin_resp = await client.post(
+                f"{client_endpoint}/user.admin",
+                data={"auth": access_token},
+            )
+            admin_payload = admin_resp.json()
+            if admin_resp.status_code < 400 and not admin_payload.get("error"):
+                is_admin = bool(admin_payload.get("result"))
+        except Exception as exc:
+            logger.warning("user.admin failed: %s", exc)
+
     session_token = make_session_token(
         user_id=str(profile.get("ID") or ""),
         name=str(profile.get("NAME") or ""),
@@ -195,6 +257,7 @@ async def bitrix_callback(
         email=str(profile.get("EMAIL") or ""),
         photo=_photo_from_profile(profile),
         phone=_phone_from_profile(profile),
+        is_admin=is_admin,
         secret=settings.session_secret,
         ttl_sec=settings.auth_session_ttl_sec,
     )
@@ -212,10 +275,11 @@ async def bitrix_callback(
     )
     response.delete_cookie(OAUTH_STATE_COOKIE, path="/")
     logger.info(
-        "bitrix login ok user_id=%s name=%s %s",
+        "bitrix login ok user_id=%s name=%s %s is_admin=%s",
         profile.get("ID"),
         profile.get("NAME"),
         profile.get("LAST_NAME"),
+        is_admin,
     )
     return response
 

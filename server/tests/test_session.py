@@ -19,6 +19,22 @@ def test_session_roundtrip():
     assert data["email"] == "ivan@example.com"
     assert data["photo"] == "https://cdn.example/photo.jpg"
     assert data["phone"] == "+7 900 000-00-00"
+    assert data["is_admin"] is False
+
+
+def test_session_stores_admin_flag():
+    token = make_session_token(
+        user_id="1",
+        name="Admin",
+        last_name="User",
+        email="",
+        is_admin=True,
+        secret="test-secret",
+        ttl_sec=3600,
+    )
+    data = unsign_payload(token, "test-secret")
+    assert data is not None
+    assert data["is_admin"] is True
 
 
 def test_session_rejects_bad_secret():
