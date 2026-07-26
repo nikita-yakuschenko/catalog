@@ -103,12 +103,10 @@ def _project_copy(project: HouseProject, custom_description: str = "") -> dict[s
         tagline = "Продуманный дом для постоянного проживания"
 
     blurb = "Продуманный формат для отдыха или постоянного проживания."
-    promo = "Рациональная планировка для комфортной жизни и отдыха."
     seal = "Естественное решение для загородной жизни"
     return {
         "tagline": tagline,
         "blurb": blurb,
-        "promo": promo,
         "seal": seal,
     }
 
@@ -304,7 +302,6 @@ class CatalogAssembler:
                         "description": cp.custom_description or "",
                         "tagline": copy["tagline"],
                         "blurb": copy["blurb"],
-                        "promo": copy["promo"],
                         "seal": copy["seal"],
                         "project_url": project_url,
                         "qr_url": qr_data_uri(project_url, box_size=8) if project_url else None,

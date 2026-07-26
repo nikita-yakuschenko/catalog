@@ -26,7 +26,7 @@ import { api, Project } from "@/lib/api";
 
 function formatPrice(value: number | null) {
   if (value == null) return "—";
-  return new Intl.NumberFormat("ru-RU").format(value) + " руб.";
+  return "от " + new Intl.NumberFormat("ru-RU").format(value) + " руб.";
 }
 
 const selectClass =
