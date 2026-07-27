@@ -68,8 +68,12 @@ async def create_catalog(
     db: AsyncSession = Depends(get_db),
     user: dict = Depends(require_user),
 ) -> Catalog:
+    name = (payload.name or "").strip()
+    if not name:
+        name = (payload.title or "").strip() or "Без названия"
+
     catalog = Catalog(
-        name=payload.name,
+        name=name,
         title=payload.title,
         subtitle=payload.subtitle,
         year=payload.year,

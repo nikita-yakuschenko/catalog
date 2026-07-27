@@ -12,6 +12,8 @@ import { StickyChrome } from "@/components/sticky-chrome";
 import { useAuth } from "@/components/auth-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -107,6 +109,27 @@ export default function CatalogDetailPage() {
     },
   });
 
+  const [metaName, setMetaName] = useState("");
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaSubtitle, setMetaSubtitle] = useState("");
+
+  useEffect(() => {
+    if (!data) return;
+    setMetaName(data.name ?? "");
+    setMetaTitle(data.title ?? "");
+    setMetaSubtitle(data.subtitle ?? "");
+  }, [data]);
+
+  const updateMeta = useMutation({
+    mutationFn: ({ name, title, subtitle }: { name: string; title: string; subtitle: string }) =>
+      api.updateCatalog(id, { name, title, subtitle }),
+    onSuccess: () => {
+      toast.success("Данные каталога обновлены");
+      qc.invalidateQueries({ queryKey: ["catalog", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (!data) return <p className="text-muted-foreground">Загрузка…</p>;
 
   const building = isCatalogBuilding(data.status, status?.build);
@@ -193,6 +216,64 @@ export default function CatalogDetailPage() {
           }
         />
       </StickyChrome>
+
+      {isAdmin && (
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1">
+              <Label htmlFor="catalog-name" className="text-xs">
+                Название в списке
+              </Label>
+              <Input
+                id="catalog-name"
+                value={metaName}
+                onChange={(e) => setMetaName(e.target.value)}
+                className="h-8"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="catalog-title" className="text-xs">
+                Заголовок на обложке
+              </Label>
+              <Input
+                id="catalog-title"
+                value={metaTitle}
+                onChange={(e) => setMetaTitle(e.target.value)}
+                className="h-8"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="catalog-subtitle" className="text-xs">
+                Подзаголовок на обложке
+              </Label>
+              <Input
+                id="catalog-subtitle"
+                value={metaSubtitle}
+                onChange={(e) => setMetaSubtitle(e.target.value)}
+                className="h-8"
+              />
+            </div>
+          </div>
+          <div className="mt-3 flex justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                updateMeta.mutate({
+                  name: metaName.trim() || metaTitle.trim() || "Без названия",
+                  title: metaTitle.trim(),
+                  subtitle: metaSubtitle.trim(),
+                })
+              }
+              disabled={
+                updateMeta.isPending || metaTitle.trim() === "" || metaSubtitle.trim() === ""
+              }
+            >
+              Сохранить
+            </Button>
+          </div>
+        </div>
+      )}
 
       {building && (
         <div

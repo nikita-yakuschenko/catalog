@@ -63,10 +63,15 @@ export default function NewCatalogPage() {
 
   const create = useMutation({
     mutationFn: async () => {
+      const trimmedName = name.trim();
+      const trimmedTitle = title.trim();
+      const trimmedSubtitle = subtitle.trim();
+      const catalogName = trimmedName || trimmedTitle || "Без названия";
+
       const catalog = await api.createCatalog({
-        name,
-        title,
-        subtitle,
+        name: catalogName,
+        title: trimmedTitle,
+        subtitle: trimmedSubtitle,
         show_prices: showPrices,
         price_actual_at: new Date().toISOString().slice(0, 10),
         project_ids: selected,
@@ -131,6 +136,8 @@ export default function NewCatalogPage() {
     title !== "" ||
     subtitle !== "" ||
     !showPrices;
+
+  const canCreate = selected.length > 0 && title.trim() !== "" && subtitle.trim() !== "";
 
   return (
     <div className="space-y-4">
@@ -230,7 +237,7 @@ export default function NewCatalogPage() {
               {allSelected ? "Снять все" : "Выбрать все"}
             </Button>
             <Button
-              disabled={create.isPending || selected.length === 0}
+              disabled={create.isPending || !canCreate}
               size="sm"
               onClick={() => create.mutate()}
             >

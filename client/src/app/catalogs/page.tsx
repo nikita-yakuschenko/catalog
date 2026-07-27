@@ -89,7 +89,7 @@ export default function CatalogsPage() {
                 <TableRow key={c.id}>
                   <TableCell>
                     <Link href={`/catalogs/${c.id}`} className="font-medium hover:text-primary">
-                      {c.name}
+                      {c.name || c.title}
                     </Link>
                     <div className="text-sm text-muted-foreground">
                       {c.title} · {c.projects?.length || 0} проектов
