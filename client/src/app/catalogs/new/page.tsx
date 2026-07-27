@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/page-header";
@@ -19,7 +19,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { applyCatalogPreset, CATALOG_PRESETS } from "@/lib/catalog-presets";
+import {
+  applyCatalogPresets,
+  buildCatalogMetaFromPresets,
+  catalogPresetsByGroup,
+  countAdditionalProjectsWithPreset,
+  countProjectsWithPreset,
+  formatPresetSelectionSummary,
+  PRESET_GROUP_LABELS,
+  PRESET_GROUP_ORDER,
+  type PresetGroupId,
+} from "@/lib/catalog-presets";
 import { api, type Project } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +47,21 @@ function sortProjects(list: Project[]) {
   });
 }
 
+function FilterGroup({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <div className="flex flex-wrap items-center gap-1.5">{children}</div>
+    </div>
+  );
+}
+
 export default function NewCatalogPage() {
   const router = useRouter();
   const { data: projects = [] } = useQuery({ queryKey: ["projects"], queryFn: () => api.projects() });
@@ -45,21 +70,19 @@ export default function NewCatalogPage() {
   const [subtitle, setSubtitle] = useState("");
   const [showPrices, setShowPrices] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
-  const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [activePresets, setActivePresets] = useState<string[]>([]);
 
+  const presetsByGroup = useMemo(() => catalogPresetsByGroup(), []);
   const sorted = useMemo(() => sortProjects(projects), [projects]);
-
-  const presetCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const preset of CATALOG_PRESETS) {
-      counts[preset.id] = projects.filter(preset.match).length;
-    }
-    return counts;
-  }, [projects]);
 
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const allIds = useMemo(() => sorted.map((p) => p.id), [sorted]);
   const allSelected = allIds.length > 0 && allIds.every((id) => selectedSet.has(id));
+
+  const presetSummary = useMemo(
+    () => formatPresetSelectionSummary(activePresets),
+    [activePresets]
+  );
 
   const create = useMutation({
     mutationFn: async () => {
@@ -96,32 +119,49 @@ export default function NewCatalogPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  function applyPresetSelection(presetIds: string[]) {
+    const ids = applyCatalogPresets(projects, presetIds);
+    const meta = buildCatalogMetaFromPresets(presetIds);
+    setActivePresets(presetIds);
+    setSelected(ids);
+    setName(meta.name);
+    setTitle(meta.title);
+    setSubtitle(meta.subtitle);
+    if (presetIds.length > 0 && ids.length === 0) {
+      toast.message("По этой комбинации отборов пока нет проектов");
+    }
+  }
+
+  function togglePreset(presetId: string) {
+    const isActive = activePresets.includes(presetId);
+    const next = isActive
+      ? activePresets.filter((id) => id !== presetId)
+      : [...activePresets, presetId];
+
+    if (next.length === 0) {
+      setActivePresets([]);
+      setSelected([]);
+      setName("");
+      setTitle("");
+      setSubtitle("");
+      return;
+    }
+
+    applyPresetSelection(next);
+  }
+
   function toggle(id: string) {
-    setActivePreset(null);
+    setActivePresets([]);
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   function toggleAll() {
-    setActivePreset(null);
+    setActivePresets([]);
     setSelected(allSelected ? [] : allIds);
   }
 
-  function applyPreset(presetId: string) {
-    const preset = CATALOG_PRESETS.find((p) => p.id === presetId);
-    if (!preset) return;
-    const ids = applyCatalogPreset(projects, preset);
-    setActivePreset(preset.id);
-    setSelected(ids);
-    setName(preset.name);
-    setTitle(preset.title);
-    setSubtitle(preset.subtitle);
-    if (ids.length === 0) {
-      toast.message("По этому отбору пока нет проектов");
-    }
-  }
-
   function resetSettings() {
-    setActivePreset(null);
+    setActivePresets([]);
     setSelected([]);
     setName("");
     setTitle("");
@@ -130,7 +170,7 @@ export default function NewCatalogPage() {
   }
 
   const canReset =
-    activePreset != null ||
+    activePresets.length > 0 ||
     selected.length > 0 ||
     name !== "" ||
     title !== "" ||
@@ -145,38 +185,80 @@ export default function NewCatalogPage() {
         <PageHeader backHref="/catalogs" backLabel="К списку каталогов" title="Новый каталог" />
       </StickyChrome>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium">Быстрые отборы</p>
-        <div className="flex flex-wrap gap-2">
-          {CATALOG_PRESETS.map((preset) => {
-            const count = presetCounts[preset.id] ?? 0;
+      <div className="space-y-3 rounded-xl border border-border bg-card p-3">
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Быстрые отборы</p>
+          <p className="text-xs text-muted-foreground">
+            Внутри группы можно выбрать несколько вариантов (например 3 и 4 спальни). Между группами
+            условия сочетаются: барнхаус + 3–4 спальни.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-x-6 gap-y-3">
+          {PRESET_GROUP_ORDER.map((groupId: PresetGroupId) => {
+            const groupPresets = presetsByGroup[groupId];
+            if (groupPresets.length === 0) return null;
             return (
-              <Button
-                key={preset.id}
-                type="button"
-                variant={activePreset === preset.id ? "default" : "outline"}
-                size="sm"
-                title={preset.name}
-                onClick={() => applyPreset(preset.id)}
-              >
-                {preset.label}
-                <span
-                  className={cn(
-                    activePreset === preset.id ? "text-primary-foreground/80" : "text-muted-foreground"
-                  )}
-                >
-                  · {count}
-                </span>
-              </Button>
+              <FilterGroup key={groupId} label={PRESET_GROUP_LABELS[groupId]}>
+                {groupPresets.map((preset) => {
+                  const isActive = activePresets.includes(preset.id);
+                  const matchCount = countProjectsWithPreset(projects, activePresets, preset.id);
+                  const additional = countAdditionalProjectsWithPreset(
+                    projects,
+                    activePresets,
+                    preset.id,
+                    selected
+                  );
+                  const disabled = !isActive && matchCount === 0;
+
+                  return (
+                    <Button
+                      key={preset.id}
+                      type="button"
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      disabled={disabled}
+                      title={preset.name}
+                      className={cn("h-8 font-normal", isActive && "shadow-none")}
+                      onClick={() => togglePreset(preset.id)}
+                    >
+                      {preset.label}
+                      <span
+                        className={cn(
+                          isActive ? "text-primary-foreground/80" : "text-muted-foreground"
+                        )}
+                      >
+                        · {matchCount}
+                      </span>
+                      {!isActive && additional > 0 && (
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400">
+                          +{additional}
+                        </span>
+                      )}
+                    </Button>
+                  );
+                })}
+              </FilterGroup>
             );
           })}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          {presetSummary ? (
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">Отбор:</span> {presetSummary}
+              <span className="text-muted-foreground"> → {selected.length} проектов</span>
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Отборы не выбраны</p>
+          )}
           <Button
             type="button"
             size="sm"
             disabled={!canReset}
             onClick={resetSettings}
             className={cn(
-              "border-transparent",
+              "ml-auto border-transparent",
               canReset
                 ? "bg-amber-500 text-white hover:bg-amber-600"
                 : "bg-muted text-muted-foreground opacity-60"
