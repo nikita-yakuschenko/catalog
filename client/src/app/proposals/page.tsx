@@ -174,6 +174,7 @@ export default function ProposalsPage() {
                           —
                         </span>
                       )}
+                      {row.can_delete && (
                       <Button
                         type="button"
                         variant="destructive"
@@ -186,6 +187,7 @@ export default function ProposalsPage() {
                         <IconTrash className="size-4" stroke={1.75} />
                         Удалить
                       </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

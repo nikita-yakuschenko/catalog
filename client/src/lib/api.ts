@@ -92,6 +92,7 @@ export type Catalog = {
   };
   created_at?: string;
   updated_at?: string;
+  can_delete?: boolean;
   projects: CatalogProject[];
 };
 
@@ -127,6 +128,7 @@ export type ProposalListItem = {
   updated_at: string;
   build_status: string | null;
   has_pdf: boolean;
+  can_delete?: boolean;
 };
 
 export const api = {

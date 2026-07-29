@@ -136,6 +136,7 @@ export default function CatalogsPage() {
                         <IconEye className="size-4" stroke={1.75} />
                         Превью
                       </Link>
+                      {c.can_delete && (
                       <Button
                         variant="destructive"
                         size="sm"
@@ -146,6 +147,7 @@ export default function CatalogsPage() {
                         <IconTrash className="size-4" stroke={1.75} />
                         Удалить
                       </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

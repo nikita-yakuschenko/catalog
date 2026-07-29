@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.access import can_access_proposal
+from app.core.access import can_access_proposal, can_delete_proposal
 from app.core.auth import require_user
 from app.core.config import settings
 from app.core.db import SessionLocal, get_db
@@ -46,7 +46,12 @@ async def _proposal_for_user(db: AsyncSession, proposal_id: UUID, user: dict) ->
     return proposal
 
 
-def _proposal_list_item(proposal: CommercialProposal, build: ProposalBuild | None) -> ProposalListItem:
+def _proposal_list_item(
+    proposal: CommercialProposal,
+    build: ProposalBuild | None,
+    *,
+    user: dict | None = None,
+) -> ProposalListItem:
     doc = proposal.document if isinstance(proposal.document, dict) else {}
     client = doc.get("client") if isinstance(doc.get("client"), dict) else {}
     manager = doc.get("manager") if isinstance(doc.get("manager"), dict) else {}
@@ -66,6 +71,7 @@ def _proposal_list_item(proposal: CommercialProposal, build: ProposalBuild | Non
         updated_at=proposal.updated_at,
         build_status=build.status.value if build else None,
         has_pdf=has_pdf,
+        can_delete=can_delete_proposal(proposal, user) if user else False,
     )
 
 
@@ -89,7 +95,7 @@ async def list_proposals(
     for build in builds_result.scalars().all():
         latest_by_proposal.setdefault(build.proposal_id, build)
 
-    return [_proposal_list_item(p, latest_by_proposal.get(p.id)) for p in proposals]
+    return [_proposal_list_item(p, latest_by_proposal.get(p.id), user=user) for p in proposals]
 
 
 @router.post("/proposals", response_model=ProposalOut, dependencies=[Depends(require_user)])
@@ -329,6 +335,8 @@ async def delete_proposal(
     user: dict = Depends(require_user),
 ) -> dict:
     proposal = await _proposal_for_user(db, proposal_id, user)
+    if not can_delete_proposal(proposal, user):
+        raise HTTPException(403, "Недостаточно прав для удаления КП")
     builds_result = await db.execute(
         select(ProposalBuild).where(ProposalBuild.proposal_id == proposal_id)
     )

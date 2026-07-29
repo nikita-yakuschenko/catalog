@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.access import can_access_catalog
+from app.core.access import can_access_catalog, can_delete_catalog
 from app.core.auth import require_user
 from app.core.db import SessionLocal, get_db
 from app.domain.models import (
@@ -52,14 +52,20 @@ async def _catalog_for_user(
     return catalog
 
 
+def _catalog_out(catalog: Catalog, user: dict) -> CatalogOut:
+    return CatalogOut.model_validate(catalog).model_copy(
+        update={"can_delete": can_delete_catalog(catalog, user)}
+    )
+
+
 @router.get("/catalogs", response_model=list[CatalogOut])
 async def list_catalogs(
     db: AsyncSession = Depends(get_db),
     user: dict = Depends(require_user),
-) -> list[Catalog]:
+) -> list[CatalogOut]:
     result = await db.execute(_catalog_query().order_by(Catalog.created_at.desc()))
-    catalogs = list(result.scalars().all())
-    return [c for c in catalogs if can_access_catalog(c, user)]
+    catalogs = [c for c in result.scalars().all() if can_access_catalog(c, user)]
+    return [_catalog_out(c, user) for c in catalogs]
 
 
 @router.post("/catalogs", response_model=CatalogOut)
@@ -67,7 +73,7 @@ async def create_catalog(
     payload: CatalogCreate,
     db: AsyncSession = Depends(get_db),
     user: dict = Depends(require_user),
-) -> Catalog:
+) -> CatalogOut:
     name = (payload.name or "").strip()
     if not name:
         name = (payload.title or "").strip() or "Без названия"
@@ -98,7 +104,7 @@ async def create_catalog(
         db.add(CatalogProject(catalog_id=catalog.id, project_id=pid, order=idx))
     await db.commit()
     result = await db.execute(_catalog_query().where(Catalog.id == catalog.id))
-    return result.scalar_one()
+    return _catalog_out(result.scalar_one(), user)
 
 
 @router.get("/catalogs/{catalog_id}", response_model=CatalogOut)
@@ -106,8 +112,9 @@ async def get_catalog(
     catalog_id: UUID,
     db: AsyncSession = Depends(get_db),
     user: dict = Depends(require_user),
-) -> Catalog:
-    return await _catalog_for_user(db, catalog_id, user)
+) -> CatalogOut:
+    catalog = await _catalog_for_user(db, catalog_id, user)
+    return _catalog_out(catalog, user)
 
 
 @router.patch("/catalogs/{catalog_id}", response_model=CatalogOut)
@@ -116,13 +123,13 @@ async def update_catalog(
     payload: CatalogUpdate,
     db: AsyncSession = Depends(get_db),
     user: dict = Depends(require_user),
-) -> Catalog:
+) -> CatalogOut:
     catalog = await _catalog_for_user(db, catalog_id, user)
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(catalog, key, value)
     await db.commit()
     result = await db.execute(_catalog_query().where(Catalog.id == catalog.id))
-    return result.scalar_one()
+    return _catalog_out(result.scalar_one(), user)
 
 
 @router.delete("/catalogs/{catalog_id}")
@@ -132,6 +139,8 @@ async def delete_catalog(
     user: dict = Depends(require_user),
 ) -> dict:
     catalog = await _catalog_for_user(db, catalog_id, user, with_projects=False)
+    if not can_delete_catalog(catalog, user):
+        raise HTTPException(403, "Недостаточно прав для удаления каталога")
     await db.delete(catalog)
     await db.commit()
     return {"ok": True}
@@ -142,7 +151,7 @@ async def duplicate_catalog(
     catalog_id: UUID,
     db: AsyncSession = Depends(get_db),
     user: dict = Depends(require_user),
-) -> Catalog:
+) -> CatalogOut:
     src = await _catalog_for_user(db, catalog_id, user)
     clone = Catalog(
         name=f"{src.name} (копия)",
@@ -179,7 +188,7 @@ async def duplicate_catalog(
         )
     await db.commit()
     result = await db.execute(_catalog_query().where(Catalog.id == clone.id))
-    return result.scalar_one()
+    return _catalog_out(result.scalar_one(), user)
 
 
 @router.post("/catalogs/{catalog_id}/projects")

@@ -178,6 +178,7 @@ class CatalogOut(ORMModel):
     created_at: datetime
     updated_at: datetime
     projects: list[CatalogProjectOut] = Field(default_factory=list)
+    can_delete: bool = False
 
 
 class ReorderItem(BaseModel):
@@ -282,6 +283,7 @@ class ProposalListItem(BaseModel):
     updated_at: datetime
     build_status: Optional[str] = None
     has_pdf: bool = False
+    can_delete: bool = False
 
 
 class ProposalBuildOut(ORMModel):

@@ -1,6 +1,11 @@
 from types import SimpleNamespace
 
-from app.core.access import can_access_catalog, can_access_proposal
+from app.core.access import (
+    can_access_catalog,
+    can_access_proposal,
+    can_delete_catalog,
+    can_delete_proposal,
+)
 
 
 def test_admin_sees_all_catalogs():
@@ -37,3 +42,39 @@ def test_manager_sees_own_proposal_by_assigned():
     other = SimpleNamespace(document={"manager": {}, "meta": {"bitrix": {"assigned_by_id": 7}}})
     assert can_access_proposal(own, user)
     assert not can_access_proposal(other, user)
+
+
+def test_admin_can_delete_any_catalog():
+    admin = {"uid": "1", "is_admin": True, "email": "a@x.ru"}
+    foreign = SimpleNamespace(contacts={"manager": {"id": "99", "email": "other@x.ru"}})
+    legacy = SimpleNamespace(contacts={"manager": {"name": "Кто-то"}})
+    assert can_delete_catalog(foreign, admin)
+    assert can_delete_catalog(legacy, admin)
+
+
+def test_manager_deletes_only_own_catalog():
+    user = {"uid": "42", "is_admin": False, "email": "me@x.ru"}
+    own = SimpleNamespace(contacts={"manager": {"id": "42", "email": "me@x.ru"}})
+    other = SimpleNamespace(contacts={"manager": {"id": "7", "email": "o@x.ru"}})
+    legacy = SimpleNamespace(contacts={"manager": {"name": "Кто-то"}})
+    assert can_delete_catalog(own, user)
+    assert not can_delete_catalog(other, user)
+    assert not can_delete_catalog(legacy, user)
+
+
+def test_admin_can_delete_any_proposal():
+    admin = {"uid": "1", "is_admin": True, "email": "a@x.ru"}
+    foreign = SimpleNamespace(
+        document={"manager": {"id": "9"}, "meta": {"bitrix": {"assigned_by_id": 9}}}
+    )
+    assert can_delete_proposal(foreign, admin)
+
+
+def test_manager_deletes_only_own_proposal():
+    user = {"uid": "42", "is_admin": False, "email": "me@x.ru"}
+    own = SimpleNamespace(document={"manager": {}, "meta": {"bitrix": {"assigned_by_id": 42}}})
+    other = SimpleNamespace(document={"manager": {}, "meta": {"bitrix": {"assigned_by_id": 7}}})
+    legacy = SimpleNamespace(document={"manager": {}, "meta": {}})
+    assert can_delete_proposal(own, user)
+    assert not can_delete_proposal(other, user)
+    assert not can_delete_proposal(legacy, user)
