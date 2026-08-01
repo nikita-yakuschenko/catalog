@@ -10,6 +10,8 @@ services:
       context: .
       dockerfile: server/Dockerfile.prod
     restart: unless-stopped
+    # Playwright/Chromium: default /dev/shm is 64MB and causes BrokenProcessPool
+    shm_size: "1gb"
     env_file:
       # Dokploy writes the Environment tab into .env next to the compose file
       - path: .env
