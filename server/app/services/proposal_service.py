@@ -14,8 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.domain.models import CommercialProposal, HouseProject, ProposalSource, ProposalStatus
 from app.domain.schemas import ProposalCreate
-from app.services.proposal_intake import pdf_to_markdown
-from app.services.proposal_parse import merge_documents, normalize_document, parse_markdown
+from app.services.proposal_intake import ingest_estimate_file
+from app.services.proposal_parse import merge_documents, normalize_document
 
 logger = logging.getLogger(__name__)
 
@@ -67,15 +67,21 @@ async def create_proposal(
     markdown = ""
 
     if pdf_bytes:
-        # Temp file only for MarkItDown — do not keep Bitrix originals on disk.
+        # Temp file only for MarkItDown/table extract — do not keep Bitrix originals on disk.
         suffix = Path(pdf_filename).suffix or ".bin"
         tmp_path: Optional[Path] = None
         try:
             with tempfile.NamedTemporaryFile(prefix="kp_intake_", suffix=suffix, delete=False) as tmp:
                 tmp.write(pdf_bytes)
                 tmp_path = Path(tmp.name)
-            markdown = pdf_to_markdown(tmp_path)
-            parsed_doc = parse_markdown(markdown)
+            parsed_doc, markdown, method = ingest_estimate_file(tmp_path)
+            logger.info(
+                "proposal intake file=%s method=%s house=%s options=%s",
+                pdf_filename,
+                method,
+                parsed_doc.get("house_price"),
+                len(parsed_doc.get("options") or []),
+            )
         finally:
             if tmp_path is not None:
                 tmp_path.unlink(missing_ok=True)

@@ -16,17 +16,39 @@ _GENERIC_TITLE_RE = re.compile(
 # Section headers that MarkItDown often spills into option lists
 _SKIP_OPTION_TITLES = {
     "стоимость дома",
+    "домокомплект",
     "дополнительные услуги",
     "дополнительно",
+    "допы",
+    "допы:",
     "проект дома",
     "название проекта",
     "итого",
     "итог",
+    "всего",
+    "сумма",
     "опции",
     "услуги",
     "позиция",
     "стоимость",
 }
+
+# Итоговые / результирующие строки сметы — никогда не опции
+_TOTAL_LABEL_RE = re.compile(
+    r"^\s*(итого|итог|всего|сумма|total|grand\s*total|всего\s*к\s*оплате|"
+    r"итоговая\s*стоимость|общая\s*стоимость|к\s*оплате)\b",
+    re.IGNORECASE,
+)
+
+_PROJECT_LABEL_RE = re.compile(
+    r"^\s*(название\s*проекта|проект|project(\s*name)?)\s*:?\s*$",
+    re.IGNORECASE,
+)
+
+_HOUSE_PRICE_LABEL_RE = re.compile(
+    r"^\s*(стоимость\s*дома|домокомплект|цена\s*дома|house(\s*price)?)\s*:?\s*$",
+    re.IGNORECASE,
+)
 
 _REGION_NN = "Нижегородская область"
 _REGION_MO = "Московская область"
@@ -109,8 +131,122 @@ def _is_section_header(line: str) -> bool:
     return line.lower().strip(" :.—-") in _SKIP_OPTION_TITLES
 
 
+def is_total_label(line: str) -> bool:
+    """True for ИТОГО / ВСЕГО / СУММА and similar result rows."""
+    text = (line or "").strip()
+    if not text:
+        return False
+    if _TOTAL_LABEL_RE.match(text):
+        return True
+    return text.lower().strip(" :.—-") in {"итого", "итог", "всего", "сумма", "total"}
+
+
+def is_project_label(line: str) -> bool:
+    return bool(_PROJECT_LABEL_RE.match((line or "").strip()))
+
+
+def is_house_price_label(line: str) -> bool:
+    return bool(_HOUSE_PRICE_LABEL_RE.match((line or "").strip()))
+
+
 def _is_generic_project_title(name: str) -> bool:
     return bool(_GENERIC_TITLE_RE.match((name or "").strip()))
+
+
+def _drop_redundant_total_price(prices: list[int]) -> list[int]:
+    """Убрать сумму ИТОГО, если она = дом + допы (частый артефакт колонки цен)."""
+    if len(prices) < 2:
+        return prices
+    total = prices[-1]
+    rest = sum(prices[:-1])
+    if total == rest or abs(total - rest) <= 1:
+        return prices[:-1]
+    return prices
+
+
+def document_from_table_rows(rows: list[list[Any]]) -> dict[str, Any]:
+    """Собрать документ КП из строк таблицы: [название, цена] в одной строке.
+
+    Гарантия соответствия: цена берётся только из той же строки, что и позиция.
+    Строки ИТОГО/ВСЕГО и заголовки секций пропускаются целиком.
+    """
+    project_name = ""
+    package_name: Optional[str] = None
+    house_price: Optional[int] = None
+    options: list[dict[str, Any]] = []
+
+    for raw_row in rows:
+        cells = [_cell_text(c) for c in raw_row]
+        cells = [c for c in cells if c is not None]
+        if not cells:
+            continue
+
+        left = cells[0]
+        right = cells[1] if len(cells) > 1 else ""
+
+        if is_total_label(left) or (right and is_total_label(right) and not _coerce_money(left)):
+            continue
+
+        if is_project_label(left):
+            name = right or (cells[2] if len(cells) > 2 else "")
+            if name and not _coerce_money(name):
+                project_name = name
+            continue
+
+        if is_house_price_label(left):
+            price = _coerce_money(right) or _coerce_money(left)
+            if price:
+                house_price = price
+            continue
+
+        # Одна ячейка-заголовок секции без цены
+        if _is_section_header(left) and not _coerce_money(right):
+            continue
+
+        if is_total_label(left):
+            continue
+
+        price = _coerce_money(right)
+        # Иногда MarkItDown/PDF: цена слева, текст справа — не наш формат AVGST
+        if price is None and len(cells) >= 2:
+            price = _coerce_money(left)
+            if price and right and not _coerce_money(right):
+                left, right = right, left
+                price = _coerce_money(right)
+
+        title = left.strip()
+        if not title or is_total_label(title) or _is_section_header(title):
+            continue
+
+        # Строка «Название проекта | Барн 74» без явного лейбла уже обработана;
+        # чисто текстовая вторая колонка без цены — имя проекта, если ещё пусто
+        if price is None and right and not _coerce_money(right):
+            if not project_name and left.lower().startswith("название"):
+                project_name = right
+            continue
+
+        if price is not None and price > 0:
+            options.append({"title": title, "price": price, "selected": True})
+
+    # Если дом не был отдельной строкой — первая опция с крупной ценой не трогаем;
+    # house_price должен прийти из «Стоимость дома» / первой цены ниже.
+    return normalize_document(
+        {
+            "project_name": project_name,
+            "package_name": package_name,
+            "house_price": house_price,
+            "options": options,
+        }
+    )
+
+
+def _cell_text(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    text = str(value).replace("\u00a0", " ").strip()
+    return text or None
 
 
 def _extract_inline_price(line: str) -> tuple[str, Optional[int]]:
@@ -131,6 +267,7 @@ def parse_markdown(text: str) -> dict[str, Any]:
     """Heuristic parser for estimator PDFs (project, package, prices, options).
 
     MarkItDown often yields: title, package, price column, then 'Итого', then labels.
+    Prefer document_from_table_rows when real tables are available.
     """
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     project_name = ""
@@ -140,13 +277,14 @@ def parse_markdown(text: str) -> dict[str, Any]:
     in_totals = False
 
     for i, line in enumerate(lines):
-        low = line.lower().strip(" :")
-        if low.startswith("итого") or low.startswith("итог"):
+        if is_total_label(line):
+            # Сумма ИТОГО часто уже попала в колонку цен — выкидываем её
+            prices = _drop_redundant_total_price(prices)
             in_totals = True
             continue
         if in_totals and line in {"?", "✓", "✔", "•", "-", "—"}:
             continue
-        if _is_section_header(line):
+        if _is_section_header(line) or is_total_label(line):
             continue
 
         if _is_price_line(line):
@@ -173,9 +311,12 @@ def parse_markdown(text: str) -> dict[str, Any]:
         # Option titles usually appear after the price column / "Итого"
         if in_totals or prices:
             title, price = _extract_inline_price(line)
+            if is_total_label(title) or _is_section_header(title):
+                continue
             if len(title) > 2:
                 options.append({"title": title, "price": price, "selected": True})
 
+    prices = _drop_redundant_total_price(prices)
     house_price = prices[0] if prices else None
     option_prices = prices[1:] if len(prices) > 1 else []
 
@@ -213,11 +354,11 @@ def normalize_document(data: dict[str, Any]) -> dict[str, Any]:
     for raw in data.get("options") or []:
         if isinstance(raw, str):
             title = raw.strip()
-            if title and not _is_section_header(title):
+            if title and not _is_section_header(title) and not is_total_label(title):
                 options.append({"title": title, "price": None, "selected": True})
             continue
         title = str(raw.get("title") or raw.get("name") or "").strip()
-        if not title or _is_section_header(title):
+        if not title or _is_section_header(title) or is_total_label(title):
             continue
         options.append(
             {

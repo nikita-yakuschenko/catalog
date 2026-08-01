@@ -1,12 +1,13 @@
-"""Convert incoming PDF / files to markdown for parsing."""
+"""Convert incoming PDF / Office files for KP parsing."""
 
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 
-def pdf_to_markdown(path: Path) -> str:
-    """Prefer Microsoft MarkItDown; fall back to PyMuPDF plain text."""
+def file_to_markdown(path: Path) -> str:
+    """Prefer Microsoft MarkItDown; fall back to PyMuPDF plain text for PDFs."""
     path = path.resolve()
     try:
         from markitdown import MarkItDown
@@ -18,6 +19,9 @@ def pdf_to_markdown(path: Path) -> str:
     except Exception:
         pass
 
+    if path.suffix.lower() != ".pdf":
+        return ""
+
     import fitz
 
     doc = fitz.open(path)
@@ -28,3 +32,15 @@ def pdf_to_markdown(path: Path) -> str:
         return "\n".join(parts).strip()
     finally:
         doc.close()
+
+
+# Backward-compatible alias
+def pdf_to_markdown(path: Path) -> str:
+    return file_to_markdown(path)
+
+
+def ingest_estimate_file(path: Path) -> tuple[dict[str, Any], str, str]:
+    """Table-first intake: Excel/PDF rows keep title↔price; MarkItDown is fallback."""
+    from app.services.proposal_table import extract_estimate_document
+
+    return extract_estimate_document(path)
