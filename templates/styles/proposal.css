@@ -597,11 +597,11 @@
   white-space: nowrap;
 }
 
-/* Сноска доставки — у самого подвала состава, не под таблицей */
+/* Сноска доставки — отдельная полоса над подвалом, не наезжает на таблицу */
 .kp-footnote {
   flex: 0 0 auto;
-  margin: auto 0 0;
-  padding: 0 2mm 1.5mm;
+  margin: 0;
+  padding: 0 2mm;
   font-size: 7.5pt;
   font-weight: 300;
   line-height: 1.35;

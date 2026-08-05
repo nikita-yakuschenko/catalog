@@ -1,6 +1,7 @@
 """Pagination of KP option rows: first page accounts for fixed house/delivery/assembly."""
 
 from app.services.proposal_assembler import (
+    FIRST_WITH_SUMMARY,
     FIRST_WITHOUT_SUMMARY,
     ROWS_WITH_SUMMARY,
     ROWS_WITHOUT_SUMMARY,
@@ -9,12 +10,17 @@ from app.services.proposal_assembler import (
 )
 
 
-def test_split_sizes_single_page_up_to_12():
-    for n in range(0, ROWS_WITH_SUMMARY + 1):
+def test_split_sizes_single_page_up_to_first_with_summary():
+    # Одна страница: 3 фикса + опции + резюме → максимум 9 опций
+    for n in range(0, FIRST_WITH_SUMMARY + 1):
         assert split_option_page_sizes(n) == [n]
 
 
 def test_split_sizes_key_cases():
+    # 10+ опций уже не влезают на один лист с резюме
+    assert split_option_page_sizes(10) == [9, 1]
+    assert split_option_page_sizes(11) == [10, 1]
+    assert split_option_page_sizes(12) == [11, 1]
     # 1-я страница без резюме: max 12 опций (15 − 3 фикса)
     assert split_option_page_sizes(13) == [12, 1]
     assert split_option_page_sizes(14) == [12, 2]
@@ -33,6 +39,8 @@ def test_split_sizes_invariants_up_to_80():
         assert sizes[-1] <= ROWS_WITH_SUMMARY
         if n > 0:
             assert sizes[-1] >= 1
+        if len(sizes) == 1:
+            assert sizes[0] <= FIRST_WITH_SUMMARY
         for idx, size in enumerate(sizes[:-1]):
             cap = FIRST_WITHOUT_SUMMARY if idx == 0 else ROWS_WITHOUT_SUMMARY
             assert 1 <= size <= cap
@@ -46,6 +54,17 @@ def test_package_pages_empty_still_shows_summary():
     assert pages[0]["is_last"] is True
     assert pages[0]["show_delivery"] is True
     assert pages[0]["show_summary"] is True
+
+
+def test_package_pages_ten_options_split_for_summary_space():
+    """Регресс: 10 опций + 3 фикса не должны лежать на одном листе с резюме."""
+    options = [{"title": f"Опция {i}", "price": 1000 * (i + 1), "selected": True} for i in range(10)]
+    pages = ProposalAssembler()._package_pages({"options": options})
+    assert [len(p["options"]) for p in pages] == [9, 1]
+    assert pages[0]["show_summary"] is False
+    assert pages[0]["show_delivery"] is True
+    assert pages[1]["show_summary"] is True
+    assert pages[1]["show_delivery"] is False
 
 
 def test_package_pages_first_page_caps_at_twelve_options():
