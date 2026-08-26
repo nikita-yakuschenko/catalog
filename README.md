@@ -139,7 +139,7 @@ docker compose up --build
 - UI: http://localhost:3000
 - API: http://localhost:8000/docs
 
-Прод (Dokploy): `docker-compose.dokploy.yml` — Postgres снаружи, у сервиса `server` обязателен `shm_size: "1gb"` (см. «Ограничения Chromium»).
+Прод (Dokploy): проект `avgst.dev`, compose **`catalog_service`** (технический `appName`: `avgstdev-catalog-jmoe0l` — **не менять**, иначе съедут named volumes). Файл: `docker-compose.dokploy.yml` — Postgres снаружи (`catalog_database`), у `server` обязателен `shm_size: "1gb"` (см. «Ограничения Chromium»).
 
 ## Переменные окружения
 
