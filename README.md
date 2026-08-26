@@ -139,6 +139,8 @@ docker compose up --build
 - UI: http://localhost:3000
 - API: http://localhost:8000/docs
 
+Прод (Dokploy): `docker-compose.dokploy.yml` — Postgres снаружи, у сервиса `server` обязателен `shm_size: "1gb"` (см. «Ограничения Chromium»).
+
 ## Переменные окружения
 
 | Переменная | Назначение |
@@ -201,7 +203,7 @@ Legacy (только через ручной override):
 - Нет нативного PDF/X / CMYK
 - CSS Paged Media поддерживается частично; каталог верстается как последовательность `.page` фиксированного A4 landscape
 - Шрифты зависят от системы контейнера / хоста
-
+- **`/dev/shm`:** в Docker по умолчанию 64MB — Playwright/Chromium падает с `BrokenProcessPool`. В проде (`docker-compose.dokploy.yml`) обязательно `shm_size: "1gb"`. **Не убирать** «для чистоты» — это ограничение прода, не косметика compose.
 ## Подключение PrinceXML
 
 Укажите `PRINCE_BIN` в `.env`. Адаптер: `server/app/renderers/print_renderer.py`.
