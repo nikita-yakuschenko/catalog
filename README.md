@@ -141,6 +141,20 @@ docker compose up --build
 
 Прод (Dokploy): проект `avgst.dev`, compose **`catalog_service`** (технический `appName`: `avgstdev-catalog-jmoe0l` — **не менять**, иначе съедут named volumes). Файл: `docker-compose.dokploy.yml` — Postgres снаружи (`catalog_database`), у `server` обязателен `shm_size: "1gb"` (см. «Ограничения Chromium»).
 
+### Backup / restore (Dokploy)
+
+Что бэкапится:
+
+| Объект | Куда | Расписание |
+|---|---|---|
+| Postgres `catalog_database` (БД `catalog`) | Destination `garage-dokploy-backups` (Garage bucket `dokploy-backups`) | ежедневно `0 0 * * *`, keep 7 |
+| Volume `storage_data` (сервис `server`) | тот же Destination, prefix `catalog/volumes/storage` | ежедневно `0 1 * * *`, keep 5, container stop |
+| Volume `output_data` (сервис `server`) | prefix `catalog/volumes/output` | ежедневно `0 1 * * *`, keep 5, container stop |
+
+Garage: существующий `b2b` / app `garage` (`b2b-garage-r78evh`), не отдельный инстанс. S3 endpoint для Destination — публичный sslip.io на порт 3900 (только с access key). Бэкап на том же VPS ≠ offsite.
+
+Имена volumes при restore: `avgstdev-catalog-jmoe0l_storage_data`, `avgstdev-catalog-jmoe0l_output_data`. Перед restore volume остановить compose и удалить целевой volume, если он уже есть.
+
 ## Переменные окружения
 
 | Переменная | Назначение |

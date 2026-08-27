@@ -2,12 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 :root {
+  /* ADS brand anchors (HEX reference) */
   --color-brand: #48b062;
   --color-ink: #111111;
   --color-muted: #737373;
   --color-paper: #ffffff;
-  --color-bg: #f2f2ef;
-  --color-line: #d9d9d4;
+  --color-bg: #f5f6f8;
+  --color-line: #dbdbdb;
   --app-header-height: 3.5rem;
   --page-chrome-height: 0px;
 }
@@ -19,28 +20,35 @@ button {
 @layer base {
   .theme {
     --font-heading: var(--font-sans);
-    --font-sans: var(--font-sans);
   }
   :root {
-    --background: oklch(0.96 0.004 120);
+    /* ADS 1.1: Geist Sans → Inter → Arial */
+    --font-sans: var(--font-geist-sans), "Inter", Arial, sans-serif;
+    /* brand.page #F5F6F8 — фон кабинета */
+    --page: oklch(0.968 0.003 260);
+    --background: var(--page);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
+    /* brand.green #48B062 */
     --primary: oklch(0.628 0.133 145.5);
     --primary-foreground: oklch(0.99 0 0);
-    --secondary: oklch(0.97 0 0);
+    /* brand.mist #EEF0F4 */
+    --secondary: oklch(0.95 0.004 260);
     --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
+    --muted: oklch(0.95 0.004 260);
     --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
+    --accent: oklch(0.95 0.004 260);
     --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.577 0.245 27.325);
     --destructive-foreground: oklch(0.99 0 0);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --border: oklch(0.9 0.004 260);
+    --input: oklch(0.9 0.004 260);
+    --ring: oklch(0.628 0.133 145.5);
+    --brand-yellow: oklch(0.88 0.16 95);
+    --brand-yellow-foreground: oklch(0.145 0 0);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -49,12 +57,12 @@ button {
     --radius: 0.625rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-primary: oklch(0.628 0.133 145.5);
+    --sidebar-primary-foreground: oklch(0.99 0 0);
+    --sidebar-accent: oklch(0.95 0.004 260);
     --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar-border: oklch(0.9 0.004 260);
+    --sidebar-ring: oklch(0.628 0.133 145.5);
   }
   .dark {
     --background: oklch(0.145 0 0);
@@ -93,10 +101,10 @@ button {
     border-color: var(--border);
   }
   body {
-    background-color: var(--background);
+    background-color: var(--page);
     color: var(--foreground);
   }
   html {
-    font-family: var(--font-sans), system-ui, sans-serif;
+    font-family: var(--font-sans);
   }
 }

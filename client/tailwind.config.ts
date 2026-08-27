@@ -10,7 +10,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)"],
       },
       colors: {
         border: "var(--border)",
@@ -18,6 +18,7 @@ export default {
         ring: "var(--ring)",
         background: "var(--background)",
         foreground: "var(--foreground)",
+        page: "var(--page)",
         primary: {
           DEFAULT: "var(--primary)",
           foreground: "var(--primary-foreground)",
@@ -46,11 +47,15 @@ export default {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",
         },
+        "brand-yellow": {
+          DEFAULT: "var(--brand-yellow)",
+          foreground: "var(--brand-yellow-foreground)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) * 0.8)",
+        sm: "calc(var(--radius) * 0.6)",
       },
     },
   },
