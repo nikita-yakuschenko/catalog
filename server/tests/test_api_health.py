@@ -1,13 +1,21 @@
-import pytest
-from httpx import ASGITransport, AsyncClient
+from unittest.mock import AsyncMock, patch
+
+from fastapi.testclient import TestClient
 
 from app.main import app
 
 
-@pytest.mark.asyncio
-async def test_health():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        res = await client.get("/health")
-        assert res.status_code == 200
-        assert res.json()["status"] == "ok"
+def test_health_ok():
+    with patch("app.api.health.ping_database", new=AsyncMock(return_value=True)):
+        with TestClient(app) as client:
+            res = client.get("/health")
+    assert res.status_code == 200
+    assert res.json()["status"] == "ok"
+
+
+def test_health_database_unavailable():
+    with patch("app.api.health.ping_database", new=AsyncMock(return_value=False)):
+        with TestClient(app) as client:
+            res = client.get("/health")
+    assert res.status_code == 503
+    assert res.json()["status"] == "unavailable"
